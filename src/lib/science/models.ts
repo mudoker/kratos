@@ -1,7 +1,7 @@
 import type { NutritionLog, SleepLog, Workout } from '../db/schema';
 
 /**
- * 1. Holistic Readiness Score (HRS) - Production Grade
+ * 1. Holistic Readiness Score (HRS)
  */
 export const calculateHRS = (
   sleep: SleepLog,
@@ -33,7 +33,7 @@ export const calculateHRS = (
 };
 
 /**
- * 2. Tonnage & ACWR Aggregation
+ * 2. Tonnage & ACWR
  */
 export const calculateDailyTonnage = (workout: Workout): number => {
   return workout.exercises.reduce((total, ex) => {
@@ -55,7 +55,20 @@ export const getACWRStatus = (acwr: number) => {
 };
 
 /**
- * 3. Dynamic SFR Calculation (Stimulus-to-Fatigue Ratio)
+ * 3. Metabolic Adaptation Detection
+ */
+export const detectMetabolicAdaptation = (
+  weightTrend: number[],
+  isDeficitGoal: boolean
+): number => {
+  if (weightTrend.length < 14) return 0;
+  const weightChange = Math.abs(weightTrend[0] - weightTrend[weightTrend.length - 1]);
+  if (isDeficitGoal && weightChange < 0.1) return -150;
+  return 0;
+};
+
+/**
+ * 4. Muscle SFR (Stimulus-to-Fatigue Ratio)
  */
 export const calculateMuscleSFR = (
   weeklySets: number,
@@ -63,18 +76,14 @@ export const calculateMuscleSFR = (
   avgSleep: number,
   isCaloricDeficit: boolean
 ): number => {
-  // Base stimulus is sets relative to MAV
   const stimulus = weeklySets / landmarks.MAV[1];
-  
-  // Recovery factor
   let recoveryFactor = avgSleep / 8;
   if (isCaloricDeficit) recoveryFactor *= 0.85;
-
-  return stimulus / recoveryFactor;
+  return stimulus / (recoveryFactor || 1);
 };
 
 /**
- * 4. Volume Landmarks
+ * 5. Volume Landmarks
  */
 export interface MuscleGroupLandmarks {
   MEV: number;
@@ -97,7 +106,7 @@ export const getMuscleStatus = (weeklySets: number, landmarks: MuscleGroupLandma
 };
 
 /**
- * 5. Rest Timer Auto-Regulation Matrix
+ * 6. Rest Matrix
  */
 export const getRecommendedRest = (exerciseName: string, rpe: number): number => {
   const isCompound = /squat|deadlift|press|row|bench|clean/i.test(exerciseName);
