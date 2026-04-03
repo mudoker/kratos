@@ -7,7 +7,7 @@ import { MacroHeatmap } from './MacroHeatmap';
 import { InWorkoutCrucible } from '../workout/InWorkoutCrucible';
 import { Activity, Battery, Flame, Zap, AlertTriangle } from 'lucide-react';
 import { db } from '../../lib/db/dexie';
-import { calculateHRS, calculateACWR, getACWRStatus } from '../../lib/science/models';
+import { calculateHRS, calculateACWR, getACWRStatus, calculateDailyTonnage } from '../../lib/science/models';
 import { Sparkline } from '../ui/Sparkline';
 import { useAgenticOS } from '../../hooks/useAgenticOS';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
@@ -19,9 +19,9 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
     status: { label: 'Optimal', color: 'text-green-400', alert: false },
     netCals: 0,
     trends: {
-      hrs: [65, 68, 72, 80, 78, 82, 88],
-      cals: [2400, 2600, 2550, 2800, 2900, 2700, 2500],
-      fatigue: [0.8, 0.9, 1.1, 1.2, 1.1, 1.0, 1.05]
+      hrs: [70, 70, 70, 70, 70, 70, 70] as number[],
+      cals: [2500, 2500, 2500, 2500, 2500, 2500, 2500] as number[],
+      fatigue: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] as number[]
     }
   });
 
@@ -30,24 +30,53 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
+        const now = new Date();
+        const acuteThreshold = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+        const chronicThreshold = new Date(now.getTime() - (28 * 24 * 60 * 60 * 1000));
+
+        // 1. Fetch Workouts for Tonnage & ACWR
+        const workouts = await db.workouts.where('date').above(chronicThreshold).toArray();
+        const dailyTonnages: Record<string, number> = {};
+        workouts.forEach(w => {
+           const dateStr = w.date.toISOString().split('T')[0];
+           dailyTonnages[dateStr] = (dailyTonnages[dateStr] || 0) + calculateDailyTonnage(w);
+        });
+
+        const acuteTonnages = Object.keys(dailyTonnages)
+          .filter(d => new Date(d) >= acuteThreshold)
+          .map(d => dailyTonnages[d]);
+        const chronicTonnages = Object.values(dailyTonnages);
+        
+        const acwrValue = calculateACWR(acuteTonnages, chronicTonnages);
+
+        // 2. Fetch Sleep & Nutrition for HRS
         const lastSleep = await db.sleep.orderBy('date').last();
         const lastNutrition = await db.nutrition.orderBy('timestamp').last();
         const biometrics = await db.biometrics.orderBy('date').toArray();
         const lastWeight = biometrics[biometrics.length - 1]?.weight || 88;
 
-        const acuteTonnage = [5000, 5200, 4800, 5500, 5100, 5300, 5400];
-        const chronicTonnage = Array(28).fill(5000);
-        const acwrValue = calculateACWR(acuteTonnage, chronicTonnage);
+        // 3. Trends Aggregation
+        const last7DaysSleep = await db.sleep.where('date').above(acuteThreshold.toISOString().split('T')[0]).toArray();
+        const last7DaysNutrition = await db.nutrition.where('timestamp').above(acuteThreshold).toArray();
+        
+        const hrsTrend = last7DaysSleep.map((s, i) => {
+           const n = last7DaysNutrition[i] || { kcals: 2500, protein: 160 };
+           return calculateHRS(s, n as any, lastWeight, 2500, 1.0);
+        });
 
         if (lastSleep && lastNutrition) {
           const hrsValue = calculateHRS(lastSleep, lastNutrition, lastWeight, 2500, acwrValue);
-          setStats(prev => ({
-            ...prev,
+          setStats({
             hrs: hrsValue,
             acwr: acwrValue,
             status: getACWRStatus(acwrValue),
-            netCals: lastNutrition.kcals - 2800
-          }));
+            netCals: lastNutrition.kcals - 2800,
+            trends: {
+              hrs: hrsTrend.length ? hrsTrend : [70, 70, 70],
+              cals: last7DaysNutrition.map(n => n.kcals),
+              fatigue: acuteTonnages.length ? acuteTonnages.map(t => t / 5000) : [1.0, 1.0, 1.0]
+            }
+          });
         }
       } catch (err) {
         console.error("Dexie Query Failed:", err);
@@ -98,7 +127,7 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
       )}
       
       {stats.hrs < 60 && (
-        <div className="bg-amber-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
+        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
            <Zap size={24} className="animate-pulse" />
            <div>
              <h4 className="font-bold uppercase tracking-tight">System Recalibration: Active Recovery</h4>

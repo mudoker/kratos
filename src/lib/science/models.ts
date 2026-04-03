@@ -1,8 +1,7 @@
-import type { NutritionLog, SleepLog } from '../db/schema';
+import type { NutritionLog, SleepLog, Workout } from '../db/schema';
 
 /**
- * 1. Holistic Readiness Score (HRS)
- * Weighted algorithm: Sleep (40%), Nutrition (30%), Training Fatigue (30%)
+ * 1. Holistic Readiness Score (HRS) - Production Grade
  */
 export const calculateHRS = (
   sleep: SleepLog,
@@ -11,44 +10,41 @@ export const calculateHRS = (
   targetKcals: number,
   acwr: number
 ): number => {
-  // Sleep Component (Sc, 40%)
   let sc = Math.min(100, (sleep.duration / 8) * 100);
-  if (sleep.quality <= 3) sc -= 15; // Penalty for Poor quality
+  if (sleep.quality <= 3) sc -= 15;
   sc = Math.max(0, sc);
 
-  // Nutrition Component (Nc, 30%)
   const kcalDev = Math.abs(nutrition.kcals - targetKcals);
   let nc = 100;
   if (kcalDev > 150) {
     nc -= (Math.floor((kcalDev - 150) / 50) + 1) * 2;
   }
   
-  // Protein Adherence (< 1.6g/kg)
   const proteinPerKg = nutrition.protein / userWeight;
-  if (proteinPerKg < 1.6) {
-    nc *= 0.5;
-  }
+  if (proteinPerKg < 1.6) nc *= 0.5;
   nc = Math.max(0, nc);
 
-  // Fatigue Component (Fc, 30%)
-  let fc = 50; // Neutral default
-  if (acwr >= 0.8 && acwr <= 1.3) fc = 100; // Sweet spot
-  else if (acwr > 1.5) fc = 30; // Danger zone
-  else if (acwr < 0.8) fc = 70; // Under-training
+  let fc = 50;
+  if (acwr >= 0.8 && acwr <= 1.3) fc = 100;
+  else if (acwr > 1.5) fc = 30;
+  else if (acwr < 0.8) fc = 70;
 
-  const hrs = (sc * 0.40) + (nc * 0.30) + (fc * 0.30);
-  return Math.round(hrs);
+  return Math.round((sc * 0.40) + (nc * 0.30) + (fc * 0.30));
 };
 
 /**
- * 2. Acute:Chronic Workload Ratio (ACWR)
- * Aw: 7-day rolling tonnage avg, Cw: 28-day rolling tonnage avg
+ * 2. Tonnage & ACWR Aggregation
  */
-export const calculateACWR = (acuteTonnage: number[], chronicTonnage: number[]): number => {
-  if (chronicTonnage.length === 0) return 1.0;
-  const aw = acuteTonnage.reduce((a, b) => a + b, 0) / Math.max(acuteTonnage.length, 1);
-  const cw = chronicTonnage.reduce((a, b) => a + b, 0) / Math.max(chronicTonnage.length, 1);
-  return cw === 0 ? 1.0 : aw / cw;
+export const calculateDailyTonnage = (workout: Workout): number => {
+  return workout.exercises.reduce((total, ex) => {
+    return total + ex.sets.reduce((exTotal, set) => exTotal + (set.weight * set.reps), 0);
+  }, 0);
+};
+
+export const calculateACWR = (acuteTonnages: number[], chronicTonnages: number[]): number => {
+  const aw = acuteTonnages.length ? acuteTonnages.reduce((a, b) => a + b, 0) / acuteTonnages.length : 0;
+  const cw = chronicTonnages.length ? chronicTonnages.reduce((a, b) => a + b, 0) / chronicTonnages.length : 1;
+  return aw / (cw || 1);
 };
 
 export const getACWRStatus = (acwr: number) => {
@@ -59,25 +55,22 @@ export const getACWRStatus = (acwr: number) => {
 };
 
 /**
- * 3. Dynamic TDEE & Metabolic Adaptation (Katch-McArdle)
- * BMR = 370 + (21.6 * LBM)
+ * 3. Dynamic SFR Calculation (Stimulus-to-Fatigue Ratio)
  */
-export const calculateBMR = (weight: number, bodyFat: number): number => {
-  const lbm = weight * (1 - bodyFat / 100);
-  return 370 + (21.6 * lbm);
-};
-
-export const detectMetabolicAdaptation = (
-  weightTrend: number[], // 14-day rolling weight
-  isDeficitGoal: boolean
+export const calculateMuscleSFR = (
+  weeklySets: number,
+  landmarks: MuscleGroupLandmarks,
+  avgSleep: number,
+  isCaloricDeficit: boolean
 ): number => {
-  if (weightTrend.length < 14) return 0;
-  const weightChange = Math.abs(weightTrend[0] - weightTrend[weightTrend.length - 1]);
+  // Base stimulus is sets relative to MAV
+  const stimulus = weeklySets / landmarks.MAV[1];
   
-  if (isDeficitGoal && weightChange < 0.1) {
-    return -150; // Metabolic adaptation adjustment
-  }
-  return 0;
+  // Recovery factor
+  let recoveryFactor = avgSleep / 8;
+  if (isCaloricDeficit) recoveryFactor *= 0.85;
+
+  return stimulus / recoveryFactor;
 };
 
 /**
@@ -107,9 +100,9 @@ export const getMuscleStatus = (weeklySets: number, landmarks: MuscleGroupLandma
  * 5. Rest Timer Auto-Regulation Matrix
  */
 export const getRecommendedRest = (exerciseName: string, rpe: number): number => {
-  const isCompound = /squat|deadlift|press|row/i.test(exerciseName);
-  if (isCompound && rpe >= 8) return 300; // 5 mins
-  if (isCompound) return 180; // 3 mins
-  if (rpe >= 8) return 90; // 1.5 mins
-  return 60; // 1 min
+  const isCompound = /squat|deadlift|press|row|bench|clean/i.test(exerciseName);
+  if (isCompound && rpe >= 9) return 300;
+  if (isCompound && rpe >= 7) return 180;
+  if (rpe >= 9) return 90;
+  return 60;
 };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../lib/db/dexie';
-import { VOLUME_LANDMARKS, getMuscleStatus } from '../../lib/science/models';
+import { VOLUME_LANDMARKS, getMuscleStatus, calculateMuscleSFR } from '../../lib/science/models';
 import { haptics, speak } from '../../lib/ui/feedback';
 
 interface MuscleState {
@@ -20,40 +20,65 @@ const MUSCLE_META = [
 ];
 
 const getColor = (sfr: number) => {
-  if (sfr < 0.4) return '#3b82f6'; // Bright Blue
-  if (sfr <= 1.0) return '#f59e0b'; // Glowing Amber
-  return '#ef4444'; // Deep Red
+  if (sfr < 0.6) return '#3b82f6'; // Recovered
+  if (sfr <= 1.2) return '#f59e0b'; // Optimal/MAV
+  return '#ef4444'; // Overreached
 };
 
-export const LivingAnatomyModel: React.FC = () => {
+export const LivingAnatomyModel: React.FC = React.memo(() => {
   const [muscles, setMuscles] = useState<MuscleState[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const latestBiometrics = await db.biometrics.orderBy('date').last();
-      const sfr = latestBiometrics?.sfr || {};
+    const fetchAnatomyData = async () => {
+      try {
+        const last7Days = new Date();
+        last7Days.setDate(last7Days.getDate() - 7);
+        
+        const workouts = await db.workouts.where('date').above(last7Days).toArray();
+        const sleep = await db.sleep.where('date').above(last7Days.toISOString().split('T')[0]).toArray();
+        const nutrition = await db.nutrition.where('timestamp').above(last7Days).toArray();
 
-      const updated = MUSCLE_META.map(m => ({
-        ...m,
-        sfr: sfr[m.id] || 0.2,
-        status: getMuscleStatus((sfr[m.id] || 0.2) * 20, VOLUME_LANDMARKS[m.id] || VOLUME_LANDMARKS.chest)
-      }));
-      setMuscles(updated);
+        const avgSleep = sleep.length ? sleep.reduce((a, b) => a + b.duration, 0) / sleep.length : 8;
+        const avgCals = nutrition.length ? nutrition.reduce((a, b) => a + b.kcals, 0) / nutrition.length : 2500;
+        const isDeficit = avgCals < 2500;
+
+        // Calculate real sets per muscle group
+        const muscleSets: Record<string, number> = {};
+        workouts.forEach(w => {
+           w.muscleGroups.forEach(m => {
+              muscleSets[m] = (muscleSets[m] || 0) + 3; // Estimating 3 sets per targeted group per session
+           });
+        });
+
+        const updated = MUSCLE_META.map(m => {
+          const sets = muscleSets[m.id] || 0;
+          const landmarks = VOLUME_LANDMARKS[m.id] || VOLUME_LANDMARKS.chest;
+          const sfr = calculateMuscleSFR(sets, landmarks, avgSleep, isDeficit);
+          return {
+            ...m,
+            sfr,
+            status: getMuscleStatus(sets, landmarks)
+          };
+        });
+        setMuscles(updated);
+      } catch (err) {
+        console.error("Anatomy Data Fetch Failed:", err);
+      }
     };
-    fetchData();
+    fetchAnatomyData();
   }, []);
 
   const getMuscleColor = (id: string) => {
     const m = muscles.find(m => m.id === id);
-    return getColor(m?.sfr || 0);
+    return getColor(m?.sfr || 0.2);
   };
 
   const handleMuscleClick = (muscle: MuscleState) => {
     haptics.tap();
     if (muscle.status === 'OVERREACHING') {
-      speak(`System Alert: ${muscle.name} recovery is failing. Suggesting dynamic load reduction.`);
+      speak(`System Alert: ${muscle.name} overreached at ${Math.round(muscle.sfr * 100)}% SFR. Dropping volume is mandatory.`);
     } else {
-      speak(`${muscle.name} status is ${muscle.status}. Proceed with planned volume.`);
+      speak(`${muscle.name} load is ${muscle.status}. Stimulus-to-fatigue ratio is ${muscle.sfr.toFixed(2)}.`);
     }
   };
 
@@ -61,15 +86,13 @@ export const LivingAnatomyModel: React.FC = () => {
     <div className="relative bg-black/40 border border-white/5 rounded-2xl p-6 h-full flex flex-col items-center group/anatomy">
       <div className="absolute top-4 left-4">
         <h3 className="text-xs font-bold text-white uppercase tracking-widest">Biomechanical Heatmap</h3>
-        <p className="text-[10px] text-muted-foreground uppercase font-medium">Interpolating SFR Landmarks</p>
+        <p className="text-[10px] text-muted-foreground uppercase font-medium">Production-Grade SFR Engine</p>
       </div>
 
       <div className="flex-1 w-full max-w-[200px] mt-8 relative">
         <svg viewBox="0 0 100 200" className="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-          {/* Head */}
           <circle cx="50" cy="20" r="15" fill="#18181b" stroke="#3f3f46" strokeWidth="1" />
           
-          {/* Torso/Chest */}
           <motion.path
             d="M35 40 L65 40 L70 80 L30 80 Z"
             fill={getMuscleColor('chest')}
@@ -86,7 +109,6 @@ export const LivingAnatomyModel: React.FC = () => {
             className="cursor-pointer transition-colors duration-1000"
           />
 
-          {/* Shoulders */}
           <motion.circle 
             cx="30" cy="45" r="8" fill={getMuscleColor('shoulders')} 
             onClick={() => { const m = muscles.find(m => m.id === 'shoulders'); if (m) handleMuscleClick(m); }}
@@ -98,7 +120,6 @@ export const LivingAnatomyModel: React.FC = () => {
             className="cursor-pointer"
           />
 
-          {/* Arms */}
           <motion.path
             d="M25 55 L15 100"
             stroke={getMuscleColor('arms')}
@@ -116,7 +137,6 @@ export const LivingAnatomyModel: React.FC = () => {
             className="cursor-pointer"
           />
 
-          {/* Quads */}
           <motion.path
             d="M35 120 L48 180"
             stroke={getMuscleColor('quads')}
@@ -143,7 +163,6 @@ export const LivingAnatomyModel: React.FC = () => {
           />
         </svg>
 
-        {/* Floating Tooltips */}
         {muscles.map((muscle, i) => (
           <div 
             key={muscle.id}
@@ -184,4 +203,4 @@ export const LivingAnatomyModel: React.FC = () => {
       </div>
     </div>
   );
-};
+});
