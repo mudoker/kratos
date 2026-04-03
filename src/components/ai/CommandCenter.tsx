@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef,  } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Send, Sparkles, Terminal, X,  } from 'lucide-react';
+import { Search, Send, Sparkles, Terminal, X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { parseNutritionText } from '../../lib/ai/nlpNutritionParser';
 import { NutritionCard } from './NutritionCard';
+import { PhysiqueSimulator } from './PhysiqueSimulator';
 import { Button } from '../ui/Primitives';
 
 type Message = {
@@ -52,14 +53,23 @@ export const CommandCenter: React.FC = () => {
     setInput('');
 
     const aiResponseId = (Date.now() + 1).toString();
-    const parsed = await parseNutritionText(currentInput);
     
-    setMessages(prev => [...prev, {
-      id: aiResponseId,
-      type: 'ai',
-      content: (parsed.confidence ?? 0) > 0.5 ? "Macros derived from biological intake data:" : "I couldn't find a precise match. Here is my best estimate:",
-      component: <NutritionCard log={parsed} />
-    }]);
+    if (currentInput.toLowerCase().includes('simulate') || currentInput.toLowerCase().includes('physique') || currentInput.toLowerCase().includes('future')) {
+      setMessages(prev => [...prev, {
+        id: aiResponseId,
+        type: 'ai',
+        content: "Initializing Trajectory Matrix. You can now adjust the ghost layer parameters:",
+        component: <PhysiqueSimulator />
+      }]);
+    } else {
+      const parsed = await parseNutritionText(currentInput);
+      setMessages(prev => [...prev, {
+        id: aiResponseId,
+        type: 'ai',
+        content: (parsed.confidence ?? 0) > 0.5 ? "Macros derived from biological intake data:" : "I couldn't find a precise match. Here is my best estimate:",
+        component: <NutritionCard log={parsed} />
+      }]);
+    }
   };
 
   if (!isCommandCenterOpen) return null;
@@ -67,7 +77,6 @@ export const CommandCenter: React.FC = () => {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-6 bg-black/60 backdrop-blur-md">
-        {/* Mobile Backdrop Click to Close */}
         <div className="absolute inset-0" onClick={() => setCommandCenterOpen(false)} />
         
         <motion.div
@@ -75,14 +84,12 @@ export const CommandCenter: React.FC = () => {
           initial={{ opacity: 0, y: 100, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 100, scale: 0.95 }}
-          className="relative bg-[#0a0a0c] border-t sm:border border-white/10 w-full max-w-2xl rounded-t-[2rem] sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh] sm:h-[600px]"
+          className="relative bg-[#0a0a0c] border-t sm:border border-white/10 w-full max-w-4xl rounded-t-[2rem] sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[90vh] sm:h-[700px]"
         >
-          {/* Mobile Handle */}
           <div className="sm:hidden w-full flex justify-center py-3">
             <div className="w-12 h-1.5 bg-white/10 rounded-full" />
           </div>
 
-          {/* Header */}
           <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
@@ -98,7 +105,6 @@ export const CommandCenter: React.FC = () => {
             </button>
           </div>
 
-          {/* Chat Stream */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
             {messages.map((msg) => (
               <motion.div
@@ -107,7 +113,7 @@ export const CommandCenter: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[90%] ${msg.type === 'user' ? 'bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-lg' : 'space-y-4'}`}>
+                <div className={`max-w-[95%] ${msg.type === 'user' ? 'bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-lg' : 'space-y-4 w-full'}`}>
                   {msg.type === 'ai' && (
                     <div className="flex items-center space-x-2 text-blue-400 mb-1">
                       <Terminal size={14} />
@@ -121,7 +127,6 @@ export const CommandCenter: React.FC = () => {
             ))}
           </div>
 
-          {/* Input */}
           <form onSubmit={handleSend} className="p-4 sm:p-6 bg-white/[0.02] border-t border-white/5 flex items-center space-x-4">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
