@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef,  } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Send, Sparkles, Terminal, X } from 'lucide-react';
+import { Search, Send, Sparkles, Terminal, X,  } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { parseNutritionText } from '../../lib/ai/nlpNutritionParser';
 import { NutritionCard } from './NutritionCard';
+import { Button } from '../ui/Primitives';
 
 type Message = {
   id: string;
@@ -19,7 +20,7 @@ export const CommandCenter: React.FC = () => {
     {
       id: 'welcome',
       type: 'ai',
-      content: "Human Performance OS active. How can I assist with your physiology today? (Try: 'I just had beef pho')"
+      content: "Human Performance OS active. Protocol: Natural Language Intake. How can I assist?"
     }
   ]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -31,26 +32,15 @@ export const CommandCenter: React.FC = () => {
         e.preventDefault();
         setCommandCenterOpen(!isCommandCenterOpen);
       }
-      if (e.key === 'Escape') {
-        setCommandCenterOpen(false);
-      }
+      if (e.key === 'Escape') setCommandCenterOpen(false);
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isCommandCenterOpen, setCommandCenterOpen]);
 
   useEffect(() => {
-    if (isCommandCenterOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (isCommandCenterOpen && inputRef.current) inputRef.current.focus();
   }, [isCommandCenterOpen]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -58,112 +48,94 @@ export const CommandCenter: React.FC = () => {
 
     const userMsg: Message = { id: Date.now().toString(), type: 'user', content: input };
     setMessages(prev => [...prev, userMsg]);
+    const currentInput = input;
     setInput('');
 
-    // Simulate AI logic
     const aiResponseId = (Date.now() + 1).toString();
+    const parsed = await parseNutritionText(currentInput);
     
-    if (input.toLowerCase().includes('had') || input.toLowerCase().includes('ate') || input.toLowerCase().includes('pho')) {
-      const parsed = await parseNutritionText(input);
-      setMessages(prev => [...prev, {
-        id: aiResponseId,
-        type: 'ai',
-        content: "I've parsed your nutrition input. Does this look accurate?",
-        component: <NutritionCard log={parsed} />
-      }]);
-    } else {
-      setMessages(prev => [...prev, {
-        id: aiResponseId,
-        type: 'ai',
-        content: "Acknowledged. I am correlating that with your current CNS fatigue and caloric state. No trajectory shifts detected."
-      }]);
-    }
+    setMessages(prev => [...prev, {
+      id: aiResponseId,
+      type: 'ai',
+      content: (parsed.confidence ?? 0) > 0.5 ? "Macros derived from biological intake data:" : "I couldn't find a precise match. Here is my best estimate:",
+      component: <NutritionCard log={parsed} />
+    }]);
   };
 
   if (!isCommandCenterOpen) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-6 bg-black/60 backdrop-blur-md">
+        {/* Mobile Backdrop Click to Close */}
+        <div className="absolute inset-0" onClick={() => setCommandCenterOpen(false)} />
+        
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-[#0a0a0c] border border-white/10 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[600px]"
+          layoutId="command-center"
+          initial={{ opacity: 0, y: 100, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 100, scale: 0.95 }}
+          className="relative bg-[#0a0a0c] border-t sm:border border-white/10 w-full max-w-2xl rounded-t-[2rem] sm:rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh] sm:h-[600px]"
         >
+          {/* Mobile Handle */}
+          <div className="sm:hidden w-full flex justify-center py-3">
+            <div className="w-12 h-1.5 bg-white/10 rounded-full" />
+          </div>
+
           {/* Header */}
-          <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-blue-500/10 rounded-lg text-blue-500">
-                <Terminal size={18} />
+          <div className="p-4 sm:p-6 border-b border-white/5 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+                <Sparkles size={20} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white uppercase tracking-widest">Kratos Core</h3>
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">AI Sports Scientist Online</span>
-                </div>
+                <h3 className="text-sm font-black text-white uppercase tracking-widest">Kratos Intelligence</h3>
+                <span className="text-[10px] text-green-500 uppercase font-black tracking-tighter animate-pulse">Neural Link Active</span>
               </div>
             </div>
-            <button
-              onClick={() => setCommandCenterOpen(false)}
-              className="p-2 hover:bg-white/5 rounded-full transition-colors text-muted-foreground"
-            >
+            <button onClick={() => setCommandCenterOpen(false)} className="p-2 hover:bg-white/5 rounded-full text-muted-foreground transition-colors">
               <X size={20} />
             </button>
           </div>
 
           {/* Chat Stream */}
-          <div 
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide scroll-smooth"
-          >
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, x: msg.type === 'user' ? 10 : -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[85%] ${msg.type === 'user' ? 'bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none' : 'space-y-3'}`}>
+                <div className={`max-w-[90%] ${msg.type === 'user' ? 'bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-lg' : 'space-y-4'}`}>
                   {msg.type === 'ai' && (
                     <div className="flex items-center space-x-2 text-blue-400 mb-1">
-                      <Sparkles size={14} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">OS Intelligence</span>
+                      <Terminal size={14} />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Agentic Stream</span>
                     </div>
                   )}
-                  <p className="text-sm leading-relaxed">{msg.content}</p>
-                  {msg.component && (
-                    <div className="mt-2 text-foreground">
-                      {msg.component}
-                    </div>
-                  )}
+                  <p className="text-sm leading-relaxed font-medium">{msg.content}</p>
+                  {msg.component && <div className="mt-2">{msg.component}</div>}
                 </div>
               </motion.div>
             ))}
           </div>
 
-          {/* Input Area */}
-          <form 
-            onSubmit={handleSend}
-            className="p-4 bg-white/[0.02] border-t border-white/5 flex items-center space-x-3"
-          >
+          {/* Input */}
+          <form onSubmit={handleSend} className="p-4 sm:p-6 bg-white/[0.02] border-t border-white/5 flex items-center space-x-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               <input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Log nutrition, training, or ask for trajectory..."
-                className="w-full bg-white/[0.05] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                placeholder="Log meal, query status, or target goal..."
+                className="w-full bg-white/[0.05] border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/40"
               />
             </div>
-            <button
-              type="submit"
-              className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95"
-            >
-              <Send size={18} />
-            </button>
+            <Button type="submit" className="p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-blue-500/20">
+              <Send size={20} />
+            </Button>
           </form>
         </motion.div>
       </div>

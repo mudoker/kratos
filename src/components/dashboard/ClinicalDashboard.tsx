@@ -1,17 +1,20 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LivingAnatomyModel } from '../anatomy/LivingAnatomyModel';
 import { MetabolicTrajectoryChart } from './MetabolicTrajectoryChart';
 import { BanisterModelChart } from './BanisterModelChart';
+import { SymmetryRadarChart } from './SymmetryRadarChart';
 import { MacroHeatmap } from './MacroHeatmap';
 import { SportsScienceFeed } from './SportsScienceFeed';
 import { InWorkoutCrucible } from '../workout/InWorkoutCrucible';
-import { Activity, Battery, Flame, Zap, AlertTriangle } from 'lucide-react';
+import { RecoveryProtocolOverlay } from '../ai/RecoveryProtocolOverlay';
+import { Activity, Battery, Flame, Zap, Maximize2, X } from 'lucide-react';
 import { db } from '../../lib/db/dexie';
 import { calculateHRS, calculateACWR, getACWRStatus, calculateDailyTonnage } from '../../lib/science/models';
 import { Sparkline } from '../ui/Sparkline';
 import { useAgenticOS } from '../../hooks/useAgenticOS';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
+import { Button, Card } from '../ui/Primitives';
 
 export const ClinicalDashboard: React.FC = React.memo(() => {
   const [stats, setStats] = useState({
@@ -25,8 +28,15 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
       fatigue: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] as number[]
     }
   });
+  
+  const [isRecoveryOpen, setRecoveryOpen] = useState(false);
+  const [isWorkoutExpanded, setWorkoutExpanded] = useState(false);
 
   useAgenticOS(stats.hrs);
+
+  useEffect(() => {
+    if (stats.hrs > 0 && stats.hrs < 60) setRecoveryOpen(true);
+  }, [stats.hrs]);
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -91,7 +101,9 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
   ], [stats]);
 
   return (
-    <div className="p-6 lg:p-10 space-y-10 max-w-[1600px] mx-auto">
+    <div className="p-6 lg:p-10 space-y-10 max-w-[1600px] mx-auto relative">
+      <RecoveryProtocolOverlay isOpen={isRecoveryOpen} hrs={stats.hrs} onClose={() => setRecoveryOpen(false)} />
+
       {/* Top Stats Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {memoizedStats.map((stat, i) => (
@@ -114,43 +126,43 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
         ))}
       </div>
 
-      {stats.status.alert && (
-        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center space-x-4 text-red-500">
-           <AlertTriangle size={24} />
-           <div>
-             <h4 className="font-bold uppercase tracking-tight">Injury Danger Zone Detected</h4>
-             <p className="text-sm">Your Acute:Chronic workload ratio is {stats.acwr.toFixed(2)}. Dropping volume by 20% is strongly suggested to prevent systemic failure.</p>
-           </div>
-        </div>
-      )}
-      
-      {stats.hrs < 60 && (
-        <div className="bg-amber-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
-           <Zap size={24} className="animate-pulse" />
-           <div>
-             <h4 className="font-bold uppercase tracking-tight">System Recalibration: Active Recovery</h4>
-             <p className="text-sm">Readiness Score is critical ({stats.hrs}). AI routes current block to Deload status. Skip heavy compounds today.</p>
-           </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Living Model & Workout */}
         <div className="lg:col-span-4 space-y-8">
-          <ErrorBoundary>
-            <LivingAnatomyModel />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <InWorkoutCrucible />
-          </ErrorBoundary>
+          <Card className="p-6 relative group overflow-hidden">
+            <div className="flex justify-between items-center mb-4">
+               <h3 className="text-xs font-black uppercase text-white tracking-widest">Active Session</h3>
+               <button onClick={() => setWorkoutExpanded(!isWorkoutExpanded)} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+                 <Maximize2 size={14} className="text-muted-foreground" />
+               </button>
+            </div>
+            <ErrorBoundary>
+              <LivingAnatomyModel />
+            </ErrorBoundary>
+            <div className="mt-8">
+              <ErrorBoundary>
+                <motion.div layoutId="workout-crucible">
+                  <InWorkoutCrucible />
+                </motion.div>
+              </ErrorBoundary>
+            </div>
+          </Card>
         </div>
 
         {/* Center/Right Column: Analytics */}
         <div className="lg:col-span-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <MetabolicTrajectoryChart />
-            <BanisterModelChart />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-1">
+              <MetabolicTrajectoryChart />
+            </div>
+            <div className="md:col-span-1">
+              <BanisterModelChart />
+            </div>
+            <div className="md:col-span-1">
+              <SymmetryRadarChart />
+            </div>
           </div>
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
              <div className="lg:col-span-1">
                 <MacroHeatmap />
@@ -158,21 +170,50 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
              <div className="lg:col-span-1">
                 <SportsScienceFeed />
              </div>
-             <div className="bg-blue-600 rounded-2xl p-6 flex flex-col justify-between text-white shadow-xl shadow-blue-600/20 relative overflow-hidden group">
+             <Card className="bg-blue-600 rounded-[2rem] p-8 flex flex-col justify-between text-white shadow-xl shadow-blue-600/20 relative overflow-hidden group border-none">
                 <div className="relative z-10">
-                   <h4 className="text-lg font-bold uppercase tracking-tight">AI Strategy Insight</h4>
-                   <p className="text-sm opacity-90 mt-2 leading-relaxed">
-                     Based on 300kcal deficit and high volume, your quad progression will plateau in 4 days. Suggesting deload block.
+                   <div className="flex items-center space-x-2 mb-4">
+                      <Zap size={20} fill="white" />
+                      <h4 className="text-sm font-black uppercase tracking-widest">Strategy Oracle</h4>
+                   </div>
+                   <p className="text-lg font-bold leading-tight">
+                     Based on 300kcal deficit, your quad progression will plateau in 4.2 days.
+                   </p>
+                   <p className="text-sm opacity-80 mt-4 leading-relaxed font-medium">
+                     AI suggests pivoting to a Deload Block starting Monday to prevent ligamentous inflammation.
                    </p>
                 </div>
-                <button className="relative z-10 mt-6 w-full bg-white text-blue-600 font-bold uppercase text-[10px] tracking-widest py-3 rounded-lg hover:bg-opacity-90 transition-all">
-                   View Trajectory Oracle
-                </button>
-                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-             </div>
+                <Button className="relative z-10 mt-8 w-full bg-white text-blue-600 hover:bg-white/90 py-4 shadow-xl">
+                   Accept Protocol
+                </Button>
+                <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+             </Card>
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isWorkoutExpanded && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[250] bg-black/90 backdrop-blur-3xl p-6 flex items-center justify-center"
+          >
+            <motion.div 
+              layoutId="workout-crucible"
+              className="max-w-4xl w-full"
+            >
+              <div className="flex justify-end mb-4">
+                <button onClick={() => setWorkoutExpanded(false)} className="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white">
+                  <X size={24} />
+                </button>
+              </div>
+              <InWorkoutCrucible />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });
