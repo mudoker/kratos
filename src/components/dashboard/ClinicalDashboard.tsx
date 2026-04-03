@@ -4,6 +4,7 @@ import { LivingAnatomyModel } from '../anatomy/LivingAnatomyModel';
 import { MetabolicTrajectoryChart } from './MetabolicTrajectoryChart';
 import { BanisterModelChart } from './BanisterModelChart';
 import { MacroHeatmap } from './MacroHeatmap';
+import { SportsScienceFeed } from './SportsScienceFeed';
 import { InWorkoutCrucible } from '../workout/InWorkoutCrucible';
 import { Activity, Battery, Flame, Zap, AlertTriangle } from 'lucide-react';
 import { db } from '../../lib/db/dexie';
@@ -34,7 +35,6 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
         const acuteThreshold = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
         const chronicThreshold = new Date(now.getTime() - (28 * 24 * 60 * 60 * 1000));
 
-        // 1. Fetch Workouts for Tonnage & ACWR
         const workouts = await db.workouts.where('date').above(chronicThreshold).toArray();
         const dailyTonnages: Record<string, number> = {};
         workouts.forEach(w => {
@@ -49,13 +49,11 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
         
         const acwrValue = calculateACWR(acuteTonnages, chronicTonnages);
 
-        // 2. Fetch Sleep & Nutrition for HRS
         const lastSleep = await db.sleep.orderBy('date').last();
         const lastNutrition = await db.nutrition.orderBy('timestamp').last();
         const biometrics = await db.biometrics.orderBy('date').toArray();
         const lastWeight = biometrics[biometrics.length - 1]?.weight || 88;
 
-        // 3. Trends Aggregation
         const last7DaysSleep = await db.sleep.where('date').above(acuteThreshold.toISOString().split('T')[0]).toArray();
         const last7DaysNutrition = await db.nutrition.where('timestamp').above(acuteThreshold).toArray();
         
@@ -127,7 +125,7 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
       )}
       
       {stats.hrs < 60 && (
-        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
+        <div className="bg-amber-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
            <Zap size={24} className="animate-pulse" />
            <div>
              <h4 className="font-bold uppercase tracking-tight">System Recalibration: Active Recovery</h4>
@@ -154,8 +152,11 @@ export const ClinicalDashboard: React.FC = React.memo(() => {
             <BanisterModelChart />
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-             <div className="lg:col-span-2">
+             <div className="lg:col-span-1">
                 <MacroHeatmap />
+             </div>
+             <div className="lg:col-span-1">
+                <SportsScienceFeed />
              </div>
              <div className="bg-blue-600 rounded-2xl p-6 flex flex-col justify-between text-white shadow-xl shadow-blue-600/20 relative overflow-hidden group">
                 <div className="relative z-10">
