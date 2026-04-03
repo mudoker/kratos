@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Play, Square, Timer, TrendingDown } from 'lucide-react';
+import { ChevronRight, Play,  Timer, TrendingDown } from 'lucide-react';
 
-interface SetData {
-  weight: number;
-  reps: number;
-  rir: number; // Reps In Reserve
-}
 
 export const InWorkoutCrucible: React.FC = () => {
   const [activeSet, setActiveSet] = useState<number>(1);
@@ -18,7 +13,7 @@ export const InWorkoutCrucible: React.FC = () => {
   const [autoRegulated, setAutoRegulated] = useState(false);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: any;
     if (isResting) {
       interval = setInterval(() => {
         setRestTime(prev => prev + 1);

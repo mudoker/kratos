@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 
 // Mock SFR data (0 to 1, where 1 is MAV achieved, >1 is overreached)
