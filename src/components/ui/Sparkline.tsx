@@ -7,7 +7,7 @@ interface SparklineProps {
 
 export const Sparkline: React.FC<SparklineProps> = ({ data, color = '#3b82f6' }) => {
   const min = Math.min(...data);
-  const max = Math.max(...max = Math.max(...data), min + 1);
+  const max = Math.max(Math.max(...data), min + 1);
   const points = data.map((v, i) => ({
     x: (i / (data.length - 1)) * 40,
     y: 10 - ((v - min) / (max - min)) * 10,

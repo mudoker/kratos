@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { db } from '../../lib/db/dexie';
 import { VOLUME_LANDMARKS, getMuscleStatus } from '../../lib/science/models';
+import { haptics, speak } from '../../lib/ui/feedback';
 
 interface MuscleState {
   id: string;
@@ -47,8 +48,17 @@ export const LivingAnatomyModel: React.FC = () => {
     return getColor(m?.sfr || 0);
   };
 
+  const handleMuscleClick = (muscle: MuscleState) => {
+    haptics.tap();
+    if (muscle.status === 'OVERREACHING') {
+      speak(`System Alert: ${muscle.name} recovery is failing. Suggesting dynamic load reduction.`);
+    } else {
+      speak(`${muscle.name} status is ${muscle.status}. Proceed with planned volume.`);
+    }
+  };
+
   return (
-    <div className="relative bg-black/40 border border-white/5 rounded-2xl p-6 h-full flex flex-col items-center">
+    <div className="relative bg-black/40 border border-white/5 rounded-2xl p-6 h-full flex flex-col items-center group/anatomy">
       <div className="absolute top-4 left-4">
         <h3 className="text-xs font-bold text-white uppercase tracking-widest">Biomechanical Heatmap</h3>
         <p className="text-[10px] text-muted-foreground uppercase font-medium">Interpolating SFR Landmarks</p>
@@ -64,13 +74,29 @@ export const LivingAnatomyModel: React.FC = () => {
             d="M35 40 L65 40 L70 80 L30 80 Z"
             fill={getMuscleColor('chest')}
             initial={{ opacity: 0.5 }}
-            animate={{ opacity: 1 }}
-            className="cursor-help transition-colors duration-1000"
+            animate={{ 
+              opacity: 1,
+              filter: muscles.find(m => m.id === 'chest')?.status === 'OVERREACHING' ? 'drop-shadow(0 0 8px #ef4444)' : 'none'
+            }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => {
+              const m = muscles.find(m => m.id === 'chest');
+              if (m) handleMuscleClick(m);
+            }}
+            className="cursor-pointer transition-colors duration-1000"
           />
 
           {/* Shoulders */}
-          <motion.circle cx="30" cy="45" r="8" fill={getMuscleColor('shoulders')} />
-          <motion.circle cx="70" cy="45" r="8" fill={getMuscleColor('shoulders')} />
+          <motion.circle 
+            cx="30" cy="45" r="8" fill={getMuscleColor('shoulders')} 
+            onClick={() => { const m = muscles.find(m => m.id === 'shoulders'); if (m) handleMuscleClick(m); }}
+            className="cursor-pointer"
+          />
+          <motion.circle 
+            cx="70" cy="45" r="8" fill={getMuscleColor('shoulders')} 
+            onClick={() => { const m = muscles.find(m => m.id === 'shoulders'); if (m) handleMuscleClick(m); }}
+            className="cursor-pointer"
+          />
 
           {/* Arms */}
           <motion.path
@@ -78,12 +104,16 @@ export const LivingAnatomyModel: React.FC = () => {
             stroke={getMuscleColor('arms')}
             strokeWidth="8"
             strokeLinecap="round"
+            onClick={() => { const m = muscles.find(m => m.id === 'arms'); if (m) handleMuscleClick(m); }}
+            className="cursor-pointer"
           />
           <motion.path
             d="M75 55 L85 100"
             stroke={getMuscleColor('arms')}
             strokeWidth="8"
             strokeLinecap="round"
+            onClick={() => { const m = muscles.find(m => m.id === 'arms'); if (m) handleMuscleClick(m); }}
+            className="cursor-pointer"
           />
 
           {/* Quads */}
@@ -92,12 +122,24 @@ export const LivingAnatomyModel: React.FC = () => {
             stroke={getMuscleColor('quads')}
             strokeWidth="12"
             strokeLinecap="round"
+            className="cursor-pointer"
+            animate={{
+              filter: muscles.find(m => m.id === 'quads')?.status === 'OVERREACHING' ? ['drop-shadow(0 0 2px #ef4444)', 'drop-shadow(0 0 12px #ef4444)', 'drop-shadow(0 0 2px #ef4444)'] : 'none'
+            }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            onClick={() => { const m = muscles.find(m => m.id === 'quads'); if (m) handleMuscleClick(m); }}
           />
           <motion.path
             d="M65 120 L52 180"
             stroke={getMuscleColor('quads')}
             strokeWidth="12"
             strokeLinecap="round"
+            className="cursor-pointer"
+            animate={{
+              filter: muscles.find(m => m.id === 'quads')?.status === 'OVERREACHING' ? ['drop-shadow(0 0 2px #ef4444)', 'drop-shadow(0 0 12px #ef4444)', 'drop-shadow(0 0 2px #ef4444)'] : 'none'
+            }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            onClick={() => { const m = muscles.find(m => m.id === 'quads'); if (m) handleMuscleClick(m); }}
           />
         </svg>
 

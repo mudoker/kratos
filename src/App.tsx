@@ -1,13 +1,32 @@
+import { useEffect } from 'react';
 import { useAppStore } from './store/useAppStore';
 import { ClinicalDashboard } from './components/dashboard/ClinicalDashboard';
 import { CommandCenter } from './components/ai/CommandCenter';
+import { AgenticOverlays } from './components/ai/AgenticOverlays';
+import { haptics } from './lib/ui/feedback';
 import { Shield, Sparkles } from 'lucide-react';
 
 function App() {
-  const { setCommandCenterOpen } = useAppStore();
+  const { setCommandCenterOpen,  } = useAppStore();
+
+  useEffect(() => {
+    const handleGlobalHotkeys = (e: KeyboardEvent) => {
+      // Shift + W to toggle active workout (demo)
+      if (e.shiftKey && e.key.toLowerCase() === 'w') {
+        haptics.tap();
+        console.log("OS: Workout context requested via hotkey");
+      }
+      if (e.key === 'Escape') {
+        setCommandCenterOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalHotkeys);
+    return () => window.removeEventListener('keydown', handleGlobalHotkeys);
+  }, [setCommandCenterOpen]);
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#050505] text-white selection:bg-blue-500/30 font-sans">
       {/* Navigation / Header */}
       <nav className="h-16 border-b border-white/5 flex items-center justify-between px-6 lg:px-10 sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-xl">
         <div className="flex items-center space-x-3 group cursor-default">
@@ -22,8 +41,8 @@ function App() {
 
         <div className="flex items-center space-x-6">
            <button 
-             onClick={() => setCommandCenterOpen(true)}
-             className="flex items-center space-x-3 bg-white/[0.03] border border-white/10 hover:border-white/20 px-4 py-2 rounded-xl transition-all group"
+             onClick={() => { haptics.tap(); setCommandCenterOpen(true); }}
+             className="flex items-center space-x-3 bg-white/[0.03] border border-white/10 hover:border-white/20 px-4 py-2 rounded-xl transition-all group active:scale-95"
            >
               <div className="flex items-center -space-x-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cmd</span>
@@ -54,6 +73,7 @@ function App() {
 
       {/* Overlays */}
       <CommandCenter />
+      <AgenticOverlays />
 
       {/* Global Background Glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] -z-10 pointer-events-none" />

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { LivingAnatomyModel } from '../anatomy/LivingAnatomyModel';
 import { MetabolicTrajectoryChart } from './MetabolicTrajectoryChart';
 import { BanisterModelChart } from './BanisterModelChart';
@@ -7,14 +8,23 @@ import { InWorkoutCrucible } from '../workout/InWorkoutCrucible';
 import { Activity, Battery, Flame, Zap, AlertTriangle } from 'lucide-react';
 import { db } from '../../lib/db/dexie';
 import { calculateHRS, calculateACWR, getACWRStatus } from '../../lib/science/models';
+import { Sparkline } from '../ui/Sparkline';
+import { useAgenticOS } from '../../hooks/useAgenticOS';
 
 export const ClinicalDashboard: React.FC = () => {
   const [stats, setStats] = useState({
     hrs: 0,
     acwr: 1.0,
     status: { label: 'Optimal', color: 'text-green-400', alert: false },
-    netCals: 0
+    netCals: 0,
+    trends: {
+      hrs: [65, 68, 72, 80, 78, 82, 88],
+      cals: [2400, 2600, 2550, 2800, 2900, 2700, 2500],
+      fatigue: [0.8, 0.9, 1.1, 1.2, 1.1, 1.0, 1.05]
+    }
   });
+
+  useAgenticOS(stats.hrs);
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -23,19 +33,19 @@ export const ClinicalDashboard: React.FC = () => {
       const biometrics = await db.biometrics.orderBy('date').toArray();
       const lastWeight = biometrics[biometrics.length - 1]?.weight || 88;
 
-      // Mock tonnage for ACWR demonstration
       const acuteTonnage = [5000, 5200, 4800, 5500, 5100, 5300, 5400];
       const chronicTonnage = Array(28).fill(5000);
       const acwrValue = calculateACWR(acuteTonnage, chronicTonnage);
 
       if (lastSleep && lastNutrition) {
         const hrsValue = calculateHRS(lastSleep, lastNutrition, lastWeight, 2500, acwrValue);
-        setStats({
+        setStats(prev => ({
+          ...prev,
           hrs: hrsValue,
           acwr: acwrValue,
           status: getACWRStatus(acwrValue),
-          netCals: lastNutrition.kcals - 2800 // Mock TDEE
-        });
+          netCals: lastNutrition.kcals - 2800
+        }));
       }
     };
     fetchDashboardStats();
@@ -46,20 +56,27 @@ export const ClinicalDashboard: React.FC = () => {
       {/* Top Stats Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Readiness', value: stats.hrs, icon: <Zap size={16} />, color: stats.hrs < 60 ? 'text-red-400' : 'text-blue-400' },
-          { label: 'ACWR Status', value: stats.status.label, icon: <Activity size={16} />, color: stats.status.color },
-          { label: 'Net Calories', value: stats.netCals > 0 ? `+${stats.netCals}` : stats.netCals, icon: <Flame size={16} />, color: 'text-amber-400' },
-          { label: 'System Fatigue', value: stats.acwr.toFixed(2), icon: <Battery size={16} />, color: stats.acwr > 1.3 ? 'text-red-400' : 'text-green-400' },
+          { label: 'Readiness', value: stats.hrs, icon: <Zap size={16} />, color: stats.hrs < 60 ? 'text-red-400' : 'text-blue-400', trend: stats.trends.hrs },
+          { label: 'ACWR Status', value: stats.status.label, icon: <Activity size={16} />, color: stats.status.color, trend: stats.trends.fatigue },
+          { label: 'Net Calories', value: stats.netCals > 0 ? `+${stats.netCals}` : stats.netCals, icon: <Flame size={16} />, color: 'text-amber-400', trend: stats.trends.cals },
+          { label: 'System Fatigue', value: stats.acwr.toFixed(2), icon: <Battery size={16} />, color: stats.acwr > 1.3 ? 'text-red-400' : 'text-green-400', trend: stats.trends.fatigue },
         ].map((stat, i) => (
-          <div key={i} className="bg-white/[0.03] border border-white/5 p-4 rounded-xl flex items-center justify-between">
+          <motion.div 
+            key={i} 
+            whileTap={{ scale: 0.97 }}
+            className="bg-white/[0.03] border border-white/5 p-4 rounded-xl flex items-center justify-between hover:bg-white/[0.05] transition-all cursor-default group"
+          >
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{stat.label}</p>
+              <div className="flex items-center">
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{stat.label}</p>
+                <Sparkline data={stat.trend} color={stat.color.replace('text-', '').replace('-400', '')} />
+              </div>
               <p className={`text-xl font-mono font-bold ${stat.color}`}>{stat.value}</p>
             </div>
-            <div className={`p-2 bg-white/5 rounded-lg ${stat.color}`}>
+            <div className={`p-2 bg-white/5 rounded-lg ${stat.color} group-hover:scale-110 transition-transform`}>
               {stat.icon}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
