@@ -12,6 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Secrets and Credentials
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials.json
+secrets.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +31,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS Files
+Thumbs.db
+db.db
+*.db
