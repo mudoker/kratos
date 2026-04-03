@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { LivingAnatomyModel } from '../anatomy/LivingAnatomyModel';
 import { MetabolicTrajectoryChart } from './MetabolicTrajectoryChart';
@@ -10,8 +10,9 @@ import { db } from '../../lib/db/dexie';
 import { calculateHRS, calculateACWR, getACWRStatus } from '../../lib/science/models';
 import { Sparkline } from '../ui/Sparkline';
 import { useAgenticOS } from '../../hooks/useAgenticOS';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 
-export const ClinicalDashboard: React.FC = () => {
+export const ClinicalDashboard: React.FC = React.memo(() => {
   const [stats, setStats] = useState({
     hrs: 0,
     acwr: 1.0,
@@ -28,39 +29,45 @@ export const ClinicalDashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
-      const lastSleep = await db.sleep.orderBy('date').last();
-      const lastNutrition = await db.nutrition.orderBy('timestamp').last();
-      const biometrics = await db.biometrics.orderBy('date').toArray();
-      const lastWeight = biometrics[biometrics.length - 1]?.weight || 88;
+      try {
+        const lastSleep = await db.sleep.orderBy('date').last();
+        const lastNutrition = await db.nutrition.orderBy('timestamp').last();
+        const biometrics = await db.biometrics.orderBy('date').toArray();
+        const lastWeight = biometrics[biometrics.length - 1]?.weight || 88;
 
-      const acuteTonnage = [5000, 5200, 4800, 5500, 5100, 5300, 5400];
-      const chronicTonnage = Array(28).fill(5000);
-      const acwrValue = calculateACWR(acuteTonnage, chronicTonnage);
+        const acuteTonnage = [5000, 5200, 4800, 5500, 5100, 5300, 5400];
+        const chronicTonnage = Array(28).fill(5000);
+        const acwrValue = calculateACWR(acuteTonnage, chronicTonnage);
 
-      if (lastSleep && lastNutrition) {
-        const hrsValue = calculateHRS(lastSleep, lastNutrition, lastWeight, 2500, acwrValue);
-        setStats(prev => ({
-          ...prev,
-          hrs: hrsValue,
-          acwr: acwrValue,
-          status: getACWRStatus(acwrValue),
-          netCals: lastNutrition.kcals - 2800
-        }));
+        if (lastSleep && lastNutrition) {
+          const hrsValue = calculateHRS(lastSleep, lastNutrition, lastWeight, 2500, acwrValue);
+          setStats(prev => ({
+            ...prev,
+            hrs: hrsValue,
+            acwr: acwrValue,
+            status: getACWRStatus(acwrValue),
+            netCals: lastNutrition.kcals - 2800
+          }));
+        }
+      } catch (err) {
+        console.error("Dexie Query Failed:", err);
       }
     };
     fetchDashboardStats();
   }, []);
 
+  const memoizedStats = useMemo(() => [
+    { label: 'Readiness', value: stats.hrs, icon: <Zap size={16} />, color: stats.hrs < 60 ? 'text-red-400' : 'text-blue-400', trend: stats.trends.hrs },
+    { label: 'ACWR Status', value: stats.status.label, icon: <Activity size={16} />, color: stats.status.color, trend: stats.trends.fatigue },
+    { label: 'Net Calories', value: stats.netCals > 0 ? `+${stats.netCals}` : stats.netCals, icon: <Flame size={16} />, color: 'text-amber-400', trend: stats.trends.cals },
+    { label: 'System Fatigue', value: stats.acwr.toFixed(2), icon: <Battery size={16} />, color: stats.acwr > 1.3 ? 'text-red-400' : 'text-green-400', trend: stats.trends.fatigue },
+  ], [stats]);
+
   return (
     <div className="p-6 lg:p-10 space-y-10 max-w-[1600px] mx-auto">
       {/* Top Stats Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Readiness', value: stats.hrs, icon: <Zap size={16} />, color: stats.hrs < 60 ? 'text-red-400' : 'text-blue-400', trend: stats.trends.hrs },
-          { label: 'ACWR Status', value: stats.status.label, icon: <Activity size={16} />, color: stats.status.color, trend: stats.trends.fatigue },
-          { label: 'Net Calories', value: stats.netCals > 0 ? `+${stats.netCals}` : stats.netCals, icon: <Flame size={16} />, color: 'text-amber-400', trend: stats.trends.cals },
-          { label: 'System Fatigue', value: stats.acwr.toFixed(2), icon: <Battery size={16} />, color: stats.acwr > 1.3 ? 'text-red-400' : 'text-green-400', trend: stats.trends.fatigue },
-        ].map((stat, i) => (
+        {memoizedStats.map((stat, i) => (
           <motion.div 
             key={i} 
             whileTap={{ scale: 0.97 }}
@@ -91,7 +98,7 @@ export const ClinicalDashboard: React.FC = () => {
       )}
       
       {stats.hrs < 60 && (
-        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
+        <div className="bg-amber-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
            <Zap size={24} className="animate-pulse" />
            <div>
              <h4 className="font-bold uppercase tracking-tight">System Recalibration: Active Recovery</h4>
@@ -103,8 +110,12 @@ export const ClinicalDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Living Model & Workout */}
         <div className="lg:col-span-4 space-y-8">
-          <LivingAnatomyModel />
-          <InWorkoutCrucible />
+          <ErrorBoundary>
+            <LivingAnatomyModel />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <InWorkoutCrucible />
+          </ErrorBoundary>
         </div>
 
         {/* Center/Right Column: Analytics */}
@@ -134,4 +145,4 @@ export const ClinicalDashboard: React.FC = () => {
       </div>
     </div>
   );
-};
+});

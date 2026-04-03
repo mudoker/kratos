@@ -1,6 +1,9 @@
 import { db } from './dexie';
 
 export const seedDatabase = async () => {
+  const isDemo = localStorage.getItem('kratos_account_type') === 'demo';
+  if (!isDemo) return;
+
   const workoutCount = await db.workouts.count();
   if (workoutCount > 0) return;
 

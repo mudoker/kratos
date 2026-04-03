@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Play, Timer, TrendingDown, AlertCircle } from 'lucide-react';
 import { getRecommendedRest } from '../../lib/science/models';
 import { haptics, speak } from '../../lib/ui/feedback';
 
-export const InWorkoutCrucible: React.FC = () => {
+export const InWorkoutCrucible: React.FC = React.memo(() => {
   const [activeSet, setActiveSet] = useState<number>(1);
   const [exerciseName, setExerciseName] = useState('Leg Press');
   const [weight, setWeight] = useState(100);
@@ -17,7 +17,7 @@ export const InWorkoutCrucible: React.FC = () => {
   const [atpWarning, setAtpWarning] = useState(false);
 
   useEffect(() => {
-    let interval: any;
+    let interval: ReturnType<typeof setInterval>;
     if (isResting) {
       interval = setInterval(() => {
         setRestTime(prev => prev + 1);
@@ -28,10 +28,10 @@ export const InWorkoutCrucible: React.FC = () => {
         }
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => clearInterval(interval!);
   }, [isResting, restTime, targetRest, activeSet, weight]);
 
-  const handleCompleteSet = () => {
+  const handleCompleteSet = useCallback(() => {
     haptics.success();
     
     // AI Spotter Intervention
@@ -48,9 +48,9 @@ export const InWorkoutCrucible: React.FC = () => {
     setIsResting(true);
     setRestTime(0);
     setActiveSet(prev => prev + 1);
-  };
+  }, [weight, rpe, exerciseName]);
 
-  const handleStartSet = () => {
+  const handleStartSet = useCallback(() => {
     if (isResting && restTime < targetRest * 0.5) {
       haptics.warning();
       setAtpWarning(true);
@@ -60,7 +60,7 @@ export const InWorkoutCrucible: React.FC = () => {
     haptics.tap();
     setIsResting(false);
     setAtpWarning(false);
-  };
+  }, [isResting, restTime, targetRest]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -181,4 +181,4 @@ export const InWorkoutCrucible: React.FC = () => {
       </div>
     </div>
   );
-};
+});
