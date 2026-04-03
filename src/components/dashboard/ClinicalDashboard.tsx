@@ -1,21 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LivingAnatomyModel } from '../anatomy/LivingAnatomyModel';
 import { MetabolicTrajectoryChart } from './MetabolicTrajectoryChart';
 import { BanisterModelChart } from './BanisterModelChart';
 import { MacroHeatmap } from './MacroHeatmap';
 import { InWorkoutCrucible } from '../workout/InWorkoutCrucible';
-import { Activity, Battery, Flame, Zap } from 'lucide-react';
+import { Activity, Battery, Flame, Zap, AlertTriangle } from 'lucide-react';
+import { db } from '../../lib/db/dexie';
+import { calculateHRS, calculateACWR, getACWRStatus } from '../../lib/science/models';
 
 export const ClinicalDashboard: React.FC = () => {
+  const [stats, setStats] = useState({
+    hrs: 0,
+    acwr: 1.0,
+    status: { label: 'Optimal', color: 'text-green-400', alert: false },
+    netCals: 0
+  });
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      const lastSleep = await db.sleep.orderBy('date').last();
+      const lastNutrition = await db.nutrition.orderBy('timestamp').last();
+      const biometrics = await db.biometrics.orderBy('date').toArray();
+      const lastWeight = biometrics[biometrics.length - 1]?.weight || 88;
+
+      // Mock tonnage for ACWR demonstration
+      const acuteTonnage = [5000, 5200, 4800, 5500, 5100, 5300, 5400];
+      const chronicTonnage = Array(28).fill(5000);
+      const acwrValue = calculateACWR(acuteTonnage, chronicTonnage);
+
+      if (lastSleep && lastNutrition) {
+        const hrsValue = calculateHRS(lastSleep, lastNutrition, lastWeight, 2500, acwrValue);
+        setStats({
+          hrs: hrsValue,
+          acwr: acwrValue,
+          status: getACWRStatus(acwrValue),
+          netCals: lastNutrition.kcals - 2800 // Mock TDEE
+        });
+      }
+    };
+    fetchDashboardStats();
+  }, []);
+
   return (
     <div className="p-6 lg:p-10 space-y-10 max-w-[1600px] mx-auto">
       {/* Top Stats Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Readiness', value: '88', icon: <Zap size={16} />, color: 'text-blue-400' },
-          { label: 'CNS Fatigue', value: 'Low', icon: <Battery size={16} />, color: 'text-green-400' },
-          { label: 'Net Calories', value: '-350', icon: <Flame size={16} />, color: 'text-amber-400' },
-          { label: 'SFR Status', value: 'Adaptive', icon: <Activity size={16} />, color: 'text-purple-400' },
+          { label: 'Readiness', value: stats.hrs, icon: <Zap size={16} />, color: stats.hrs < 60 ? 'text-red-400' : 'text-blue-400' },
+          { label: 'ACWR Status', value: stats.status.label, icon: <Activity size={16} />, color: stats.status.color },
+          { label: 'Net Calories', value: stats.netCals > 0 ? `+${stats.netCals}` : stats.netCals, icon: <Flame size={16} />, color: 'text-amber-400' },
+          { label: 'System Fatigue', value: stats.acwr.toFixed(2), icon: <Battery size={16} />, color: stats.acwr > 1.3 ? 'text-red-400' : 'text-green-400' },
         ].map((stat, i) => (
           <div key={i} className="bg-white/[0.03] border border-white/5 p-4 rounded-xl flex items-center justify-between">
             <div>
@@ -28,6 +62,26 @@ export const ClinicalDashboard: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {stats.status.alert && (
+        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center space-x-4 text-red-500">
+           <AlertTriangle size={24} />
+           <div>
+             <h4 className="font-bold uppercase tracking-tight">Injury Danger Zone Detected</h4>
+             <p className="text-sm">Your Acute:Chronic workload ratio is {stats.acwr.toFixed(2)}. Dropping volume by 20% is strongly suggested to prevent systemic failure.</p>
+           </div>
+        </div>
+      )}
+      
+      {stats.hrs < 60 && (
+        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center space-x-4 text-amber-500">
+           <Zap size={24} className="animate-pulse" />
+           <div>
+             <h4 className="font-bold uppercase tracking-tight">System Recalibration: Active Recovery</h4>
+             <p className="text-sm">Readiness Score is critical ({stats.hrs}). AI routes current block to Deload status. Skip heavy compounds today.</p>
+           </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Living Model & Workout */}

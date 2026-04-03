@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Play,  Timer, TrendingDown } from 'lucide-react';
-
+import { ChevronRight, Play, Timer, TrendingDown } from 'lucide-react';
+import { getRecommendedRest } from '../../lib/science/models';
 
 export const InWorkoutCrucible: React.FC = () => {
   const [activeSet, setActiveSet] = useState<number>(1);
+  const [exerciseName, setExerciseName] = useState('Leg Press');
   const [weight, setWeight] = useState(100);
   const [reps, setReps] = useState(10);
-  const [rir, setRir] = useState(2);
+  const [rpe, setRpe] = useState(8);
   const [restTime, setRestTime] = useState(0);
+  const [targetRest, setTargetRest] = useState(180);
   const [isResting, setIsResting] = useState(false);
   const [autoRegulated, setAutoRegulated] = useState(false);
 
@@ -23,17 +25,19 @@ export const InWorkoutCrucible: React.FC = () => {
   }, [isResting]);
 
   const handleCompleteSet = () => {
-    // Auto-regulation logic: If RIR hits 0, suggest dropping weight for next set
-    if (rir === 0) {
+    if (rpe >= 10) {
       setWeight(prev => Math.round(prev * 0.95));
       setAutoRegulated(true);
       setTimeout(() => setAutoRegulated(false), 5000);
     }
-    
+
+    const nextRest = getRecommendedRest(exerciseName, rpe);
+    setTargetRest(nextRest);
     setIsResting(true);
     setRestTime(0);
     setActiveSet(prev => prev + 1);
   };
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -49,15 +53,21 @@ export const InWorkoutCrucible: React.FC = () => {
             <Play size={16} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-widest leading-tight">Leg Press</h3>
+            <input 
+              value={exerciseName}
+              onChange={(e) => setExerciseName(e.target.value)}
+              className="bg-transparent border-none text-sm font-bold text-white uppercase tracking-widest leading-tight focus:outline-none focus:ring-1 focus:ring-white/20 rounded"
+            />
             <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Set {activeSet} of 4</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2 bg-white/5 px-3 py-1.5 rounded-full">
-           <Timer size={14} className={isResting ? 'text-blue-400' : 'text-muted-foreground'} />
-           <span className={`text-xs font-mono font-bold ${isResting ? 'text-blue-400' : 'text-muted-foreground'}`}>
-             {formatTime(restTime)}
-           </span>
+        <div className="flex flex-col items-end">
+          <div className="flex items-center space-x-2 bg-white/5 px-3 py-1.5 rounded-full">
+             <Timer size={14} className={isResting ? 'text-blue-400' : 'text-muted-foreground'} />
+             <span className={`text-xs font-mono font-bold ${isResting ? 'text-blue-400' : 'text-muted-foreground'}`}>
+               {formatTime(restTime)} / {formatTime(targetRest)}
+             </span>
+          </div>
         </div>
       </div>
 
@@ -82,13 +92,13 @@ export const InWorkoutCrucible: React.FC = () => {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">RIR</label>
+            <label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">RPE</label>
             <select 
-              value={rir} 
-              onChange={(e) => setRir(Number(e.target.value))}
+              value={rpe} 
+              onChange={(e) => setRpe(Number(e.target.value))}
               className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-lg font-mono font-bold text-white focus:outline-none appearance-none"
             >
-              {[0, 1, 2, 3, 4, 5].map(v => <option key={v} value={v} className="bg-[#0a0a0c]">{v}</option>)}
+              {[6, 7, 8, 9, 10].map(v => <option key={v} value={v} className="bg-[#0a0a0c]">{v}</option>)}
             </select>
           </div>
         </div>

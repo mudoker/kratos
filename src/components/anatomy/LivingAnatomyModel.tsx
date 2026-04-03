@@ -1,29 +1,52 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { db } from '../../lib/db/dexie';
+import { VOLUME_LANDMARKS, getMuscleStatus } from '../../lib/science/models';
 
-// Mock SFR data (0 to 1, where 1 is MAV achieved, >1 is overreached)
 interface MuscleState {
   id: string;
   name: string;
-  sfr: number; // 0 (recovered) to 1 (full volume)
-  status: 'Recovered' | 'Adaptive' | 'Overreached';
+  sfr: number;
+  status: string;
 }
 
-const MUSCLE_GROUPS: MuscleState[] = [
-  { id: 'chest', name: 'Pectorals', sfr: 0.8, status: 'Adaptive' },
-  { id: 'quads', name: 'Quadriceps', sfr: 1.2, status: 'Overreached' },
-  { id: 'back', name: 'Latissimus Dorsi', sfr: 0.2, status: 'Recovered' },
-  { id: 'shoulders', name: 'Deltoids', sfr: 0.5, status: 'Recovered' },
-  { id: 'arms', name: 'Biceps/Triceps', sfr: 0.9, status: 'Adaptive' },
+const MUSCLE_META = [
+  { id: 'chest', name: 'Pectorals' },
+  { id: 'quads', name: 'Quadriceps' },
+  { id: 'back', name: 'Latissimus Dorsi' },
+  { id: 'shoulders', name: 'Deltoids' },
+  { id: 'arms', name: 'Biceps/Triceps' },
 ];
 
 const getColor = (sfr: number) => {
-  if (sfr < 0.4) return '#3b82f6'; // Bright Blue (Recovered)
-  if (sfr <= 1.0) return '#f59e0b'; // Glowing Amber (MAV)
-  return '#ef4444'; // Deep Red (MRV Exceeded)
+  if (sfr < 0.4) return '#3b82f6'; // Bright Blue
+  if (sfr <= 1.0) return '#f59e0b'; // Glowing Amber
+  return '#ef4444'; // Deep Red
 };
 
 export const LivingAnatomyModel: React.FC = () => {
+  const [muscles, setMuscles] = useState<MuscleState[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const latestBiometrics = await db.biometrics.orderBy('date').last();
+      const sfr = latestBiometrics?.sfr || {};
+
+      const updated = MUSCLE_META.map(m => ({
+        ...m,
+        sfr: sfr[m.id] || 0.2,
+        status: getMuscleStatus((sfr[m.id] || 0.2) * 20, VOLUME_LANDMARKS[m.id] || VOLUME_LANDMARKS.chest)
+      }));
+      setMuscles(updated);
+    };
+    fetchData();
+  }, []);
+
+  const getMuscleColor = (id: string) => {
+    const m = muscles.find(m => m.id === id);
+    return getColor(m?.sfr || 0);
+  };
+
   return (
     <div className="relative bg-black/40 border border-white/5 rounded-2xl p-6 h-full flex flex-col items-center">
       <div className="absolute top-4 left-4">
@@ -39,26 +62,26 @@ export const LivingAnatomyModel: React.FC = () => {
           {/* Torso/Chest */}
           <motion.path
             d="M35 40 L65 40 L70 80 L30 80 Z"
-            fill={getColor(MUSCLE_GROUPS.find(m => m.id === 'chest')?.sfr || 0)}
+            fill={getMuscleColor('chest')}
             initial={{ opacity: 0.5 }}
             animate={{ opacity: 1 }}
             className="cursor-help transition-colors duration-1000"
           />
 
           {/* Shoulders */}
-          <motion.circle cx="30" cy="45" r="8" fill={getColor(MUSCLE_GROUPS.find(m => m.id === 'shoulders')?.sfr || 0)} />
-          <motion.circle cx="70" cy="45" r="8" fill={getColor(MUSCLE_GROUPS.find(m => m.id === 'shoulders')?.sfr || 0)} />
+          <motion.circle cx="30" cy="45" r="8" fill={getMuscleColor('shoulders')} />
+          <motion.circle cx="70" cy="45" r="8" fill={getMuscleColor('shoulders')} />
 
           {/* Arms */}
           <motion.path
             d="M25 55 L15 100"
-            stroke={getColor(MUSCLE_GROUPS.find(m => m.id === 'arms')?.sfr || 0)}
+            stroke={getMuscleColor('arms')}
             strokeWidth="8"
             strokeLinecap="round"
           />
           <motion.path
             d="M75 55 L85 100"
-            stroke={getColor(MUSCLE_GROUPS.find(m => m.id === 'arms')?.sfr || 0)}
+            stroke={getMuscleColor('arms')}
             strokeWidth="8"
             strokeLinecap="round"
           />
@@ -66,20 +89,20 @@ export const LivingAnatomyModel: React.FC = () => {
           {/* Quads */}
           <motion.path
             d="M35 120 L48 180"
-            stroke={getColor(MUSCLE_GROUPS.find(m => m.id === 'quads')?.sfr || 0)}
+            stroke={getMuscleColor('quads')}
             strokeWidth="12"
             strokeLinecap="round"
           />
           <motion.path
             d="M65 120 L52 180"
-            stroke={getColor(MUSCLE_GROUPS.find(m => m.id === 'quads')?.sfr || 0)}
+            stroke={getMuscleColor('quads')}
             strokeWidth="12"
             strokeLinecap="round"
           />
         </svg>
 
-        {/* Floating Tooltips (Simplified) */}
-        {MUSCLE_GROUPS.map((muscle, i) => (
+        {/* Floating Tooltips */}
+        {muscles.map((muscle, i) => (
           <div 
             key={muscle.id}
             className="absolute hidden lg:block"
