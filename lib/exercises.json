@@ -458,5 +458,670 @@
     ],
     "defaultRestSeconds": 90,
     "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "diamond-push-up",
+    "name": "Diamond Push-Up",
+    "category": "Push",
+    "primaryMuscles": ["Triceps"],
+    "secondaryMuscles": ["Chest", "Shoulders"],
+    "bodyRegionSlugs": ["triceps", "chest", "deltoids"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Place hands close together so thumbs and index fingers form a diamond.",
+      "Perform a push-up maintaining a straight body line."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "arnold-press",
+    "name": "Arnold Press",
+    "category": "Push",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Triceps"],
+    "bodyRegionSlugs": ["deltoids", "triceps"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Start with dumbbells in front of shoulders, palms facing you.",
+      "Rotate palms outward as you press the weights overhead."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "hammer-curl",
+    "name": "Hammer Curl",
+    "category": "Pull",
+    "primaryMuscles": ["Forearms", "Biceps"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["forearm", "biceps"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Hold dumbbells with a neutral grip (palms facing each other).",
+      "Curl the weights while keeping palms facing in."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "russian-twist",
+    "name": "Russian Twist",
+    "category": "Core",
+    "primaryMuscles": ["Abs", "Obliques"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["abs", "obliques"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Sit with knees bent, feet off the floor.",
+      "Twist your torso from side to side, touching the floor."
+    ],
+    "defaultRestSeconds": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "romanian-deadlift",
+    "name": "Romanian Deadlift",
+    "category": "Legs",
+    "primaryMuscles": ["Hamstrings", "Glutes"],
+    "secondaryMuscles": ["Lower Back"],
+    "bodyRegionSlugs": ["hamstring", "gluteal", "lower-back"],
+    "equipment": "Barbell",
+    "instructions": [
+      "Hold the bar at hip level.",
+      "Hinge at the hips, keeping the bar close to your legs.",
+      "Lower until you feel a stretch in your hamstrings.",
+      "Return to the starting position by extending your hips."
+    ],
+    "defaultRestSeconds": 120,
+    "imageUrl": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "box-jump",
+    "name": "Box Jump",
+    "category": "Conditioning",
+    "primaryMuscles": ["Quadriceps", "Glutes"],
+    "secondaryMuscles": ["Calves"],
+    "bodyRegionSlugs": ["quadriceps", "gluteal", "calves"],
+    "equipment": "Box",
+    "instructions": [
+      "Stand in front of a box.",
+      "Jump onto the box landing softly with both feet.",
+      "Step back down and repeat."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "kroc-row",
+    "name": "Kroc Row",
+    "category": "Pull",
+    "primaryMuscles": ["Upper Back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Forearms"],
+    "bodyRegionSlugs": ["upper-back", "biceps", "forearm"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Use a heavy dumbbell and perform high-rep rows.",
+      "Allow for some body English to move the heavy weight."
+    ],
+    "defaultRestSeconds": 120,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "machine-shoulder-press",
+    "name": "Machine Shoulder Press",
+    "category": "Push",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Triceps"],
+    "bodyRegionSlugs": ["deltoids", "triceps"],
+    "equipment": "Machine",
+    "instructions": [
+      "Sit in the shoulder press machine.",
+      "Press the handles overhead until arms are extended."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "cable-lateral-raise",
+    "name": "Cable Lateral Raise",
+    "category": "Push",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["deltoids"],
+    "equipment": "Cable",
+    "instructions": [
+      "Stand beside a cable machine.",
+      "Raise your arm out to the side until parallel with the floor."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "triceps-pushdown",
+    "name": "Triceps Pushdown",
+    "category": "Push",
+    "primaryMuscles": ["Triceps"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["triceps"],
+    "equipment": "Cable",
+    "instructions": [
+      "Grip the cable attachment and push down until arms are extended.",
+      "Keep elbows close to your body."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "cable-crunch",
+    "name": "Cable Crunch",
+    "category": "Core",
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["abs"],
+    "equipment": "Cable",
+    "instructions": [
+      "Kneel in front of a cable machine.",
+      "Crunch down bringing your elbows toward your knees."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "hanging-leg-raise",
+    "name": "Hanging Leg Raise",
+    "category": "Core",
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Hip Flexors"],
+    "bodyRegionSlugs": ["abs"],
+    "equipment": "Pull-up Bar",
+    "instructions": [
+      "Hang from a bar and raise your legs until parallel with the floor."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "machine-chest-press",
+    "name": "Machine Chest Press",
+    "category": "Push",
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Triceps", "Shoulders"],
+    "bodyRegionSlugs": ["chest", "triceps", "deltoids"],
+    "equipment": "Machine",
+    "instructions": [
+      "Sit in the chest press machine.",
+      "Press the handles forward until arms are extended."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "push-up",
+    "name": "Push-Up",
+    "category": "Push",
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Triceps", "Shoulders"],
+    "bodyRegionSlugs": ["chest", "triceps", "deltoids"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Place hands shoulder-width apart on the floor.",
+      "Lower your chest until just above the floor.",
+      "Push back up to the starting position."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "dumbbell-lateral-raise",
+    "name": "Dumbbell Lateral Raise",
+    "category": "Push",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["deltoids"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Hold dumbbells at your sides.",
+      "Raise arms out to the sides until parallel with the floor."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "decline-sit-up",
+    "name": "Decline Sit-Up",
+    "category": "Core",
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["abs"],
+    "equipment": "Bench",
+    "instructions": [
+      "Sit on a decline bench with feet secured.",
+      "Lower your torso then sit back up."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "lat-pulldown",
+    "name": "Lat Pulldown",
+    "category": "Pull",
+    "primaryMuscles": ["Lats"],
+    "secondaryMuscles": ["Biceps", "Upper Back"],
+    "bodyRegionSlugs": ["upper-back", "biceps"],
+    "equipment": "Cable",
+    "instructions": [
+      "Sit at the pulldown machine.",
+      "Pull the bar down to your upper chest."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "single-arm-dumbbell-row",
+    "name": "Single-Arm Dumbbell Row",
+    "category": "Pull",
+    "primaryMuscles": ["Upper Back", "Lats"],
+    "secondaryMuscles": ["Biceps"],
+    "bodyRegionSlugs": ["upper-back", "biceps"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Place one hand and knee on a bench.",
+      "Row the dumbbell with your other hand."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "rear-delt-fly",
+    "name": "Rear Delt Fly",
+    "category": "Pull",
+    "primaryMuscles": ["Rear Delts"],
+    "secondaryMuscles": ["Upper Back"],
+    "bodyRegionSlugs": ["deltoids", "upper-back"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Bent over at the hips.",
+      "Raise dumbbells out to the sides focusing on the rear delts."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "chest-supported-row",
+    "name": "Chest-Supported Row",
+    "category": "Pull",
+    "primaryMuscles": ["Upper Back", "Lats"],
+    "secondaryMuscles": ["Biceps"],
+    "bodyRegionSlugs": ["upper-back", "biceps"],
+    "equipment": "Machine",
+    "instructions": [
+      "Lie face down on an incline bench or use a row machine.",
+      "Row the weights toward your body."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "cable-curl",
+    "name": "Cable Curl",
+    "category": "Pull",
+    "primaryMuscles": ["Biceps"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["biceps"],
+    "equipment": "Cable",
+    "instructions": [
+      "Grip the cable bar and curl upward."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "barbell-row",
+    "name": "Barbell Row",
+    "category": "Pull",
+    "primaryMuscles": ["Upper Back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Lower Back"],
+    "bodyRegionSlugs": ["upper-back", "biceps", "lower-back"],
+    "equipment": "Barbell",
+    "instructions": [
+      "Hinge at the hips with a slight knee bend.",
+      "Grip the bar and pull it toward your lower ribs.",
+      "Squeeze your shoulder blades at the top.",
+      "Lower the bar back to arms' length."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "hammer-curl-cable",
+    "name": "Cable Hammer Curl",
+    "category": "Pull",
+    "primaryMuscles": ["Forearms", "Biceps"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["forearm", "biceps"],
+    "equipment": "Cable",
+    "instructions": [
+      "Use a rope attachment on a low cable.",
+      "Curl the weight while keeping palms facing each other."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "cable-pullover",
+    "name": "Cable Pullover",
+    "category": "Pull",
+    "primaryMuscles": ["Lats", "Serratus"],
+    "secondaryMuscles": ["Triceps"],
+    "bodyRegionSlugs": ["upper-back", "triceps", "abs"],
+    "equipment": "Cable",
+    "instructions": [
+      "Stand facing the cable machine with a straight bar.",
+      "Pull the bar down to your thighs while keeping arms straight.",
+      "Focus on the lat and serratus stretch."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "scapular-push-up",
+    "name": "Scapular Push-Up",
+    "category": "Push",
+    "primaryMuscles": ["Serratus"],
+    "secondaryMuscles": ["Shoulders"],
+    "bodyRegionSlugs": ["deltoids", "upper-back"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Get into a plank position.",
+      "Lower your chest toward the floor without bending elbows.",
+      "Push back up by protracting your shoulder blades."
+    ],
+    "defaultRestSeconds": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "wrist-curl",
+    "name": "Wrist Curl",
+    "category": "Pull",
+    "primaryMuscles": ["Forearms"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["forearm"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Rest your forearms on a bench holding dumbbells.",
+      "Curl your wrists upward.",
+      "Lower under control."
+    ],
+    "defaultRestSeconds": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "decline-twist",
+    "name": "Decline Twist",
+    "category": "Core",
+    "primaryMuscles": ["Abs", "Obliques"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["abs", "obliques"],
+    "equipment": "Bench",
+    "instructions": [
+      "Sit on a decline bench.",
+      "Twist your torso from side to side while maintaining a 45-degree angle."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "arnold-press-seated",
+    "name": "Seated Arnold Press",
+    "category": "Push",
+    "primaryMuscles": ["Shoulders"],
+    "secondaryMuscles": ["Triceps"],
+    "bodyRegionSlugs": ["deltoids", "triceps"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Sit on a bench with back support.",
+      "Perform the Arnold Press movement with dumbbells."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "cable-fly-high",
+    "name": "High Cable Fly",
+    "category": "Push",
+    "primaryMuscles": ["Lower Chest"],
+    "secondaryMuscles": ["Shoulders"],
+    "bodyRegionSlugs": ["chest", "deltoids"],
+    "equipment": "Cable",
+    "instructions": [
+      "Set cables to the high position.",
+      "Bring handles together in a downward arc in front of your body."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "close-grip-bench-press",
+    "name": "Close Grip Bench Press",
+    "category": "Push",
+    "primaryMuscles": ["Triceps", "Chest"],
+    "secondaryMuscles": ["Shoulders"],
+    "bodyRegionSlugs": ["triceps", "chest", "deltoids"],
+    "equipment": "Barbell",
+    "instructions": [
+      "Lie on a bench and grip the bar with hands shoulder-width apart.",
+      "Lower the bar to your chest and press back up focusing on triceps."
+    ],
+    "defaultRestSeconds": 120,
+    "imageUrl": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "hammer-strength-row",
+    "name": "Hammer Strength Row",
+    "category": "Pull",
+    "primaryMuscles": ["Upper Back", "Lats"],
+    "secondaryMuscles": ["Biceps"],
+    "bodyRegionSlugs": ["upper-back", "biceps"],
+    "equipment": "Machine",
+    "instructions": [
+      "Sit in the machine and grip the handles.",
+      "Pull back while focusing on the mid-back contraction."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "reverse-curl",
+    "name": "Reverse Curl",
+    "category": "Pull",
+    "primaryMuscles": ["Forearms", "Biceps"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["forearm", "biceps"],
+    "equipment": "EZ Bar",
+    "instructions": [
+      "Grip the bar with palms facing down.",
+      "Curl the weight toward your shoulders."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "goblet-squat",
+    "name": "Goblet Squat",
+    "category": "Legs",
+    "primaryMuscles": ["Quadriceps"],
+    "secondaryMuscles": ["Glutes", "Core"],
+    "bodyRegionSlugs": ["quadriceps", "gluteal", "abs"],
+    "equipment": "Kettlebell",
+    "instructions": [
+      "Hold a weight at your chest.",
+      "Squat down keeping your chest up and core tight."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "hip-thrust",
+    "name": "Hip Thrust",
+    "category": "Legs",
+    "primaryMuscles": ["Glutes"],
+    "secondaryMuscles": ["Hamstrings"],
+    "bodyRegionSlugs": ["gluteal", "hamstring"],
+    "equipment": "Barbell",
+    "instructions": [
+      "Sit on the floor with your back against a bench.",
+      "Drive your hips upward against the barbell."
+    ],
+    "defaultRestSeconds": 120,
+    "imageUrl": "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "leg-press-standard",
+    "name": "Leg Press",
+    "category": "Legs",
+    "primaryMuscles": ["Quadriceps", "Glutes"],
+    "secondaryMuscles": ["Hamstrings"],
+    "bodyRegionSlugs": ["quadriceps", "gluteal", "hamstring"],
+    "equipment": "Machine",
+    "instructions": [
+      "Sit in the leg press machine.",
+      "Lower the weight until your knees are at 90 degrees.",
+      "Drive back up."
+    ],
+    "defaultRestSeconds": 120,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "mountain-climber",
+    "name": "Mountain Climber",
+    "category": "Core",
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Shoulders", "Heart"],
+    "bodyRegionSlugs": ["abs", "deltoids"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Start in a plank position.",
+      "Drive your knees toward your chest in a running motion."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1599058917232-d750c20070c2?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "bicycle-crunch",
+    "name": "Bicycle Crunch",
+    "category": "Core",
+    "primaryMuscles": ["Abs", "Obliques"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["abs", "obliques"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Lie on your back.",
+      "Bring opposite elbow toward opposite knee in a pedaling motion."
+    ],
+    "defaultRestSeconds": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "ab-wheel-rollout",
+    "name": "Ab Wheel Rollout",
+    "category": "Core",
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Lower Back", "Shoulders"],
+    "bodyRegionSlugs": ["abs", "lower-back", "deltoids"],
+    "equipment": "Ab Wheel",
+    "instructions": [
+      "Kneel holding the ab wheel handles.",
+      "Roll forward as far as possible while maintaining a flat back.",
+      "Pull back to the starting position."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "running-sprint",
+    "name": "Running (Sprints)",
+    "category": "Conditioning",
+    "primaryMuscles": ["Legs"],
+    "secondaryMuscles": ["Heart"],
+    "bodyRegionSlugs": ["quadriceps", "hamstring", "gluteal"],
+    "equipment": "None",
+    "instructions": [
+      "Run at maximum intensity for short durations."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "box-jump-high",
+    "name": "High Box Jump",
+    "category": "Conditioning",
+    "primaryMuscles": ["Legs"],
+    "secondaryMuscles": ["Explosiveness"],
+    "bodyRegionSlugs": ["quadriceps", "gluteal"],
+    "equipment": "Box",
+    "instructions": [
+      "Jump onto a high box focusing on maximum vertical power."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "bird-dog",
+    "name": "Bird Dog",
+    "category": "Mobility",
+    "primaryMuscles": ["Core"],
+    "secondaryMuscles": ["Balance"],
+    "bodyRegionSlugs": ["abs", "lower-back"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Get on all fours.",
+      "Extend opposite arm and leg simultaneously."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "cat-cow",
+    "name": "Cat-Cow",
+    "category": "Mobility",
+    "primaryMuscles": ["Spine"],
+    "secondaryMuscles": ["Core"],
+    "bodyRegionSlugs": ["lower-back", "upper-back"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Move from a rounded back to an arched back while on all fours."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "thoracic-rotation",
+    "name": "Thoracic Rotation",
+    "category": "Mobility",
+    "primaryMuscles": ["Upper Back"],
+    "secondaryMuscles": ["Shoulders"],
+    "bodyRegionSlugs": ["upper-back", "deltoids"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Kneel and rotate your upper body toward the ceiling."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "wall-slide",
+    "name": "Wall Slide",
+    "category": "Mobility",
+    "primaryMuscles": ["Shoulders", "Upper Back"],
+    "secondaryMuscles": [],
+    "bodyRegionSlugs": ["deltoids", "upper-back"],
+    "equipment": "Wall",
+    "instructions": [
+      "Stand with back against a wall.",
+      "Slide arms up and down the wall while maintaining contact."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop"
   }
 ]

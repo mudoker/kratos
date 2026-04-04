@@ -1,73 +1,47 @@
-# React + TypeScript + Vite
+# KRATOS: Athletic Stimulus System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Kratos is a specialized strength and physique management system designed for **true body recomposition**. It transforms a "skinny-fat" baseline into a dense, sharp, and highly functional "Athletic-Aesthetic" physique.
 
-Currently, two official plugins are available:
+## 🎯 The Mission
+To build a frame that is both visually striking and functionally capable—undoing the physical toll of a software development career while maintaining peak performance for the badminton court.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 1. Visual Objectives
+*   **Eradicate Skinny-Fat:** Strategic volume and LISS cardio to strip fat while maintaining muscle density.
+*   **The V-Taper:** Aggressive vertical pulling and side-delt priority for a wide upper frame.
+*   **Square Chest shelf:** Specific focus on incline pressing to create a dense, "square" aesthetic.
+*   **Posture Correction:** Dedicated "Anti-Desk Hunch" protocols (Face Pulls, Rear Delts) to reverse rounded shoulders.
 
-## React Compiler
+### 2. Performance Milestones
+*   **Vertical Pulling:** Progression from 0 to 8 strict dead-hang pull-ups.
+*   **Pushing Power:** High-rep pushup mastery (25+) and heavy dumbbell bench overload.
+*   **Anabolic Base:** Heavy Hack Squats and Split Squats to drive systemic growth.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠 Technical Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 📊 Biological Stimulus Analytics
+*   **Weighted Stimulus Heatmap:** A data-driven anatomy model that distinguishes between primary movers (100% credit) and secondary support tissue (20% credit).
+*   **Absolute Science Thresholds:** Muscle groups are rated from 1/4 (Maintenance) to 4/4 (Max Stimulus) based on absolute weekly set volume, not relative comparisons.
+*   **Interactive Hover:** Brighter intensity feedback when inspecting specific muscle regions.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 🏋️ Master Split Management
+*   **Master Plan v4:** A gym + badminton optimized rotation featuring heavy compounds, absolute grip utility, and teardrop quad focus.
+*   **Vertical Split Library:** A collapsible, drag-and-drop reorderable library of training phases.
+*   **Auto-Save Persistence:** Debounced persistence layer that saves your library order automatically as you organize.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 📈 Progression Lab
+*   **Automatic PR Extraction:** Real-time detection of personal records from logged workout sets.
+*   **Trend Visualization:** Professional area charts (`recharts`) tracking strength trajectory and baseline-to-peak growth.
+*   **Workout Studio:** Granular, set-by-set logging with support for weights, reps, and specific execution notes.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🚀 Built With
+*   **Framework:** Next.js 15 (App Router)
+*   **Styling:** Tailwind CSS 4
+*   **Animations:** Framer Motion
+*   **Charts:** Recharts
+*   **Database:** PostgreSQL (Pool & Transactions)
+*   **Intelligence:** Google AI (Gemini 2.0 Flash)
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+*Stay sharp. Lift heavy. Get those gains.*
