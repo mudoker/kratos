@@ -9,28 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const bodySlugs = new Set<BodyHighlightSlug>([
-  "trapezius",
-  "triceps",
-  "forearm",
-  "adductors",
-  "calves",
-  "neck",
-  "deltoids",
-  "hands",
-  "feet",
-  "head",
-  "ankles",
-  "tibialis",
-  "obliques",
-  "chest",
-  "biceps",
-  "abs",
-  "quadriceps",
-  "knees",
-  "upper-back",
-  "lower-back",
-  "hamstring",
-  "gluteal",
+  "trapezius", "triceps", "forearm", "adductors", "calves", "neck", "deltoids", "hands", "feet", "head", "ankles", "tibialis", "obliques", "chest", "biceps", "abs", "quadriceps", "knees", "upper-back", "lower-back", "hamstring", "gluteal",
 ]);
 
 const formatSlug = (slug: BodyHighlightSlug) => slug.replaceAll("-", " ");
@@ -50,22 +29,32 @@ export function MuscleMap({
   const [hoveredSlug, setHoveredSlug] = useState<BodyHighlightSlug | null>(null);
 
   const data = useMemo(() => {
+    // If we have intensity data (heatmap mode)
     if (intensities) {
-      return intensities.map((item) => {
-        const isHovered = hoveredSlug === item.slug;
-        return {
-          slug: item.slug,
-          // Levels 1-4 are base, 5-8 are "brightened" versions of 1-4
-          intensity: isHovered ? item.intensity + 4 : item.intensity,
-        };
-      });
+      const activeData = intensities.map((item) => ({
+        slug: item.slug,
+        intensity: hoveredSlug === item.slug ? item.intensity + 4 : item.intensity,
+      }));
+
+      // If the currently hovered muscle isn't in the stimulus list, 
+      // add it with a special "neutral highlight" intensity (Level 9)
+      if (hoveredSlug && !intensities.find(i => i.slug === hoveredSlug)) {
+        activeData.push({ slug: hoveredSlug, intensity: 9 });
+      }
+      return activeData;
     }
+
+    // If we only have simple slugs (selection mode)
     const uniqueSlugs = [...new Set(slugs || [])];
-    const visibleSlugs = [...new Set(hoveredSlug ? [...uniqueSlugs, hoveredSlug] : uniqueSlugs)];
-    return visibleSlugs.map((slug) => ({
+    const baseData = uniqueSlugs.map((slug) => ({
       slug,
-      intensity: hoveredSlug === slug ? 5 : 1,
+      intensity: hoveredSlug === slug ? 6 : 1, // 1 is base green, 6 is brighter yellow
     }));
+
+    if (hoveredSlug && !uniqueSlugs.includes(hoveredSlug)) {
+      baseData.push({ slug: hoveredSlug, intensity: 9 });
+    }
+    return baseData;
   }, [hoveredSlug, slugs, intensities]);
 
   const uniqueSlugs = useMemo(() => {
@@ -83,7 +72,7 @@ export function MuscleMap({
             {title || "Target muscles"}
           </p>
           <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-            Hover a region to see stimulus intensity.
+            Hover a region to inspect stimulus.
           </p>
         </div>
         <Button
@@ -135,7 +124,7 @@ export function MuscleMap({
             )}
           </>
         ) : (
-          <span className="text-sm font-medium text-[color:var(--muted-foreground)] italic">
+          <span className="text-sm font-medium text-[color:var(--muted-foreground)] italic opacity-50">
             Hover a muscle to inspect stimulus...
           </span>
         )}
@@ -146,7 +135,6 @@ export function MuscleMap({
         onMouseMove={(event) => {
           const target = event.target;
           if (!(target instanceof Element)) return;
-
           const slug = target.getAttribute("id");
           if (!slug || !bodySlugs.has(slug as BodyHighlightSlug)) return;
           setHoveredSlug(slug as BodyHighlightSlug);
@@ -160,11 +148,11 @@ export function MuscleMap({
             side={side}
             border="none"
             scale={1.35}
-            // 1-4: Base Colors (Green, Yellow, Orange, Red)
-            // 5-8: Brightened variants for hover effect
+            // 1-4: Base, 5-8: Brighter, 9: Neutral Highlight
             colors={[
-              "#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e", // Normal
-              "#a8e6cf", "#ffea8a", "#ffbf69", "#ff4d4d"  // Hover (brighter)
+              "#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e", // 1-4
+              "#a8e6cf", "#ffea8a", "#ffbf69", "#ff4d4d", // 5-8
+              "#d1d5db" // 9 (Grey highlight for non-stimulus)
             ]}
           />
         </div>
@@ -172,19 +160,8 @@ export function MuscleMap({
 
       <div className="mt-4 flex flex-wrap gap-2">
         {uniqueSlugs.map((slug) => (
-          <button
-            key={slug}
-            type="button"
-            onMouseEnter={() => setHoveredSlug(slug)}
-            onMouseLeave={() => setHoveredSlug(null)}
-          >
-            <Badge
-              className={
-                hoveredSlug === slug
-                  ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white!"
-                  : undefined
-              }
-            >
+          <button key={slug} type="button" onMouseEnter={() => setHoveredSlug(slug)} onMouseLeave={() => setHoveredSlug(null)}>
+            <Badge className={hoveredSlug === slug ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white!" : undefined}>
               {formatSlug(slug)}
             </Badge>
           </button>

@@ -31,6 +31,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { calculateMuscleIntensities } from "@/lib/stimulus";
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
@@ -106,40 +107,8 @@ export function DashboardPage() {
   const recentSession = data.sessions[0];
 
   const muscleIntensities = useMemo(() => {
-    const frequency: Record<string, number> = {};
     if (!activePlan) return [];
-
-    activePlan.days.forEach((day) => {
-      day.items.forEach((item) => {
-        const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-        if (!exercise) return;
-        
-        exercise.bodyRegionSlugs.forEach((slug, idx) => {
-          // BIOLOGICAL STIMULUS WEIGHTING:
-          // Primary movers (first 2 slugs) get 100% credit.
-          // Secondary movers get 20% credit (correcting the "ghost volume" trap).
-          const weight = idx < 2 ? 1.0 : 0.2;
-          frequency[slug] = (frequency[slug] || 0) + (item.sets * weight);
-        });
-      });
-    });
-
-    return Object.entries(frequency).map(([slug, weightedSets]) => {
-      // ABSOLUTE THRESHOLD SCALING (Abandoning the "Relative Peak" fallacy):
-      // 4/4 (Red): 14+ weighted sets (Max Stimulus)
-      // 3/4 (Orange): 10-13 weighted sets (High Stimulus)
-      // 2/4 (Yellow): 5-9 weighted sets (Moderate Stimulus)
-      // 1/4 (Green): 1-4 weighted sets (Maintenance)
-      let intensity = 1;
-      if (weightedSets >= 14) intensity = 4;
-      else if (weightedSets >= 10) intensity = 3;
-      else if (weightedSets >= 5) intensity = 2;
-      
-      return {
-        slug: slug as BodyHighlightSlug,
-        intensity
-      };
-    });
+    return calculateMuscleIntensities(activePlan, data.exercises);
   }, [activePlan, data.exercises]);
 
   const exportPlanToMarkdown = (plan: WeeklyPlan) => {
@@ -209,6 +178,19 @@ export function DashboardPage() {
         />
       </div>
 
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-[color:var(--foreground)]">
+          <Flame className="h-4 w-4 text-[color:var(--brand)]" />
+          <CardTitle className="text-lg">Workout Activity</CardTitle>
+        </div>
+        <CardDescription className="mt-2">
+          Tracking consistency and relative intensity based on volume and logged results.
+        </CardDescription>
+        <div className="mt-6">
+          <WorkoutHeatmap sessions={data.sessions} />
+        </div>
+      </Card>
+
       <BentoGrid className="xl:grid-cols-[1.25fr_0.85fr]">
         <BentoGridItem className="p-0">
           <GlowCard className="h-full">
@@ -260,7 +242,7 @@ export function DashboardPage() {
                         }}
                         className={cn(
                           "rounded-[28px] border border-[color:var(--border)] transition-opacity duration-200 overflow-hidden",
-                          isActive ? "bg-white/80 shadow-sm" : "bg-white/30 opacity-60 grayscale-[40%]"
+                          isActive ? "bg-white/80 shadow-md scale-[1.01]" : "bg-white/30 opacity-60 grayscale-[40%]"
                         )}
                       >
                         <div className="flex items-center">
@@ -344,19 +326,6 @@ export function DashboardPage() {
           <MuscleMap intensities={muscleIntensities} profile={data.profile} title={`${activePlan?.name || 'Active'} Split Target`} />
         </BentoGridItem>
       </BentoGrid>
-
-      <Card className="p-6">
-        <div className="flex items-center gap-2 text-[color:var(--foreground)]">
-          <Flame className="h-4 w-4 text-[color:var(--brand)]" />
-          <CardTitle className="text-lg">Workout Activity</CardTitle>
-        </div>
-        <CardDescription className="mt-2">
-          Tracking consistency and relative intensity based on volume and logged results.
-        </CardDescription>
-        <div className="mt-6">
-          <WorkoutHeatmap sessions={data.sessions} />
-        </div>
-      </Card>
 
       <DashboardCharts data={data} />
 
