@@ -1,5 +1,6 @@
-import { Activity, BrainCircuit, CalendarClock, Trophy } from "lucide-react";
-import type { DashboardData } from "@/lib/types";
+import { useMemo } from "react";
+import { Activity, BrainCircuit, CalendarClock, Trophy, Flame } from "lucide-react";
+import type { DashboardData, BodyHighlightSlug } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { MetricTile } from "@/components/shared/metric-tile";
 import { MuscleMap } from "@/components/shared/muscle-map";
@@ -8,6 +9,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { GlowCard } from "@/components/ui/glow-card";
 import { TextGenerate } from "@/components/ui/text-generate";
+import { WorkoutHeatmap } from "./workout-heatmap";
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
@@ -15,12 +17,31 @@ const formatDate = (value: string) =>
 export function DashboardPage({ data }: { data: DashboardData }) {
   const plan = data.plans[0];
   const recentSession = data.sessions[0];
-  const highlightedSlugs = plan
-    ? plan.days
-        .flatMap((day) => day.items)
-        .map((item) => data.exercises.find((exercise) => exercise.id === item.exerciseId)?.bodyRegionSlugs ?? [])
-        .flat()
-    : [];
+
+  const muscleIntensities = useMemo(() => {
+    const frequency: Record<string, number> = {};
+    const lookbackDays = 30;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - lookbackDays);
+
+    data.sessions
+      .filter((s) => new Date(s.startedAt) >= cutoff)
+      .forEach((session) => {
+        session.items.forEach((item) => {
+          const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+          if (!exercise) return;
+          exercise.bodyRegionSlugs.forEach((slug) => {
+            frequency[slug] = (frequency[slug] || 0) + 1;
+          });
+        });
+      });
+
+    const maxFreq = Math.max(...Object.values(frequency), 1);
+    return Object.entries(frequency).map(([slug, count]) => ({
+      slug: slug as BodyHighlightSlug,
+      intensity: Math.min(Math.round((count / maxFreq) * 4), 4) || 1,
+    }));
+  }, [data.sessions, data.exercises]);
 
   return (
     <div className="space-y-6">
@@ -97,9 +118,22 @@ export function DashboardPage({ data }: { data: DashboardData }) {
         </BentoGridItem>
 
         <BentoGridItem className="p-0">
-          <MuscleMap slugs={highlightedSlugs} profile={data.profile} />
+          <MuscleMap intensities={muscleIntensities} profile={data.profile} title="Recent Stimulus Focus" />
         </BentoGridItem>
       </BentoGrid>
+
+      <Card className="p-6">
+        <div className="flex items-center gap-2 text-[color:var(--foreground)]">
+          <Flame className="h-4 w-4 text-[color:var(--brand)]" />
+          <CardTitle className="text-lg">Workout Activity</CardTitle>
+        </div>
+        <CardDescription className="mt-2">
+          Tracking consistency and relative intensity based on volume and logged results.
+        </CardDescription>
+        <div className="mt-6">
+          <WorkoutHeatmap sessions={data.sessions} />
+        </div>
+      </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <Card className="p-6">
