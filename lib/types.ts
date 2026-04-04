@@ -147,6 +147,11 @@ export type UserProfile = {
   height?: number;
   weight?: number;
   age?: number;
+  nickname?: string;
+  pronouns?: string;
+  activityLevel?: string;
+  sleepHours?: number;
+  medicalConditions?: string;
   injuries: string;
   notes: string;
   bodyGender: "male" | "female";

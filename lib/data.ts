@@ -80,15 +80,26 @@ export const getProfile = async (userId: string): Promise<UserProfile> => {
 export const saveProfile = async (userId: string, profile: Omit<UserProfile, "userId">) => {
   await ensureDataReady();
   await pool.query(
-    `INSERT INTO profiles (user_id, goal, experience_level, weekly_sessions, injuries, notes, body_gender)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `INSERT INTO profiles (
+       user_id, goal, experience_level, weekly_sessions, injuries, notes, body_gender,
+       age, height, weight, nickname, pronouns, activity_level, sleep_hours, medical_conditions
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
      ON CONFLICT (user_id) DO UPDATE SET
        goal = EXCLUDED.goal,
        experience_level = EXCLUDED.experience_level,
        weekly_sessions = EXCLUDED.weekly_sessions,
        injuries = EXCLUDED.injuries,
        notes = EXCLUDED.notes,
-       body_gender = EXCLUDED.body_gender`,
+       body_gender = EXCLUDED.body_gender,
+       age = EXCLUDED.age,
+       height = EXCLUDED.height,
+       weight = EXCLUDED.weight,
+       nickname = EXCLUDED.nickname,
+       pronouns = EXCLUDED.pronouns,
+       activity_level = EXCLUDED.activity_level,
+       sleep_hours = EXCLUDED.sleep_hours,
+       medical_conditions = EXCLUDED.medical_conditions`,
     [
       userId,
       profile.goal,
@@ -97,6 +108,14 @@ export const saveProfile = async (userId: string, profile: Omit<UserProfile, "us
       profile.injuries,
       profile.notes,
       profile.bodyGender,
+      profile.age,
+      profile.height,
+      profile.weight,
+      profile.nickname,
+      profile.pronouns,
+      profile.activityLevel,
+      profile.sleepHours,
+      profile.medicalConditions,
     ]
   );
 
