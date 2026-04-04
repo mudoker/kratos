@@ -212,6 +212,16 @@ export const deletePlan = async (userId: string, planId: string) => {
   await pool.query("DELETE FROM weekly_plans WHERE id = $1 AND user_id = $2", [planId, userId]);
 };
 
+export const deleteRecord = async (userId: string, recordId: string) => {
+  await ensureDataReady();
+  await pool.query("DELETE FROM personal_records WHERE id = $1 AND user_id = $2", [recordId, userId]);
+};
+
+export const deleteSession = async (userId: string, sessionId: string) => {
+  await ensureDataReady();
+  await pool.query("DELETE FROM workout_sessions WHERE id = $1 AND user_id = $2", [sessionId, userId]);
+};
+
 export const getRecords = async (userId: string): Promise<PersonalRecord[]> => {
   await ensureDataReady();
   const rows = await queryRows(

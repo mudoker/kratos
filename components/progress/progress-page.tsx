@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Target, Trophy } from "lucide-react";
+import { ArrowUpRight, Target, Trophy, Trash2, Edit2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { DashboardData, PersonalRecord } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
-import { Edit2, X } from "lucide-react";
 
 const blankRecord = (): Omit<PersonalRecord, "id" | "userId"> & { id?: string } => ({
   id: undefined,
@@ -33,14 +32,6 @@ export function ProgressPage({ data }: { data: DashboardData }) {
   const exerciseOptions = useMemo(
     () => data.exercises.map((exercise) => ({ value: exercise.id, label: exercise.name })),
     [data.exercises]
-  );
-
-  const topRecords = useMemo(
-    () =>
-      [...records]
-        .sort((a, b) => new Date(b.achievedAt).getTime() - new Date(a.achievedAt).getTime())
-        .slice(0, 8),
-    [records]
   );
 
   const saveRecord = async () => {
@@ -75,6 +66,19 @@ export function ProgressPage({ data }: { data: DashboardData }) {
     });
     setStatus("Editing PR...");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const removeRecord = async (recordId: string) => {
+    if (!confirm("Are you sure you want to delete this PR?")) return;
+    const response = await fetch(`/api/records?id=${recordId}`, { method: "DELETE" });
+    if (response.ok) {
+      setRecords((current) => current.filter((r) => r.id !== recordId));
+      if (form.id === recordId) {
+        setForm(blankRecord());
+        setStatus("");
+      }
+      router.refresh();
+    }
   };
 
   return (
@@ -120,7 +124,14 @@ export function ProgressPage({ data }: { data: DashboardData }) {
               <CardTitle className="text-lg">{form.id ? "Edit personal record" : "Log a personal record"}</CardTitle>
             </div>
             {form.id && (
-              <Button variant="ghost" size="sm" onClick={() => { setForm(blankRecord()); setStatus(""); }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setForm(blankRecord());
+                  setStatus("");
+                }}
+              >
                 <X className="h-4 w-4" />
                 Cancel
               </Button>
@@ -128,7 +139,9 @@ export function ProgressPage({ data }: { data: DashboardData }) {
           </div>
           <div className="mt-4 space-y-4">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Exercise</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                Exercise
+              </p>
               <Combobox
                 options={exerciseOptions}
                 value={form.exerciseId}
@@ -138,7 +151,9 @@ export function ProgressPage({ data }: { data: DashboardData }) {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Value</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                  Value
+                </p>
                 <Input
                   type="number"
                   min="0"
@@ -148,8 +163,13 @@ export function ProgressPage({ data }: { data: DashboardData }) {
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Unit</p>
-                <Select value={form.unit} onValueChange={(value) => setForm((current) => ({ ...current, unit: value as PersonalRecord["unit"] }))}>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                  Unit
+                </p>
+                <Select
+                  value={form.unit}
+                  onValueChange={(value) => setForm((current) => ({ ...current, unit: value as PersonalRecord["unit"] }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -162,7 +182,9 @@ export function ProgressPage({ data }: { data: DashboardData }) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Reps</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                  Reps
+                </p>
                 <Input
                   type="number"
                   min="1"
@@ -173,7 +195,9 @@ export function ProgressPage({ data }: { data: DashboardData }) {
               </div>
             </div>
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Date achieved</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                Date achieved
+              </p>
               <Input
                 type="date"
                 value={form.achievedAt}
@@ -181,7 +205,9 @@ export function ProgressPage({ data }: { data: DashboardData }) {
               />
             </div>
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Notes</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                Notes
+              </p>
               <Textarea
                 value={form.notes}
                 onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
@@ -225,12 +251,19 @@ export function ProgressPage({ data }: { data: DashboardData }) {
                   {catRecords.slice(0, 5).map((record) => {
                     const exercise = data.exercises.find((entry) => entry.id === record.exerciseId);
                     return (
-                      <div key={record.id} className="group relative rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4 transition hover:bg-white/80">
+                      <div
+                        key={record.id}
+                        className="group relative rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4 transition hover:bg-white/80"
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <p className="font-semibold text-[color:var(--foreground)]">{exercise?.name || record.exerciseId}</p>
                             <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-                              {new Date(record.achievedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              {new Date(record.achievedAt).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -244,6 +277,14 @@ export function ProgressPage({ data }: { data: DashboardData }) {
                               onClick={() => startEdit(record)}
                             >
                               <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 rounded-full p-0 text-[color:var(--danger)] opacity-0 transition group-hover:opacity-100 hover:bg-[color:var(--danger-soft)]"
+                              onClick={() => removeRecord(record.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </div>
@@ -274,7 +315,10 @@ export function ProgressPage({ data }: { data: DashboardData }) {
               `${data.plans.length} active plans. Keep old blocks around so the coach can compare phases.`,
               `${records.length} PR records. Translate the best lifts into target-load updates on the planner page.`,
             ].map((line) => (
-              <div key={line} className="rounded-[22px] border border-[color:var(--border)] bg-white/60 p-4 text-sm leading-6 text-[color:var(--muted-foreground)]">
+              <div
+                key={line}
+                className="rounded-[22px] border border-[color:var(--border)] bg-white/60 p-4 text-sm leading-6 text-[color:var(--muted-foreground)]"
+              >
                 {line}
               </div>
             ))}

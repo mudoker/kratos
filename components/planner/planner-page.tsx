@@ -168,6 +168,7 @@ export function PlannerPage({ data }: { data: DashboardData }) {
   };
 
   const removePlan = async () => {
+    if (!confirm("Are you sure you want to delete this plan?")) return;
     if (!isPersistedId(selectedPlan.id)) {
       const remainingDrafts = plans.filter((plan) => plan.id !== selectedPlan.id);
       const nextPlans = remainingDrafts.length ? remainingDrafts : [blankPlan(data.user.id)];

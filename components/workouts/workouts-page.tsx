@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Edit2, Plus, Save, X } from "lucide-react";
+import { CheckCircle2, Edit2, Plus, Save, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { DashboardData, WeeklyPlan, WorkoutSession } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
@@ -120,6 +120,19 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
     setDayId(session.planDayId || "");
     setStatus("Editing session...");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const removeSession = async (sessionId: string) => {
+    if (!confirm("Are you sure you want to delete this session?")) return;
+    const response = await fetch(`/api/workouts?id=${sessionId}`, { method: "DELETE" });
+    if (response.ok) {
+      setSessions((current) => current.filter((s) => s.id !== sessionId));
+      if (draft.id === sessionId) {
+        setDraft(baseSession());
+        setStatus("");
+      }
+      router.refresh();
+    }
   };
 
   if (!data.plans.length) {
@@ -376,6 +389,14 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
                       onClick={() => startEdit(session)}
                     >
                       <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 rounded-full p-0 text-[color:var(--danger)] opacity-0 transition group-hover:opacity-100 hover:bg-[color:var(--danger-soft)]"
+                      onClick={() => removeSession(session.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>

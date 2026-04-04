@@ -36,3 +36,4 @@ secrets.json
 Thumbs.db
 db.db
 *.db
+.next/

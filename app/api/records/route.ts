@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { getRecords, saveRecord } from "@/lib/data";
+import { deleteRecord, getRecords, saveRecord } from "@/lib/data";
 import type { PersonalRecord } from "@/lib/types";
 
 export async function GET() {
@@ -39,4 +39,17 @@ export async function PUT(request: Request) {
 
   const record = await saveRecord(user.id, body);
   return NextResponse.json({ record });
+}
+
+export async function DELETE(request: Request) {
+  const user = await requireUser();
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "Record ID is required." }, { status: 400 });
+  }
+
+  await deleteRecord(user.id, id);
+  return NextResponse.json({ ok: true });
 }

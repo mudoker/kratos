@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { getSessions, saveSession } from "@/lib/data";
+import { deleteSession, getSessions, saveSession } from "@/lib/data";
 import type { WorkoutSession } from "@/lib/types";
 
 export async function GET() {
@@ -37,4 +37,17 @@ export async function PUT(request: Request) {
 
   const session = await saveSession(user.id, body);
   return NextResponse.json({ session });
+}
+
+export async function DELETE(request: Request) {
+  const user = await requireUser();
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "Session ID is required." }, { status: 400 });
+  }
+
+  await deleteSession(user.id, id);
+  return NextResponse.json({ ok: true });
 }
