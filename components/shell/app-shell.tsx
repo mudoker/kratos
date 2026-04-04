@@ -111,14 +111,6 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </aside>
 
       <main className="space-y-6">
-        <header className="rounded-[32px] border border-[color:var(--border)] bg-white/70 px-6 py-5 shadow-[0_24px_80px_rgba(26,17,13,0.05)] backdrop-blur">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-            Workspace
-          </p>
-          <h2 className="mt-2 font-[family:var(--font-display)] text-3xl font-semibold text-[color:var(--foreground)]">
-            {titles[pathname] ?? "Training system"}
-          </h2>
-        </header>
         {children}
       </main>
     </div>

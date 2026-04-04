@@ -224,11 +224,12 @@
     "name": "Farmer Carry",
     "category": "Conditioning",
     "primaryMuscles": ["Forearms", "Core", "Traps"],
-    "secondaryMuscles": ["Full Body"],
-    "bodyRegionSlugs": ["forearm", "trapezius", "hands", "feet"],
+    "secondaryMuscles": ["Abs", "Obliques", "Full Body"],
+    "bodyRegionSlugs": ["forearm", "trapezius", "abs", "obliques", "hands", "feet"],
     "equipment": "Dumbbells",
     "instructions": [
-      "Walk a set distance while holding heavy weights at your sides."
+      "Walk a set distance while holding heavy weights at your sides.",
+      "Keep core engaged and posture upright."
     ],
     "defaultRestSeconds": 60,
     "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
@@ -855,6 +856,22 @@
     ],
     "defaultRestSeconds": 45,
     "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "suit-case-carry",
+    "name": "Suitcase Carry",
+    "category": "Conditioning",
+    "primaryMuscles": ["Abs", "Obliques", "Forearms"],
+    "secondaryMuscles": ["Shoulders", "Traps", "Full Body"],
+    "bodyRegionSlugs": ["abs", "obliques", "forearm", "deltoids", "trapezius", "hands", "feet"],
+    "equipment": "Dumbbell",
+    "instructions": [
+      "Hold a single heavy weight in one hand.",
+      "Walk while maintaining a perfect upright posture without leaning.",
+      "Focus on resisting the lateral pull of the weight."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
   },
   {
     "id": "decline-twist",
