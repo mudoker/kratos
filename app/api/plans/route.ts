@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     id: body.id || "",
     name: body.name?.trim() || "Weekly plan",
     notes: body.notes?.trim() || "",
+    orderIndex: body.orderIndex ?? 0,
     days: body.days ?? [],
   });
   return NextResponse.json({ plan });
@@ -29,6 +30,9 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Plan not found." }, { status: 404 });
   }
 
-  const plan = await savePlan(user.id, body);
+  const plan = await savePlan(user.id, {
+    ...body,
+    orderIndex: body.orderIndex ?? 0,
+  });
   return NextResponse.json({ plan });
 }

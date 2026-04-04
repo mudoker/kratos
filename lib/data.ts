@@ -24,7 +24,7 @@ import type {
   WorkoutSession,
 } from "@/lib/types";
 
-type UpsertPlanInput = Pick<WeeklyPlan, "id" | "name" | "notes" | "days">;
+type UpsertPlanInput = Pick<WeeklyPlan, "id" | "name" | "notes" | "days" | "orderIndex">;
 type UpsertSessionInput = Omit<WorkoutSession, "id" | "userId" | "startedAt"> & {
   id?: string;
   startedAt?: string;
@@ -107,7 +107,7 @@ export const getPlans = async (userId: string): Promise<WeeklyPlan[]> => {
   await ensureDataReady();
   const planRows = await queryRows(
     pool,
-    "SELECT * FROM weekly_plans WHERE user_id = $1 ORDER BY updated_at DESC",
+    "SELECT * FROM weekly_plans WHERE user_id = $1 ORDER BY order_index ASC, updated_at DESC",
     [userId]
   );
   if (!planRows.length) return [];
@@ -152,13 +152,14 @@ export const savePlan = async (userId: string, planInput: UpsertPlanInput) => {
 
   await transaction(async (client) => {
     await client.query(
-      `INSERT INTO weekly_plans (id, user_id, name, notes, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO weekly_plans (id, user_id, name, notes, order_index, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (id) DO UPDATE SET
          name = EXCLUDED.name,
          notes = EXCLUDED.notes,
+         order_index = EXCLUDED.order_index,
          updated_at = EXCLUDED.updated_at`,
-      [planId, userId, planInput.name.trim(), planInput.notes.trim(), now, now]
+      [planId, userId, planInput.name.trim(), planInput.notes.trim(), planInput.orderIndex ?? 0, now, now]
     );
 
     await client.query("DELETE FROM weekly_plan_days WHERE plan_id = $1", [planId]);
