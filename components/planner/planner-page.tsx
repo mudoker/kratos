@@ -29,6 +29,7 @@ const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
   userId,
   name,
   notes: "",
+  orderIndex: 0,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   days: dayNames.map((title, day) => ({
