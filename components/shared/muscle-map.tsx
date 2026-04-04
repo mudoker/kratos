@@ -6,6 +6,7 @@ import { RotateCcw } from "lucide-react";
 import type { BodyHighlightSlug, UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const bodySlugs = new Set<BodyHighlightSlug>([
   "trapezius",
@@ -93,12 +94,39 @@ export function MuscleMap({
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[22px] border border-[color:var(--border)] bg-black/[0.03] px-4 py-3">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)]">
-          Inspecting
-        </span>
-        <span className="text-sm font-semibold text-[color:var(--foreground)]">
-          {activeSlug ? formatSlug(activeSlug) : "hover a muscle"}
-        </span>
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
+            Inspecting Region
+          </span>
+          <span className="text-sm font-semibold text-[color:var(--foreground)]">
+            {activeSlug ? formatSlug(activeSlug) : "hover a muscle"}
+          </span>
+        </div>
+        {activeSlug && intensities && (
+          <div className="ml-auto flex flex-col items-end text-right">
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
+              Stimulus Level
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-[color:var(--foreground)]">
+                {intensities.find((i) => i.slug === activeSlug)?.intensity || 0} / 4
+              </span>
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4].map((step) => (
+                  <div
+                    key={step}
+                    className={cn(
+                      "h-1.5 w-3 rounded-full transition-colors",
+                      (intensities.find((i) => i.slug === activeSlug)?.intensity || 0) >= step
+                        ? "bg-[color:var(--brand)]"
+                        : "bg-black/5"
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div
