@@ -53,14 +53,15 @@ export function MuscleMap({
     if (intensities) {
       return intensities.map((item) => ({
         slug: item.slug,
-        intensity: hoveredSlug === item.slug ? Math.max(item.intensity, 2) : item.intensity,
+        // Intensity 5 is our bright neon state for hover
+        intensity: hoveredSlug === item.slug ? 5 : item.intensity,
       }));
     }
     const uniqueSlugs = [...new Set(slugs || [])];
     const visibleSlugs = [...new Set(hoveredSlug ? [...uniqueSlugs, hoveredSlug] : uniqueSlugs)];
     return visibleSlugs.map((slug) => ({
       slug,
-      intensity: hoveredSlug === slug ? 2 : 1,
+      intensity: hoveredSlug === slug ? 5 : 1,
     }));
   }, [hoveredSlug, slugs, intensities]);
 
@@ -69,7 +70,7 @@ export function MuscleMap({
     return [...new Set(slugs || [])];
   }, [slugs, intensities]);
 
-  const activeSlug = hoveredSlug ?? uniqueSlugs[0] ?? null;
+  const activeSlug = hoveredSlug;
 
   return (
     <div className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-5">
@@ -148,7 +149,8 @@ export function MuscleMap({
             side={side}
             border="none"
             scale={1.35}
-            colors={["#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e"]}
+            // 5th color is bright white/neon for the hovered state
+            colors={["#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e", "#ffffff"]}
           />
         </div>
       </div>
@@ -164,7 +166,7 @@ export function MuscleMap({
             <Badge
               className={
                 hoveredSlug === slug
-                  ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white"
+                  ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white!"
                   : undefined
               }
             >
