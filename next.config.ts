@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  typedRoutes: true,
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  webpack: (config) => {
+    config.cache = false;
+    return config;
   },
 };
 
