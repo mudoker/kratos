@@ -1,8 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Activity, BrainCircuit, CalendarClock, Trophy, Flame, ChevronDown, ChevronRight, LayoutList, Layers } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { 
+  Activity, 
+  BrainCircuit, 
+  CalendarClock, 
+  Trophy, 
+  Flame, 
+  ChevronDown, 
+  ChevronRight, 
+  LayoutList, 
+  GripVertical, 
+  FileDown,
+  Loader2
+} from "lucide-react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 import type { BodyHighlightSlug, WeeklyPlan } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { MetricTile } from "@/components/shared/metric-tile";
@@ -18,34 +30,89 @@ import { useData } from "@/components/shared/data-provider";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 
 export function DashboardPage() {
   const data = useData();
+  const router = useRouter();
+  
+  const [plans, setPlans] = useState<WeeklyPlan[]>(data.plans);
   const [selectedPlanId, setSelectedPlanId] = useState(data.plans[0]?.id || "");
-  const [showAll, setShowAll] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [expandedPlans, setExpandedPlans] = useState<Record<string, boolean>>({
     [data.plans[0]?.id || ""]: true
   });
+
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const isInitialMount = useRef(true);
+
+  // Sync initial plans
+  useEffect(() => {
+    setPlans(data.plans);
+  }, [data.plans]);
+
+  // AUTO-SAVE LOGIC (Debounced)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Only save if the order has actually changed from the initial data
+    const initialOrderIds = data.plans.map(p => p.id).join(",");
+    const currentOrderIds = plans.map(p => p.id).join(",");
+    
+    if (initialOrderIds === currentOrderIds) return;
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(async () => {
+      setIsAutoSaving(true);
+      try {
+        const updates = plans.map((p, idx) => ({
+          ...p,
+          orderIndex: idx
+        }));
+        
+        for (const p of updates) {
+          await fetch("/api/plans", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(p),
+          });
+        }
+        router.refresh();
+      } catch (err) {
+        console.error("Auto-save failed", err);
+      } finally {
+        setIsAutoSaving(false);
+      }
+    }, 1500);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [plans, data.plans, router]);
 
   const togglePlan = (id: string) => {
     setExpandedPlans(prev => ({ ...prev, [id]: !prev[id] }));
     setSelectedPlanId(id);
   };
 
-  const plan = useMemo(() => 
-    data.plans.find(p => p.id === selectedPlanId) || data.plans[0], 
-  [data.plans, selectedPlanId]);
+  const activePlan = useMemo(() => 
+    plans.find(p => p.id === selectedPlanId) || plans[0], 
+  [plans, selectedPlanId]);
 
   const recentSession = data.sessions[0];
 
   const muscleIntensities = useMemo(() => {
     const frequency: Record<string, number> = {};
-    if (!plan) return [];
+    if (!activePlan) return [];
 
-    plan.days.forEach((day) => {
+    activePlan.days.forEach((day) => {
       day.items.forEach((item) => {
         const exercise = data.exercises.find((e) => e.id === item.exerciseId);
         if (!exercise) return;
@@ -62,9 +129,37 @@ export function DashboardPage() {
       slug: slug as BodyHighlightSlug,
       intensity: Math.min(Math.round((count / maxFreq) * 4), 4) || 1,
     }));
-  }, [plan, data.exercises]);
+  }, [activePlan, data.exercises]);
 
-  const displayedPlans = showAll ? data.plans : data.plans.slice(0, 3);
+  const exportPlanToMarkdown = (plan: WeeklyPlan) => {
+    let md = `# ${plan.name}\n\n`;
+    md += `**Notes:** ${plan.notes || "None"}\n\n`;
+    md += `**Last Updated:** ${formatDate(plan.updatedAt)}\n\n---\n\n`;
+
+    plan.days.forEach(day => {
+      md += `## ${day.title}\n`;
+      md += `**Focus:** ${day.focus || "Recovery"}\n`;
+      if (day.warmup) md += `**Warm-up:** ${day.warmup}\n`;
+      if (day.sessionGoal) md += `**Session Goal:** ${day.sessionGoal}\n`;
+      md += `\n| Exercise | Sets | Reps | Rest | Load/RPE | Notes |\n`;
+      md += `| :--- | :---: | :---: | :---: | :---: | :--- |\n`;
+      
+      day.items.forEach(item => {
+        const exercise = data.exercises.find(e => e.id === item.exerciseId);
+        const name = exercise?.name || item.exerciseId;
+        md += `| ${name} | ${item.sets} | ${item.reps} | ${item.restSeconds}s | ${item.targetLoad || "-"}/${item.targetRpe || "-"} | ${item.notes || "-"} |\n`;
+      });
+      md += `\n---\n\n`;
+    });
+
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${plan.name.replace(/\s+/g, "_")}.md`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6">
@@ -86,7 +181,7 @@ export function DashboardPage() {
         <MetricTile
           label="Saved plans"
           value={`${data.plans.length}`}
-          detail={plan ? `Latest update ${formatDate(plan.updatedAt)}` : "Create your first structured split."}
+          detail={activePlan ? `Latest update ${formatDate(activePlan.updatedAt)}` : "Create your first structured split."}
           icon={<Activity className="h-5 w-5 text-[color:var(--support)]" />}
         />
         <MetricTile
@@ -114,55 +209,85 @@ export function DashboardPage() {
                     Split Library
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => setShowAll(!showAll)}
-                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition"
-                  >
-                    <Layers className="h-3 w-3" />
-                    {showAll ? "Show Summary" : "Show All"}
-                  </button>
+                <div className="flex items-center gap-3">
+                  {isAutoSaving && (
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-[color:var(--brand)] animate-pulse">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Auto-Saving
+                    </div>
+                  )}
                   <Badge className="bg-black/5 border-none text-[10px]">{data.plans.length} plans</Badge>
                 </div>
               </div>
 
               <ScrollArea className="flex-1 -mx-2 px-2">
-                <div className="space-y-3 pb-4">
-                  {displayedPlans.map((p) => {
+                <Reorder.Group 
+                  axis="y" 
+                  values={plans} 
+                  onReorder={setPlans} 
+                  className="space-y-3 pb-4"
+                >
+                  {plans.map((p) => {
                     const isExpanded = expandedPlans[p.id];
                     const isActive = p.id === selectedPlanId;
                     
                     return (
-                      <div key={p.id} className={cn(
-                        "rounded-[28px] border transition-all duration-300 overflow-hidden",
-                        isActive ? "border-[color:var(--brand)] bg-white/80 shadow-md scale-[1.01]" : "border-[color:var(--border)] bg-white/40 hover:bg-white/60"
-                      )}>
-                        <button
-                          onClick={() => togglePlan(p.id)}
-                          className="flex w-full items-center justify-between p-4 text-left"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={cn(
-                              "h-2 w-2 rounded-full",
-                              isActive ? "bg-[color:var(--brand)]" : "bg-black/10"
-                            )} />
-                            <div className="min-w-0">
-                              <p className="font-bold text-[color:var(--foreground)] truncate">{p.name}</p>
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)] opacity-60">
-                                {p.days.reduce((acc, d) => acc + d.items.length, 0)} Lifts • {formatDate(p.updatedAt)}
-                              </p>
-                            </div>
+                      <Reorder.Item 
+                        key={p.id} 
+                        value={p}
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 600, damping: 35 }}
+                        className={cn(
+                          "rounded-[28px] border border-[color:var(--border)] transition-all duration-200 overflow-hidden",
+                          isActive ? "bg-white/80 shadow-md scale-[1.01]" : "bg-white/30 opacity-60 hover:opacity-80 grayscale-[40%]"
+                        )}
+                      >
+                        <div className="flex items-center">
+                          <div className="pl-4 cursor-grab active:cursor-grabbing opacity-20 hover:opacity-50 h-full py-6 flex items-center">
+                            <GripVertical className="h-4 w-4" />
                           </div>
-                          {isExpanded ? <ChevronDown className="h-4 w-4 opacity-40" /> : <ChevronRight className="h-4 w-4 opacity-40" />}
-                        </button>
+                          <button
+                            onClick={() => togglePlan(p.id)}
+                            className="flex-1 flex items-center justify-between p-4 pl-2 text-left"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-bold text-[color:var(--foreground)] truncate">{p.name}</p>
+                                  {isActive && <Badge className="h-4 px-1.5 text-[8px] bg-[color:var(--brand)] text-white! border-none font-black">ACTIVE</Badge>}
+                                </div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)] opacity-60">
+                                  {p.days.reduce((acc, d) => acc + d.items.length, 0)} Lifts • {formatDate(p.updatedAt)}
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                          <div className="pr-4">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-full text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                exportPlanToMarkdown(p);
+                              }}
+                              title="Export to Markdown"
+                            >
+                              <FileDown className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="pr-4">
+                            {isExpanded ? <ChevronDown className="h-4 w-4 opacity-40" /> : <ChevronRight className="h-4 w-4 opacity-40" />}
+                          </div>
+                        </div>
 
-                        <AnimatePresence>
+                        <AnimatePresence initial={false}>
                           {isExpanded && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
                               exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.3 }}
+                              transition={{ duration: 0.25, ease: "easeInOut" }}
                             >
                               <div className="border-t border-[color:var(--border)] bg-black/[0.02] p-4 pt-2">
                                 <p className="text-[11px] leading-5 text-[color:var(--muted-foreground)] italic mb-4">
@@ -185,17 +310,17 @@ export function DashboardPage() {
                             </motion.div>
                           )}
                         </AnimatePresence>
-                      </div>
+                      </Reorder.Item>
                     );
                   })}
-                </div>
+                </Reorder.Group>
               </ScrollArea>
             </Card>
           </GlowCard>
         </BentoGridItem>
 
         <BentoGridItem className="p-0">
-          <MuscleMap intensities={muscleIntensities} profile={data.profile} title={`${plan?.name || 'Active'} Split Target`} />
+          <MuscleMap intensities={muscleIntensities} profile={data.profile} title={`${activePlan?.name || 'Active'} Split Target`} />
         </BentoGridItem>
       </BentoGrid>
 
