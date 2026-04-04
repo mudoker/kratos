@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import { Activity, BrainCircuit, CalendarClock, Trophy, Flame } from "lucide-react";
 import type { BodyHighlightSlug } from "@/lib/types";
