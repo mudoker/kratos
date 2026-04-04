@@ -7,6 +7,7 @@ import { MuscleMap } from "@/components/shared/muscle-map";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const categories: Array<ExerciseCategory | "All"> = ["All", "Push", "Pull", "Legs", "Core", "Conditioning", "Mobility"];
@@ -101,8 +102,27 @@ export function ExercisesPage({ data }: { data: DashboardData }) {
                   {selected.category} • {selected.equipment} • default rest {selected.defaultRestSeconds}s
                 </CardDescription>
               </div>
-              <Badge>{selected.category}</Badge>
+              <div className="flex items-center gap-2">
+                {selected.videoUrl && (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={selected.videoUrl} target="_blank" rel="noopener noreferrer">
+                      Watch demo
+                    </a>
+                  </Button>
+                )}
+                <Badge>{selected.category}</Badge>
+              </div>
             </div>
+
+            {selected.imageUrl && (
+              <div className="mt-6 overflow-hidden rounded-[28px] border border-[color:var(--border)]">
+                <img
+                  src={selected.imageUrl}
+                  alt={selected.name}
+                  className="h-64 w-full object-cover transition hover:scale-105"
+                />
+              </div>
+            )}
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4">
