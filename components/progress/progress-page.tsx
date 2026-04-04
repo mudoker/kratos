@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowUpRight, Target, Trophy, Trash2, Edit2, X, BarChart3 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { DashboardData, PersonalRecord } from "@/lib/types";
+import type { PersonalRecord } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProgressCharts } from "./progress-charts";
+import { useData } from "@/components/shared/data-provider";
 
 const blankRecord = (): Omit<PersonalRecord, "id" | "userId"> & { id?: string } => ({
   id: undefined,
@@ -25,7 +26,8 @@ const blankRecord = (): Omit<PersonalRecord, "id" | "userId"> & { id?: string } 
   notes: "",
 });
 
-export function ProgressPage({ data }: { data: DashboardData }) {
+export function ProgressPage() {
+  const data = useData();
   const router = useRouter();
   const [records, setRecords] = useState(data.records);
   const [form, setForm] = useState(blankRecord());

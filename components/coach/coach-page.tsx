@@ -2,157 +2,83 @@
 
 import { useMemo, useState } from "react";
 import { SendHorizonal } from "lucide-react";
-import type { CoachMessage, DashboardData } from "@/lib/types";
+import type { CoachMessage } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { useData } from "@/components/shared/data-provider";
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(value));
-
-export function CoachPage({ data }: { data: DashboardData }) {
+export function CoachPage() {
+  const data = useData();
   const [messages, setMessages] = useState<CoachMessage[]>(data.coachMessages);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
-  const latestRecord = data.records[0];
-  const latestSession = data.sessions[0];
-  const latestPlan = data.plans[0];
-  const latestRecordLabel = useMemo(() => {
-    if (!latestRecord) return "No PR logged yet";
-    const exercise = data.exercises.find((item) => item.id === latestRecord.exerciseId);
-    return `${exercise?.name || latestRecord.exerciseId} • ${latestRecord.value} ${latestRecord.unit} x ${latestRecord.reps}`;
-  }, [data.exercises, latestRecord]);
+  const recentSessions = useMemo(() => data.sessions.slice(0, 5), [data.sessions]);
 
   const send = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || pending) return;
+
     setPending(true);
     setError("");
-    const response = await fetch("/api/ai/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input }),
-    });
-    const payload = (await response.json()) as { message?: string; messages?: CoachMessage[]; error?: string };
-    if (!response.ok || !payload.message) {
-      setError(payload.error || "The coach could not respond.");
-      setPending(false);
-      return;
-    }
-
-    const nextMessages = payload.messages ?? [
-      ...messages,
-      {
-        id: `local-user-${Date.now()}`,
-        userId: data.user.id,
-        role: "user",
-        content: input,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: `local-assistant-${Date.now() + 1}`,
-        userId: data.user.id,
-        role: "assistant",
-        content: payload.message,
-        createdAt: new Date().toISOString(),
-      },
-    ];
-
-    setMessages(nextMessages);
+    const message = input.trim();
     setInput("");
-    setPending(false);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      const payload = (await response.json()) as { message?: string; messages?: CoachMessage[]; error?: string };
+      if (!response.ok || !payload.messages) {
+        throw new Error(payload.error || "Failed to get a response from the coach.");
+      }
+
+      setMessages(payload.messages);
+    } catch (err: any) {
+      setError(err.message);
+      setInput(message); // Restore input on error
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-      <Card className="p-6">
+    <div className="grid gap-6 xl:grid-cols-[1fr_400px]">
+      <Card className="flex h-[760px] flex-col p-6">
         <PageHeader
-          eyebrow="Coach"
-          title="Ask for adjustments with real training context."
-          description="Text responses use your profile, recent plans, PR records, and completed sessions."
+          eyebrow="AI Intelligence"
+          title="Kratos Coach"
+          description="A data-driven strength and physique assistant that understands your history and intent."
         />
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {[
-            ["Current goal", data.profile.goal || "Not set"],
-            ["Weekly target", data.profile.weeklySessions ? `${data.profile.weeklySessions} sessions` : "Not set"],
-            ["Latest plan", latestPlan?.name || "No plan saved"],
-            ["Latest PR", latestRecordLabel],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                {label}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[color:var(--foreground)]">{value}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-2">
-          {[
-            "Review my current weekly volume and recovery risk.",
-            "Adjust next week based on my latest sessions.",
-            "Find PR opportunities in this split.",
-          ].map((prompt) => (
-            <button
-              key={prompt}
-              type="button"
-              onClick={() => setInput(prompt)}
-              className="rounded-full border border-[color:var(--border)] bg-white/60 px-4 py-2 text-sm text-[color:var(--muted-foreground)] transition hover:bg-white/80 hover:text-[color:var(--foreground)]"
-            >
-              {prompt}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[linear-gradient(180deg,#161616,#202020)] p-5 text-white">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/62">Current context</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Badge className="border-white/14 bg-white/10 text-white">{data.plans.length} plans</Badge>
-            <Badge className="border-white/14 bg-white/10 text-white">{data.sessions.length} logged sessions</Badge>
-            <Badge className="border-white/14 bg-white/10 text-white">{data.records.length} PR records</Badge>
-            <Badge className="border-white/14 bg-white/10 text-white">
-              {latestSession ? `Last session ${formatDate(latestSession.startedAt)}` : "No sessions yet"}
-            </Badge>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="flex min-h-[720px] flex-col p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-              Conversation
-            </p>
-            <h2 className="mt-2 font-[family:var(--font-display)] text-2xl font-semibold text-[color:var(--foreground)]">
-              Coaching thread
-            </h2>
-          </div>
-          <Badge>{messages.length} messages</Badge>
-        </div>
-
-        <ScrollArea className="mt-6 flex-1 rounded-[28px] border border-[color:var(--border)] bg-white/55 p-4">
-          <div className="space-y-3">
+        <ScrollArea className="mt-6 flex-1 pr-4">
+          <div className="space-y-6 pb-4">
             {messages.length ? (
-              messages.map((message) => (
+              messages.map((msg, index) => (
                 <div
-                  key={message.id}
-                  className={`max-w-[88%] rounded-[24px] border px-4 py-3 text-sm leading-7 ${
-                    message.role === "assistant"
-                      ? "border-[color:var(--border)] bg-black/5 text-[color:var(--foreground)]"
-                      : "ml-auto border-black bg-black text-white"
-                  }`}
+                  key={index}
+                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  {message.content}
+                  <div
+                    className={`max-w-[85%] rounded-[26px] px-5 py-4 text-sm leading-7 ${
+                      msg.role === "user"
+                        ? "bg-[color:var(--brand)] text-white shadow-lg"
+                        : "border-[color:var(--border)] bg-black/5 text-[color:var(--foreground)]"
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted-foreground)]">
-                Ask about readiness, programming changes, or what to prioritize next week.
+              <p className="rounded-[24px] border border-dashed border-[color:var(--border-strong)] p-5 text-sm text-[color:var(--muted-foreground)]">
+                Start a conversation to get an audit of your weekly split, suggestions for load management, or technical cues for specific lifts.
               </p>
             )}
           </div>
@@ -183,6 +109,47 @@ export function CoachPage({ data }: { data: DashboardData }) {
           </Button>
         </div>
       </Card>
+
+      <div className="space-y-6">
+        <Card className="p-6">
+          <CardTitle className="text-lg">Recent context</CardTitle>
+          <p className="mt-2 text-sm leading-6 text-[color:var(--muted-foreground)]">
+            The coach uses your profile, latest plan, and recent session performance to anchor its advice.
+          </p>
+
+          <div className="mt-6 space-y-3">
+            {recentSessions.map((session) => (
+              <div key={session.id} className="rounded-[22px] border border-[color:var(--border)] bg-white/60 p-4">
+                <p className="text-sm font-semibold text-[color:var(--foreground)]">{session.title}</p>
+                <p className="mt-1 text-xs text-[color:var(--muted-foreground)]">
+                  {new Date(session.startedAt).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <CardTitle className="text-lg">Athlete stats</CardTitle>
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            {[
+              ["Experience", data.profile.experienceLevel],
+              ["Sessions/wk", String(data.profile.weeklySessions)],
+              ["Total PRs", String(data.records.length)],
+              ["Goal", data.profile.goal || "Strength"],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)] opacity-60">
+                  {label}
+                </p>
+                <p className="mt-1 font-[family:var(--font-display)] text-xl font-semibold text-[color:var(--foreground)]">
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Activity, BrainCircuit, CalendarClock, Trophy, Flame } from "lucide-react";
-import type { DashboardData, BodyHighlightSlug } from "@/lib/types";
+import type { BodyHighlightSlug } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { MetricTile } from "@/components/shared/metric-tile";
 import { MuscleMap } from "@/components/shared/muscle-map";
@@ -10,11 +10,13 @@ import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { GlowCard } from "@/components/ui/glow-card";
 import { TextGenerate } from "@/components/ui/text-generate";
 import { WorkoutHeatmap } from "./workout-heatmap";
+import { useData } from "@/components/shared/data-provider";
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 
-export function DashboardPage({ data }: { data: DashboardData }) {
+export function DashboardPage() {
+  const data = useData();
   const plan = data.plans[0];
   const recentSession = data.sessions[0];
 

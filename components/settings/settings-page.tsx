@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { DashboardData } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -11,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useData } from "@/components/shared/data-provider";
 
-export function SettingsPage({ data }: { data: DashboardData }) {
+export function SettingsPage() {
+  const data = useData();
   const router = useRouter();
   const [profile, setProfile] = useState(data.profile);
   const [status, setStatus] = useState("");

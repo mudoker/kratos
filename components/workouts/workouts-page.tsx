@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Edit2, Plus, Save, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { DashboardData, WeeklyPlan, WorkoutSession } from "@/lib/types";
+import type { WeeklyPlan, WorkoutSession } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useData } from "@/components/shared/data-provider";
 
 const baseSession = (): Partial<WorkoutSession> => ({
   id: undefined,
@@ -58,7 +59,8 @@ const createSessionFromDay = (plan: WeeklyPlan, dayId: string): Partial<WorkoutS
   };
 };
 
-export function WorkoutsPage({ data }: { data: DashboardData }) {
+export function WorkoutsPage() {
+  const data = useData();
   const router = useRouter();
   const [sessions, setSessions] = useState(data.sessions);
   const firstPlan = data.plans[0] ?? null;

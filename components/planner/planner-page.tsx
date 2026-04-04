@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Plus, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { DashboardData, WeeklyPlan } from "@/lib/types";
+import type { WeeklyPlan } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlanAnalysis } from "./plan-analysis";
+import { useData } from "@/components/shared/data-provider";
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -43,7 +44,8 @@ const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
   })),
 });
 
-export function PlannerPage({ data }: { data: DashboardData }) {
+export function PlannerPage() {
+  const data = useData();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   
@@ -232,7 +234,7 @@ export function PlannerPage({ data }: { data: DashboardData }) {
           <CardDescription className="mt-2 leading-6">
             The planner stays focused on weekly programming. PRs, momentum, and performance review live in Progress Lab.
           </CardDescription>
-          <Button asChild className="mt-5 w-full text-white">
+          <Button asChild className="mt-5 w-full text-white!">
             <Link href="/progress">
               Open Progress Lab
               <ArrowRight className="h-4 w-4" />
@@ -317,7 +319,7 @@ export function PlannerPage({ data }: { data: DashboardData }) {
           </TabsContent>
 
           {selectedPlan.days.map((day) => (
-            <TabsContent key={day.id} value={String(day.day)} className="space-y-4">
+            <TabsContent key={day.id} value={String(day.day)} className="space-y-4 outline-none">
               <div className="grid gap-4 md:grid-cols-3">
                 {[
                   ["Focus", day.focus || "Unset"],

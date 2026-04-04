@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { DashboardData, ExerciseCategory } from "@/lib/types";
+import type { ExerciseCategory } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { MuscleMap } from "@/components/shared/muscle-map";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useData } from "@/components/shared/data-provider";
 
 const categories: Array<ExerciseCategory | "All"> = ["All", "Push", "Pull", "Legs", "Core", "Conditioning", "Mobility"];
 
-export function ExercisesPage({ data }: { data: DashboardData }) {
+export function ExercisesPage() {
+  const data = useData();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ExerciseCategory | "All">("All");
   const [selectedId, setSelectedId] = useState(data.exercises[0]?.id ?? "");
