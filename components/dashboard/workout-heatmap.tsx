@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, cloneElement } from "react";
 import { ActivityCalendar, ThemeInput } from "react-activity-calendar";
 import type { WorkoutSession } from "@/lib/types";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [hovered, setHovered] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -83,7 +85,7 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
     : 12;
 
   return (
-    <div className="w-full overflow-hidden pb-4" ref={containerRef}>
+    <div className="relative w-full overflow-hidden pb-4" ref={containerRef}>
       {containerWidth > 0 && (
         <ActivityCalendar
           data={heatmapData}
@@ -100,8 +102,53 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
             },
             totalCount: '{{count}} exercises/sets in {{year}}',
           }}
+          renderBlock={(block, activity) => {
+            return cloneElement(block, {
+              onMouseEnter: (e: any) => {
+                if (!containerRef.current) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const containerRect = containerRef.current.getBoundingClientRect();
+                setHovered({
+                  date: activity.date,
+                  count: activity.count,
+                  x: rect.left - containerRect.left + rect.width / 2,
+                  y: rect.top - containerRect.top,
+                });
+              },
+              onMouseLeave: () => {
+                setHovered(null);
+              },
+            });
+          }}
         />
       )}
+      
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="pointer-events-none absolute z-50 flex -translate-x-1/2 -translate-y-full flex-col gap-1 rounded-xl border border-[color:var(--border)] bg-[linear-gradient(180deg,#1a1a1a,#242424)] px-3 py-2 text-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+            style={{
+              left: hovered.x,
+              top: hovered.y - 8,
+            }}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">
+              {new Date(hovered.date).toLocaleDateString(undefined, { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })}
+            </p>
+            <p className="font-[family:var(--font-display)] text-base font-semibold leading-none">
+              {hovered.count === 0 ? "Rest Day" : `${hovered.count} ${hovered.count === 1 ? 'exercise/set' : 'exercises/sets'}`}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
