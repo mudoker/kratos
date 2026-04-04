@@ -33,8 +33,14 @@ export function DashboardPage() {
       day.items.forEach((item) => {
         const exercise = data.exercises.find((e) => e.id === item.exerciseId);
         if (!exercise) return;
-        exercise.bodyRegionSlugs.forEach((slug) => {
-          frequency[slug] = (frequency[slug] || 0) + (item.sets || 0);
+        
+        exercise.bodyRegionSlugs.forEach((slug, idx) => {
+          // WEIGHTED STIMULUS:
+          // The first slug (primary) gets 100% volume weight.
+          // Support slugs get 50% volume weight.
+          // This ensures Chest/Biceps aren't drowned out by Shoulders/Triceps.
+          const weight = idx === 0 ? 1.0 : 0.5;
+          frequency[slug] = (frequency[slug] || 0) + (item.sets * weight);
         });
       });
     });
