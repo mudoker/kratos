@@ -33,7 +33,8 @@ const formatDate = (value: string) =>
 
 const createSessionFromDay = (plan: WeeklyPlan, dayId: string): Partial<WorkoutSession> => {
   const day = plan.days.find((entry) => entry.id === dayId);
-  if (!day) return baseSession();  return {
+  if (!day) return baseSession();
+  return {
     planId: plan.id,
     planDayId: day.id,
     endedAt: new Date().toISOString(),
@@ -71,6 +72,7 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
   const selectedPlan = useMemo(() => data.plans.find((plan) => plan.id === planId) ?? null, [data.plans, planId]);
   const selectedDay = selectedPlan?.days.find((day) => day.id === dayId) ?? null;
   const completedResults = (draft.items || []).filter((item) => item.result.trim()).length;
+
   useEffect(() => {
     if (draft.id) return; // Don't overwrite if we are editing
     if (!selectedPlan || !dayId) {
@@ -103,7 +105,7 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
       setSaving(false);
       return;
     }
-    setSessions((current) => [payload.session!, ...current.filter(s => s.id !== payload.session!.id)]);
+    setSessions((current) => [payload.session!, ...current.filter((s) => s.id !== payload.session!.id)]);
     setStatus(isEdit ? "Session updated." : "Session saved.");
     setSaving(false);
     if (!isEdit) setDraft(baseSession());
@@ -142,10 +144,21 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
           <PageHeader
             eyebrow="Workout Studio"
             title={draft.id ? "Edit workout session" : "Load a planned day and log the real outcome."}
-            description={draft.id ? "Updating a previously logged session." : "Load a planned day into a live session and log the actual result beside the prescription."}
+            description={
+              draft.id
+                ? "Updating a previously logged session."
+                : "Load a planned day into a live session and log the actual result beside the prescription."
+            }
           />
           {draft.id && (
-            <Button variant="ghost" size="sm" onClick={() => { setDraft(baseSession()); setStatus(""); }}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setDraft(baseSession());
+                setStatus("");
+              }}
+            >
               <X className="h-4 w-4" />
               Cancel edit
             </Button>
@@ -213,7 +226,9 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Session title</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+              Session title
+            </p>
             <Input
               value={draft.title}
               onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
@@ -221,7 +236,9 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
             />
           </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Readiness / Effort</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+              Readiness / Effort
+            </p>
             <Input
               value={draft.effort}
               onChange={(event) => setDraft((current) => ({ ...current, effort: event.target.value }))}
@@ -240,68 +257,85 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
         </div>
 
         <div className="mt-6 space-y-4">
-          {(draft.items || []).map((item, index) => (
-            <div key={`${item.exerciseId}-${index}`} className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-[color:var(--foreground)]">{item.exerciseName}</p>
-                  <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-                    Prescription for {selectedDay?.title || "today"}
-                  </p>
+          {(draft.items || []).map((item, index) => {
+            const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+            return (
+              <div
+                key={`${item.exerciseId}-${index}`}
+                className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-4">
+                    {exercise?.imageUrl && (
+                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-[color:var(--border)]">
+                        <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-semibold text-[color:var(--foreground)]">{item.exerciseName}</p>
+                      <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
+                        Prescription for {selectedDay?.title || "today"}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge>{item.restSeconds}s rest</Badge>
                 </div>
-                <Badge>{item.restSeconds}s rest</Badge>
-              </div>
 
-              <div className="mt-4 grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-                <div className="rounded-[24px] border border-[color:var(--border)] bg-black/[0.03] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                    Prescription
-                  </p>
-                  <div className="mt-4 space-y-3 text-sm text-[color:var(--foreground)]">
-                    <p>
-                      {item.plannedSets} sets x {item.reps}
+                <div className="mt-4 grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
+                  <div className="rounded-[24px] border border-[color:var(--border)] bg-black/[0.03] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
+                      Prescription
                     </p>
-                    <p>Target load: {item.targetLoad || "Not set"}</p>
-                    <p>Target RPE: {item.targetRpe || "Not set"}</p>
+                    <div className="mt-4 space-y-3 text-sm text-[color:var(--foreground)]">
+                      <p>
+                        {item.plannedSets} sets x {item.reps}
+                      </p>
+                      <p>Target load: {item.targetLoad || "Not set"}</p>
+                      <p>Target RPE: {item.targetRpe || "Not set"}</p>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Actual result</p>
-                    <Input
-                      value={item.result}
-                      onChange={(event) =>
-                        setDraft((current) => ({
-                          ...current,
-                          items: (current.items || []).map((entry, currentIndex) =>
-                            currentIndex === index ? { ...entry, result: event.target.value } : entry
-                          ),
-                        }))
-                      }
-                      placeholder="Actual result, e.g. 100kg x 8,8,7"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Execution notes</p>
-                    <Textarea
-                      value={item.notes}
-                      onChange={(event) =>
-                        setDraft((current) => ({
-                          ...current,
-                          items: (current.items || []).map((entry, currentIndex) =>
-                            currentIndex === index ? { ...entry, notes: event.target.value } : entry
-                          ),
-                        }))
-                      }
-                      placeholder="Execution notes, pain signals, tempo changes, or missed targets"
-                      className="min-h-[110px]"
-                    />
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                        Actual result
+                      </p>
+                      <Input
+                        value={item.result}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            items: (current.items || []).map((entry, currentIndex) =>
+                              currentIndex === index ? { ...entry, result: event.target.value } : entry
+                            ),
+                          }))
+                        }
+                        placeholder="Actual result, e.g. 100kg x 8,8,7"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                        Execution notes
+                      </p>
+                      <Textarea
+                        value={item.notes}
+                        onChange={(event) =>
+                          setDraft((current) => ({
+                            ...current,
+                            items: (current.items || []).map((entry, currentIndex) =>
+                              currentIndex === index ? { ...entry, notes: event.target.value } : entry
+                            ),
+                          }))
+                        }
+                        placeholder="Execution notes, pain signals, tempo changes, or missed targets"
+                        className="min-h-[110px]"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {status ? (
@@ -324,7 +358,10 @@ export function WorkoutsPage({ data }: { data: DashboardData }) {
         <div className="mt-6 space-y-3">
           {sessions.length ? (
             sessions.map((session) => (
-              <div key={session.id} className="group relative rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4 transition hover:bg-white/80">
+              <div
+                key={session.id}
+                className="group relative rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4 transition hover:bg-white/80"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="font-semibold text-[color:var(--foreground)]">{session.title}</p>
