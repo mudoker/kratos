@@ -35,12 +35,14 @@ export function ExercisesPage() {
     if (!selected) return [];
     const intensities: Array<{ slug: BodyHighlightSlug; intensity: number }> = [];
     
-    selected.bodyRegionSlugs.forEach(slug => {
-      // If it's in primary muscles (best effort match), give it 4, otherwise 2
-      // Note: mapping between human readable primaryMuscles and slugs isn't 1:1,
-      // so for now we highlight all region slugs of the exercise.
-      // We can use a simple heuristic or just highlight all at 4 for specific exercises.
-      intensities.push({ slug, intensity: 4 });
+    selected.bodyRegionSlugs.forEach((slug, idx) => {
+      // PER-EXERCISE STIMULUS:
+      // Primary movers (first 2) show as 4/4 (Max Stimulus for this exercise)
+      // Secondary movers show as 2/4 (Moderate Stimulus)
+      intensities.push({ 
+        slug, 
+        intensity: idx < 2 ? 4 : 2 
+      });
     });
     
     return intensities;
@@ -113,7 +115,7 @@ export function ExercisesPage() {
           <MuscleMap 
             intensities={exerciseIntensities} 
             profile={data.profile} 
-            title={`${selected.name} Stimulus`} 
+            title={`${selected.name} Biological Stimulus`} 
           />
           <Card className="p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -148,7 +150,7 @@ export function ExercisesPage() {
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                  Primary muscles
+                  Primary movers (4/4)
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {selected.primaryMuscles.map((muscle) => (
@@ -158,7 +160,7 @@ export function ExercisesPage() {
               </div>
               <div className="rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                  Secondary muscles
+                  Supportive tissue (2/4)
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {selected.secondaryMuscles.map((muscle) => (

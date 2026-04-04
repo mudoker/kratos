@@ -22,19 +22,26 @@ export function PlanAnalysis({ plan, data }: { plan: WeeklyPlan; data: Dashboard
         // Category distribution
         categorySets[exercise.category] = (categorySets[exercise.category] || 0) + item.sets;
 
-        // Muscle distribution
-        exercise.bodyRegionSlugs.forEach((slug) => {
-          muscleSets[slug] = (muscleSets[slug] || 0) + item.sets;
+        // BIOLOGICAL STIMULUS WEIGHTING (Matching Dashboard logic)
+        exercise.bodyRegionSlugs.forEach((slug, idx) => {
+          const weight = idx < 2 ? 1.0 : 0.2;
+          muscleSets[slug] = (muscleSets[slug] || 0) + (item.sets * weight);
         });
       });
     });
 
-    // Normalize muscle intensities for MuscleMap (1 to 4)
-    const maxSets = Math.max(...Object.values(muscleSets), 1);
-    const intensities = Object.entries(muscleSets).map(([slug, sets]) => ({
-      slug: slug as BodyHighlightSlug,
-      intensity: Math.min(Math.round((sets / maxSets) * 4), 4) || 1,
-    }));
+    // ABSOLUTE THRESHOLD INTENSITIES (Matching Dashboard logic)
+    const intensities = Object.entries(muscleSets).map(([slug, weightedSets]) => {
+      let intensity = 1;
+      if (weightedSets >= 14) intensity = 4;
+      else if (weightedSets >= 10) intensity = 3;
+      else if (weightedSets >= 5) intensity = 2;
+      
+      return {
+        slug: slug as BodyHighlightSlug,
+        intensity
+      };
+    });
 
     return { muscleSets, categorySets, totalSets, intensities };
   }, [plan, data.exercises]);
@@ -74,9 +81,9 @@ export function PlanAnalysis({ plan, data }: { plan: WeeklyPlan; data: Dashboard
         </Card>
 
         <Card className="p-6">
-          <CardTitle>Projected Physique Focus</CardTitle>
+          <CardTitle>Biological Stimulus Score</CardTitle>
           <CardDescription className="mt-2">
-            Where your current weekly volume is being directed. Darker regions indicate higher relative frequency.
+            Weighted weekly volume per muscle group. 14+ sets is considered Max Stimulus (Red).
           </CardDescription>
           <div className="mt-6 grid grid-cols-2 gap-4">
             {Object.entries(stats.muscleSets)
@@ -87,7 +94,7 @@ export function PlanAnalysis({ plan, data }: { plan: WeeklyPlan; data: Dashboard
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)] opacity-60">
                     {slug.replaceAll("-", " ")}
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">{count} sets/wk</p>
+                  <p className="mt-1 text-lg font-semibold text-[color:var(--foreground)]">{count.toFixed(1)} w-sets/wk</p>
                 </div>
               ))}
           </div>
@@ -98,7 +105,7 @@ export function PlanAnalysis({ plan, data }: { plan: WeeklyPlan; data: Dashboard
         <MuscleMap
           intensities={stats.intensities}
           profile={data.profile}
-          title="Volume Intensity Map"
+          title="Stimulus Intensity Map"
         />
       </div>
     </div>

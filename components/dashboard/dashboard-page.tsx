@@ -49,19 +49,16 @@ export function DashboardPage() {
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const isInitialMount = useRef(true);
 
-  // Sync initial plans
   useEffect(() => {
     setPlans(data.plans);
   }, [data.plans]);
 
-  // AUTO-SAVE LOGIC (Debounced)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
     }
 
-    // Only save if the order has actually changed from the initial data
     const initialOrderIds = data.plans.map(p => p.id).join(",");
     const currentOrderIds = plans.map(p => p.id).join(",");
     
@@ -118,17 +115,31 @@ export function DashboardPage() {
         if (!exercise) return;
         
         exercise.bodyRegionSlugs.forEach((slug, idx) => {
-          const weight = idx < 2 ? 1.0 : 0.4;
+          // BIOLOGICAL STIMULUS WEIGHTING:
+          // Primary movers (first 2 slugs) get 100% credit.
+          // Secondary movers get 20% credit (correcting the "ghost volume" trap).
+          const weight = idx < 2 ? 1.0 : 0.2;
           frequency[slug] = (frequency[slug] || 0) + (item.sets * weight);
         });
       });
     });
 
-    const maxFreq = Math.max(...Object.values(frequency), 1);
-    return Object.entries(frequency).map(([slug, count]) => ({
-      slug: slug as BodyHighlightSlug,
-      intensity: Math.min(Math.round((count / maxFreq) * 4), 4) || 1,
-    }));
+    return Object.entries(frequency).map(([slug, weightedSets]) => {
+      // ABSOLUTE THRESHOLD SCALING (Abandoning the "Relative Peak" fallacy):
+      // 4/4 (Red): 14+ weighted sets (Max Stimulus)
+      // 3/4 (Orange): 10-13 weighted sets (High Stimulus)
+      // 2/4 (Yellow): 5-9 weighted sets (Moderate Stimulus)
+      // 1/4 (Green): 1-4 weighted sets (Maintenance)
+      let intensity = 1;
+      if (weightedSets >= 14) intensity = 4;
+      else if (weightedSets >= 10) intensity = 3;
+      else if (weightedSets >= 5) intensity = 2;
+      
+      return {
+        slug: slug as BodyHighlightSlug,
+        intensity
+      };
+    });
   }, [activePlan, data.exercises]);
 
   const exportPlanToMarkdown = (plan: WeeklyPlan) => {
