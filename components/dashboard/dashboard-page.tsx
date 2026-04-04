@@ -12,6 +12,7 @@ import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 import { GlowCard } from "@/components/ui/glow-card";
 import { TextGenerate } from "@/components/ui/text-generate";
 import { WorkoutHeatmap } from "./workout-heatmap";
+import { DashboardCharts } from "./dashboard-charts";
 import { useData } from "@/components/shared/data-provider";
 
 const formatDate = (value: string) =>
@@ -35,7 +36,7 @@ export function DashboardPage() {
           const exercise = data.exercises.find((e) => e.id === item.exerciseId);
           if (!exercise) return;
           exercise.bodyRegionSlugs.forEach((slug) => {
-            frequency[slug] = (frequency[slug] || 0) + 1;
+            frequency[slug] = (frequency[slug] || 0) + (item.sets?.length || 0);
           });
         });
       });
@@ -138,6 +139,8 @@ export function DashboardPage() {
           <WorkoutHeatmap sessions={data.sessions} />
         </div>
       </Card>
+
+      <DashboardCharts data={data} />
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <Card className="p-6">
