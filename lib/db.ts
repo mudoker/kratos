@@ -105,7 +105,15 @@ const seedExerciseCatalog = async (db: DbExecutor) => {
         default_rest_seconds
       )
       VALUES ($1, $2, $3, $4::jsonb, $5::jsonb, $6::jsonb, $7, $8::jsonb, $9)
-      ON CONFLICT (id) DO NOTHING`,
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        category = EXCLUDED.category,
+        primary_muscles = EXCLUDED.primary_muscles,
+        secondary_muscles = EXCLUDED.secondary_muscles,
+        body_region_slugs = EXCLUDED.body_region_slugs,
+        equipment = EXCLUDED.equipment,
+        instructions = EXCLUDED.instructions,
+        default_rest_seconds = EXCLUDED.default_rest_seconds`,
       [
         exercise.id,
         exercise.name,

@@ -17,17 +17,17 @@
     "imageUrl": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?q=80&w=800&auto=format&fit=crop"
   },
   {
-    "id": "incline-barbell-bench-press",
-    "name": "Incline Barbell Bench Press",
+    "id": "incline-dumbbell-press",
+    "name": "Incline Dumbbell Press",
     "category": "Push",
     "primaryMuscles": ["Upper Chest"],
     "secondaryMuscles": ["Triceps", "Shoulders"],
     "bodyRegionSlugs": ["chest", "triceps", "deltoids"],
-    "equipment": "Barbell",
+    "equipment": "Dumbbells",
     "instructions": [
       "Set the bench to a 30-45 degree incline.",
-      "Grip the bar and lower it to your upper chest.",
-      "Press the bar back up until arms are locked."
+      "Press the dumbbells from your upper chest to full extension.",
+      "Lower under control to feel the stretch."
     ],
     "defaultRestSeconds": 120,
     "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
@@ -76,29 +76,11 @@
     "equipment": "Pull-up Bar",
     "instructions": [
       "Grip the bar with palms facing away, slightly wider than shoulders.",
-      "Hang with arms fully extended.",
       "Pull yourself up until your chin is over the bar.",
       "Lower yourself back to the starting position."
     ],
     "defaultRestSeconds": 90,
     "imageUrl": "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop"
-  },
-  {
-    "id": "barbell-row",
-    "name": "Barbell Row",
-    "category": "Pull",
-    "primaryMuscles": ["Upper Back", "Lats"],
-    "secondaryMuscles": ["Biceps", "Lower Back"],
-    "bodyRegionSlugs": ["upper-back", "biceps", "lower-back"],
-    "equipment": "Barbell",
-    "instructions": [
-      "Hinge at the hips with a slight knee bend.",
-      "Grip the bar and pull it toward your lower ribs.",
-      "Squeeze your shoulder blades at the top.",
-      "Lower the bar back to arms' length."
-    ],
-    "defaultRestSeconds": 90,
-    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
   },
   {
     "id": "standing-overhead-press",
@@ -109,13 +91,60 @@
     "bodyRegionSlugs": ["deltoids", "triceps", "chest"],
     "equipment": "Barbell",
     "instructions": [
-      "Clean the bar to your shoulders or take it from a rack.",
       "Press the bar overhead until arms are locked.",
       "Keep your core tight and avoid leaning back.",
       "Lower the bar back to your shoulders."
     ],
     "defaultRestSeconds": 120,
     "imageUrl": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "hack-squat",
+    "name": "Hack Squat",
+    "category": "Legs",
+    "primaryMuscles": ["Quadriceps"],
+    "secondaryMuscles": ["Glutes"],
+    "bodyRegionSlugs": ["quadriceps", "gluteal"],
+    "equipment": "Machine",
+    "instructions": [
+      "Position yourself in the hack squat machine.",
+      "Lower your body until your thighs are parallel to the footplate.",
+      "Drive back up using your quads."
+    ],
+    "defaultRestSeconds": 150,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "seated-cable-row",
+    "name": "Seated Cable Row",
+    "category": "Pull",
+    "primaryMuscles": ["Mid Back", "Lats"],
+    "secondaryMuscles": ["Biceps", "Forearms"],
+    "bodyRegionSlugs": ["upper-back", "biceps", "forearm"],
+    "equipment": "Cable",
+    "instructions": [
+      "Sit at the row machine and grip the handle.",
+      "Pull the handle toward your abdomen, squeezing your shoulder blades.",
+      "Extend your arms back to the starting position."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "bulgarian-split-squat",
+    "name": "Bulgarian Split Squat",
+    "category": "Legs",
+    "primaryMuscles": ["Quadriceps", "Glutes"],
+    "secondaryMuscles": ["Hamstrings"],
+    "bodyRegionSlugs": ["quadriceps", "gluteal", "hamstring"],
+    "equipment": "Dumbbells",
+    "instructions": [
+      "Place one foot behind you on a bench.",
+      "Squat down on your front leg until your thigh is parallel to the ground.",
+      "Drive back up to the starting position."
+    ],
+    "defaultRestSeconds": 120,
+    "imageUrl": "https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?q=80&w=800&auto=format&fit=crop"
   },
   {
     "id": "weighted-dip",
@@ -126,45 +155,292 @@
     "bodyRegionSlugs": ["chest", "triceps", "deltoids"],
     "equipment": "Bodyweight",
     "instructions": [
-      "Support yourself on parallel bars with arms extended.",
-      "Lower your body by bending your elbows until they are at 90 degrees.",
-      "Push back up to the starting position."
+      "Lower your body until your elbows are at 90 degrees.",
+      "Push back up to full extension."
     ],
     "defaultRestSeconds": 90,
     "imageUrl": "https://images.unsplash.com/photo-1590487988256-9ed24133863e?q=80&w=800&auto=format&fit=crop"
   },
   {
-    "id": "romanian-deadlift",
-    "name": "Romanian Deadlift",
-    "category": "Legs",
-    "primaryMuscles": ["Hamstrings", "Glutes"],
-    "secondaryMuscles": ["Lower Back"],
-    "bodyRegionSlugs": ["hamstring", "gluteal", "lower-back"],
-    "equipment": "Barbell",
+    "id": "assault-bike-sprints",
+    "name": "Assault Bike Sprints",
+    "category": "Conditioning",
+    "primaryMuscles": ["Full Body"],
+    "secondaryMuscles": ["Heart"],
+    "bodyRegionSlugs": ["quadriceps", "deltoids", "hands"],
+    "equipment": "Bike",
     "instructions": [
-      "Hold the bar at hip level.",
-      "Hinge at the hips, keeping the bar close to your legs.",
-      "Lower until you feel a stretch in your hamstrings.",
-      "Return to the starting position by extending your hips."
+      "Sprint as hard as possible for the target duration.",
+      "Use both arms and legs to generate maximum power."
     ],
-    "defaultRestSeconds": 120,
+    "defaultRestSeconds": 60,
     "imageUrl": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop"
   },
   {
-    "id": "bulgarian-split-squat",
-    "name": "Bulgarian Split Squat",
-    "category": "Legs",
-    "primaryMuscles": ["Quadriceps", "Glutes"],
-    "secondaryMuscles": ["Hamstrings", "Core"],
-    "bodyRegionSlugs": ["quadriceps", "gluteal", "hamstring"],
+    "id": "kettlebell-swing",
+    "name": "Kettlebell Swing",
+    "category": "Conditioning",
+    "primaryMuscles": ["Glutes", "Hamstrings"],
+    "secondaryMuscles": ["Core", "Shoulders"],
+    "bodyRegionSlugs": ["gluteal", "hamstring", "lower-back", "deltoids"],
+    "equipment": "Kettlebell",
+    "instructions": [
+      "Hinge at the hips and swing the kettlebell to chest height.",
+      "Snap your hips forward powerfully."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1517130038641-a774d04afb3c?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "burpee",
+    "name": "Burpee",
+    "category": "Conditioning",
+    "primaryMuscles": ["Full Body"],
+    "secondaryMuscles": ["Heart"],
+    "bodyRegionSlugs": ["chest", "quadriceps", "hands"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Drop into a plank, do a push-up, jump your feet in, and explode upward."
+    ],
+    "defaultRestSeconds": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1599058917232-d750c20070c2?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "battle-ropes",
+    "name": "Battle Ropes",
+    "category": "Conditioning",
+    "primaryMuscles": ["Shoulders", "Core"],
+    "secondaryMuscles": ["Forearms"],
+    "bodyRegionSlugs": ["deltoids", "forearm", "hands"],
+    "equipment": "Ropes",
+    "instructions": [
+      "Create waves in the ropes by moving your arms rapidly up and down."
+    ],
+    "defaultRestSeconds": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "farmer-carry",
+    "name": "Farmer Carry",
+    "category": "Conditioning",
+    "primaryMuscles": ["Forearms", "Core", "Traps"],
+    "secondaryMuscles": ["Full Body"],
+    "bodyRegionSlugs": ["forearm", "trapezius", "hands", "feet"],
     "equipment": "Dumbbells",
     "instructions": [
-      "Place one foot on a bench behind you.",
-      "Hold dumbbells at your sides.",
-      "Lower your hips until your front thigh is parallel to the ground.",
-      "Drive back up through your front heel."
+      "Walk a set distance while holding heavy weights at your sides."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "category": "Core",
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Shoulders", "Glutes"],
+    "bodyRegionSlugs": ["abs", "deltoids", "gluteal"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Hold a straight body position supported by your forearms and toes."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1566241142559-40e1bfc26ee7?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "dead-bug",
+    "name": "Dead Bug",
+    "category": "Core",
+    "primaryMuscles": ["Abs"],
+    "secondaryMuscles": ["Hip Flexors"],
+    "bodyRegionSlugs": ["abs"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Lie on your back and slowly lower opposite arm and leg while keeping your back flat."
+    ],
+    "defaultRestSeconds": 45,
+    "imageUrl": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "cossack-squat",
+    "name": "Cossack Squat",
+    "category": "Mobility",
+    "primaryMuscles": ["Adductors"],
+    "secondaryMuscles": ["Hamstrings", "Quads"],
+    "bodyRegionSlugs": ["adductors", "hamstring", "quadriceps"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Squat deeply to one side while keeping the other leg straight."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1552196564-97c84bb691ce?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "worlds-greatest-stretch",
+    "name": "World's Greatest Stretch",
+    "category": "Mobility",
+    "primaryMuscles": ["Hips", "Thoracic Back"],
+    "secondaryMuscles": ["Hamstrings"],
+    "bodyRegionSlugs": ["upper-back", "hamstring"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Lunge forward, drop your elbow to the floor, then rotate your arm toward the ceiling."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "incline-walk-liss",
+    "name": "Incline Walk (LISS)",
+    "category": "Conditioning",
+    "primaryMuscles": ["Full Body"],
+    "secondaryMuscles": ["Heart"],
+    "bodyRegionSlugs": ["feet", "knees"],
+    "equipment": "Treadmill",
+    "instructions": [
+      "Walk at a steady pace on an incline to keep heart rate in Zone 2."
+    ],
+    "defaultRestSeconds": 0,
+    "imageUrl": "https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "row-erg-sprints",
+    "name": "Row Erg Sprints",
+    "category": "Conditioning",
+    "primaryMuscles": ["Back", "Legs"],
+    "secondaryMuscles": ["Arms", "Heart"],
+    "bodyRegionSlugs": ["upper-back", "quadriceps", "biceps"],
+    "equipment": "Rower",
+    "instructions": [
+      "Row at maximum intensity for short bursts followed by rest."
     ],
     "defaultRestSeconds": 90,
-    "imageUrl": "https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?q=80&w=800&auto=format&fit=crop"
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "jump-rope",
+    "name": "Jump Rope",
+    "category": "Conditioning",
+    "primaryMuscles": ["Calves"],
+    "secondaryMuscles": ["Heart", "Shoulders"],
+    "bodyRegionSlugs": ["calves", "deltoids", "hands"],
+    "equipment": "Jump Rope",
+    "instructions": [
+      "Maintain a steady rhythm jumping over the rope."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1595078475328-1ab05d0a6a0e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "shadow-boxing",
+    "name": "Shadow Boxing",
+    "category": "Conditioning",
+    "primaryMuscles": ["Shoulders", "Core"],
+    "secondaryMuscles": ["Heart"],
+    "bodyRegionSlugs": ["deltoids", "abs", "hands"],
+    "equipment": "Bodyweight",
+    "instructions": [
+      "Perform boxing combinations in the air focusing on speed and movement."
+    ],
+    "defaultRestSeconds": 30,
+    "imageUrl": "https://images.unsplash.com/photo-1517438476312-10d79c077509?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "face-pull",
+    "name": "Face Pull",
+    "category": "Pull",
+    "primaryMuscles": ["Rear Delts", "Upper Back"],
+    "secondaryMuscles": ["Shoulders"],
+    "bodyRegionSlugs": ["deltoids", "upper-back"],
+    "equipment": "Cable",
+    "instructions": [
+      "Pull the rope toward your face while keeping your elbows high."
+    ],
+    "defaultRestSeconds": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "pec-deck-fly",
+    "name": "Pec Deck Fly",
+    "category": "Push",
+    "primaryMuscles": ["Chest"],
+    "secondaryMuscles": ["Shoulders"],
+    "bodyRegionSlugs": ["chest", "deltoids"],
+    "equipment": "Machine",
+    "instructions": [
+      "Squeeze the handles together in front of your chest."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "preacher-curl",
+    "name": "Preacher Curl",
+    "category": "Pull",
+    "primaryMuscles": ["Biceps"],
+    "secondaryMuscles": ["Forearms"],
+    "bodyRegionSlugs": ["biceps", "forearm"],
+    "equipment": "Barbell",
+    "instructions": [
+      "Curl the weight up while resting your upper arms on the preacher bench."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "skull-crusher",
+    "name": "Skull Crusher",
+    "category": "Push",
+    "primaryMuscles": ["Triceps"],
+    "secondaryMuscles": ["Shoulders"],
+    "bodyRegionSlugs": ["triceps", "deltoids"],
+    "equipment": "Barbell",
+    "instructions": [
+      "Lower the weight toward your forehead then extend arms back up."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1534367507873-d2d7e24c797f?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "straight-arm-pulldown",
+    "name": "Straight-Arm Pulldown",
+    "category": "Pull",
+    "primaryMuscles": ["Lats"],
+    "secondaryMuscles": ["Triceps", "Core"],
+    "bodyRegionSlugs": ["upper-back", "triceps", "abs"],
+    "equipment": "Cable",
+    "instructions": [
+      "Keep arms straight and pull the bar down to your thighs."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1591940742878-13aba4b7a35e?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "seated-leg-curl",
+    "name": "Seated Leg Curl",
+    "category": "Legs",
+    "primaryMuscles": ["Hamstrings"],
+    "secondaryMuscles": ["Calves"],
+    "bodyRegionSlugs": ["hamstring", "calves"],
+    "equipment": "Machine",
+    "instructions": [
+      "Curl your legs down toward the bench while seated."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
+  },
+  {
+    "id": "leg-extension",
+    "name": "Leg Extension",
+    "category": "Legs",
+    "primaryMuscles": ["Quadriceps"],
+    "secondaryMuscles": ["Knees"],
+    "bodyRegionSlugs": ["quadriceps", "knees"],
+    "equipment": "Machine",
+    "instructions": [
+      "Extend your legs forward against the resistance pad."
+    ],
+    "defaultRestSeconds": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop"
   }
 ]
