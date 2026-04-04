@@ -81,6 +81,7 @@ export type WeeklyPlan = {
   userId: string;
   name: string;
   notes: string;
+  orderIndex: number;
   days: WeeklyPlanDay[];
   createdAt: string;
   updatedAt: string;

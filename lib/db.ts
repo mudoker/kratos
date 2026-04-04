@@ -315,6 +315,7 @@ export const hydratePlans = (
     userId: String(planRow.user_id),
     name: String(planRow.name),
     notes: String(planRow.notes ?? ""),
+    orderIndex: Number(planRow.order_index ?? 0),
     createdAt: toIso(planRow.created_at as string | null | undefined),
     updatedAt: toIso(planRow.updated_at as string | null | undefined),
     days: dayRows
