@@ -170,6 +170,13 @@ export const savePlan = async (userId: string, planInput: UpsertPlanInput) => {
   }));
 
   await transaction(async (client) => {
+    if (planInput.id) {
+      const existing = await client.query("SELECT user_id FROM weekly_plans WHERE id = $1", [planId]);
+      if (existing.rowCount && existing.rows[0].user_id !== userId) {
+        throw new Error("Unauthorized: You do not own this plan.");
+      }
+    }
+
     await client.query(
       `INSERT INTO weekly_plans (id, user_id, name, notes, order_index, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -255,6 +262,14 @@ export const getRecords = async (userId: string): Promise<PersonalRecord[]> => {
 export const saveRecord = async (userId: string, record: UpsertRecordInput) => {
   await ensureDataReady();
   const id = record.id || createId("pr");
+
+  if (record.id) {
+    const existing = await pool.query("SELECT user_id FROM personal_records WHERE id = $1", [id]);
+    if (existing.rowCount && existing.rows[0].user_id !== userId) {
+      throw new Error("Unauthorized: You do not own this record.");
+    }
+  }
+
   await pool.query(
     `INSERT INTO personal_records (id, user_id, exercise_id, value, unit, reps, achieved_at, notes)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -298,6 +313,13 @@ export const saveSession = async (userId: string, sessionInput: UpsertSessionInp
   const startedAt = sessionInput.startedAt || new Date().toISOString();
 
   await transaction(async (client) => {
+    if (sessionInput.id) {
+      const existing = await client.query("SELECT user_id FROM workout_sessions WHERE id = $1", [id]);
+      if (existing.rowCount && existing.rows[0].user_id !== userId) {
+        throw new Error("Unauthorized: You do not own this session.");
+      }
+    }
+
     await client.query(
       `INSERT INTO workout_sessions
         (id, user_id, plan_id, plan_day_id, started_at, ended_at, day_index, title, effort, notes)
