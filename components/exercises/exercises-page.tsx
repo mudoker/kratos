@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ExerciseCategory } from "@/lib/types";
+import type { ExerciseCategory, BodyHighlightSlug } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { MuscleMap } from "@/components/shared/muscle-map";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,21 @@ export function ExercisesPage() {
   );
 
   const selected = filtered.find((exercise) => exercise.id === selectedId) ?? filtered[0] ?? data.exercises[0];
+
+  const exerciseIntensities = useMemo(() => {
+    if (!selected) return [];
+    const intensities: Array<{ slug: BodyHighlightSlug; intensity: number }> = [];
+    
+    selected.bodyRegionSlugs.forEach(slug => {
+      // If it's in primary muscles (best effort match), give it 4, otherwise 2
+      // Note: mapping between human readable primaryMuscles and slugs isn't 1:1,
+      // so for now we highlight all region slugs of the exercise.
+      // We can use a simple heuristic or just highlight all at 4 for specific exercises.
+      intensities.push({ slug, intensity: 4 });
+    });
+    
+    return intensities;
+  }, [selected]);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -95,7 +110,11 @@ export function ExercisesPage() {
 
       {selected ? (
         <div className="space-y-6">
-          <MuscleMap slugs={selected.bodyRegionSlugs} profile={data.profile} title={selected.name} />
+          <MuscleMap 
+            intensities={exerciseIntensities} 
+            profile={data.profile} 
+            title={`${selected.name} Stimulus`} 
+          />
           <Card className="p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>

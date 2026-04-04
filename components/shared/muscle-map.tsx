@@ -51,11 +51,14 @@ export function MuscleMap({
 
   const data = useMemo(() => {
     if (intensities) {
-      return intensities.map((item) => ({
-        slug: item.slug,
-        // Intensity 5 is our bright neon state for hover
-        intensity: hoveredSlug === item.slug ? 5 : item.intensity,
-      }));
+      return intensities.map((item) => {
+        const isHovered = hoveredSlug === item.slug;
+        return {
+          slug: item.slug,
+          // Levels 1-4 are base, 5-8 are "brightened" versions of 1-4
+          intensity: isHovered ? item.intensity + 4 : item.intensity,
+        };
+      });
     }
     const uniqueSlugs = [...new Set(slugs || [])];
     const visibleSlugs = [...new Set(hoveredSlug ? [...uniqueSlugs, hoveredSlug] : uniqueSlugs)];
@@ -80,7 +83,7 @@ export function MuscleMap({
             {title || "Target muscles"}
           </p>
           <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-            Hover a region or label to isolate that muscle group on the map.
+            Hover a region to see stimulus intensity.
           </p>
         </div>
         <Button
@@ -94,39 +97,47 @@ export function MuscleMap({
         </Button>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[22px] border border-[color:var(--border)] bg-black/[0.03] px-4 py-3">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
-            Inspecting Region
-          </span>
-          <span className="text-sm font-semibold text-[color:var(--foreground)]">
-            {activeSlug ? formatSlug(activeSlug) : "hover a muscle"}
-          </span>
-        </div>
-        {activeSlug && intensities && (
-          <div className="ml-auto flex flex-col items-end text-right">
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
-              Stimulus Level
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-[color:var(--foreground)]">
-                {intensities.find((i) => i.slug === activeSlug)?.intensity || 0} / 4
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[22px] border border-[color:var(--border)] bg-black/[0.03] px-4 py-3 min-h-[64px]">
+        {activeSlug ? (
+          <>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
+                Inspecting Region
               </span>
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4].map((step) => (
-                  <div
-                    key={step}
-                    className={cn(
-                      "h-1.5 w-3 rounded-full transition-colors",
-                      (intensities.find((i) => i.slug === activeSlug)?.intensity || 0) >= step
-                        ? "bg-[color:var(--brand)]"
-                        : "bg-black/5"
-                    )}
-                  />
-                ))}
-              </div>
+              <span className="text-sm font-semibold text-[color:var(--foreground)]">
+                {formatSlug(activeSlug)}
+              </span>
             </div>
-          </div>
+            {intensities && (
+              <div className="ml-auto flex flex-col items-end text-right">
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
+                  Stimulus Level
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-[color:var(--foreground)]">
+                    {intensities.find((i) => i.slug === activeSlug)?.intensity || 0} / 4
+                  </span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4].map((step) => (
+                      <div
+                        key={step}
+                        className={cn(
+                          "h-1.5 w-3 rounded-full transition-colors",
+                          (intensities.find((i) => i.slug === activeSlug)?.intensity || 0) >= step
+                            ? "bg-[color:var(--brand)]"
+                            : "bg-black/5"
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="text-sm font-medium text-[color:var(--muted-foreground)] italic">
+            Hover a muscle to inspect stimulus...
+          </span>
         )}
       </div>
 
@@ -149,8 +160,12 @@ export function MuscleMap({
             side={side}
             border="none"
             scale={1.35}
-            // 5th color is bright white/neon for the hovered state
-            colors={["#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e", "#ffffff"]}
+            // 1-4: Base Colors (Green, Yellow, Orange, Red)
+            // 5-8: Brightened variants for hover effect
+            colors={[
+              "#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e", // Normal
+              "#a8e6cf", "#ffea8a", "#ffbf69", "#ff4d4d"  // Hover (brighter)
+            ]}
           />
         </div>
       </div>

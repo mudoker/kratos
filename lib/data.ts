@@ -306,7 +306,35 @@ export const saveSession = async (userId: string, sessionInput: UpsertSessionInp
 
     await client.query("DELETE FROM workout_session_items WHERE session_id = $1", [id]);
 
+    const existingRecords = await getRecords(userId);
+
     for (const [order, item] of sessionInput.items.entries()) {
+      // Auto-extract PRs from the sets
+      if (item.sets && item.sets.length > 0) {
+        for (const set of item.sets) {
+          const weightNum = parseFloat(set.weight);
+          const repsNum = parseInt(set.reps);
+          
+          if (!isNaN(weightNum) && !isNaN(repsNum) && weightNum > 0 && repsNum > 0) {
+            const currentBest = existingRecords
+              .filter(r => r.exerciseId === item.exerciseId)
+              .sort((a, b) => b.value - a.value || b.reps - a.reps)[0];
+
+            if (!currentBest || weightNum > currentBest.value || (weightNum === currentBest.value && repsNum > currentBest.reps)) {
+              // Create a new record
+              await client.query(
+                `INSERT INTO personal_records (id, user_id, exercise_id, value, unit, reps, achieved_at, notes)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                 ON CONFLICT (id) DO NOTHING`,
+                [createId("pr"), userId, item.exerciseId, weightNum, "kg", repsNum, startedAt, `Auto-logged from session: ${sessionInput.title}`]
+              );
+              // Refresh existingRecords for the next set/item in this loop
+              existingRecords.push({ id: "temp", userId, exerciseId: item.exerciseId, value: weightNum, unit: "kg", reps: repsNum, achievedAt: startedAt, notes: "" });
+            }
+          }
+        }
+      }
+
       await client.query(
         `INSERT INTO workout_session_items
           (id, session_id, exercise_id, exercise_name, planned_sets, reps, rest_seconds, target_load, target_rpe, result, notes, order_index)
