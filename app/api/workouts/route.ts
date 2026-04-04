@@ -1,0 +1,40 @@
+import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/auth";
+import { getSessions, saveSession } from "@/lib/data";
+import type { WorkoutSession } from "@/lib/types";
+
+export async function GET() {
+  const user = await requireUser();
+  return NextResponse.json({
+    sessions: await getSessions(user.id),
+  });
+}
+
+export async function POST(request: Request) {
+  const user = await requireUser();
+  const body = (await request.json()) as Partial<WorkoutSession>;
+  const session = await saveSession(user.id, {
+    id: body.id,
+    planId: body.planId ?? null,
+    planDayId: body.planDayId ?? null,
+    startedAt: body.startedAt,
+    endedAt: body.endedAt ?? new Date().toISOString(),
+    day: body.day ?? 0,
+    title: body.title?.trim() || "Workout session",
+    effort: body.effort?.trim() || "",
+    notes: body.notes?.trim() || "",
+    items: body.items ?? [],
+  });
+  return NextResponse.json({ session });
+}
+
+export async function PUT(request: Request) {
+  const user = await requireUser();
+  const body = (await request.json()) as WorkoutSession;
+  if (!body.id) {
+    return NextResponse.json({ error: "Workout session not found." }, { status: 404 });
+  }
+
+  const session = await saveSession(user.id, body);
+  return NextResponse.json({ session });
+}
