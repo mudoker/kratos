@@ -90,7 +90,7 @@ export function DashboardPage() {
       } finally {
         setIsAutoSaving(false);
       }
-    }, 1500);
+    }, 800);
 
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -236,10 +236,20 @@ export function DashboardPage() {
                         key={p.id} 
                         value={p}
                         initial={false}
-                        transition={{ type: "spring", stiffness: 600, damping: 35 }}
+                        layout
+                        whileDrag={{ 
+                          scale: 1.02, 
+                          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" 
+                        }}
+                        transition={{ 
+                          type: "spring", 
+                          stiffness: 700, 
+                          damping: 40, 
+                          mass: 0.8 
+                        }}
                         className={cn(
-                          "rounded-[28px] border border-[color:var(--border)] transition-all duration-200 overflow-hidden",
-                          isActive ? "bg-white/80 shadow-md scale-[1.01]" : "bg-white/30 opacity-60 hover:opacity-80 grayscale-[40%]"
+                          "rounded-[28px] border border-[color:var(--border)] transition-opacity duration-200 overflow-hidden",
+                          isActive ? "bg-white/80 shadow-sm" : "bg-white/30 opacity-60 grayscale-[40%]"
                         )}
                       >
                         <div className="flex items-center">
