@@ -25,28 +25,26 @@ export function DashboardPage() {
 
   const muscleIntensities = useMemo(() => {
     const frequency: Record<string, number> = {};
-    const lookbackDays = 30;
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - lookbackDays);
+    const activePlan = data.plans[0];
+    
+    if (!activePlan) return [];
 
-    data.sessions
-      .filter((s) => new Date(s.startedAt) >= cutoff)
-      .forEach((session) => {
-        session.items.forEach((item) => {
-          const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-          if (!exercise) return;
-          exercise.bodyRegionSlugs.forEach((slug) => {
-            frequency[slug] = (frequency[slug] || 0) + (item.sets?.length || 0);
-          });
+    activePlan.days.forEach((day) => {
+      day.items.forEach((item) => {
+        const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+        if (!exercise) return;
+        exercise.bodyRegionSlugs.forEach((slug) => {
+          frequency[slug] = (frequency[slug] || 0) + (item.sets || 0);
         });
       });
+    });
 
     const maxFreq = Math.max(...Object.values(frequency), 1);
     return Object.entries(frequency).map(([slug, count]) => ({
       slug: slug as BodyHighlightSlug,
       intensity: Math.min(Math.round((count / maxFreq) * 4), 4) || 1,
     }));
-  }, [data.sessions, data.exercises]);
+  }, [data.plans, data.exercises]);
 
   return (
     <div className="space-y-6">
@@ -123,7 +121,7 @@ export function DashboardPage() {
         </BentoGridItem>
 
         <BentoGridItem className="p-0">
-          <MuscleMap intensities={muscleIntensities} profile={data.profile} title="Recent Stimulus Focus" />
+          <MuscleMap intensities={muscleIntensities} profile={data.profile} title="Active Plan Stimulus Target" />
         </BentoGridItem>
       </BentoGrid>
 
