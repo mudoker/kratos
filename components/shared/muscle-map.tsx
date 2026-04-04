@@ -120,7 +120,7 @@ export function MuscleMap({
             side={side}
             border="none"
             scale={1.35}
-            colors={["#ffd36b", "#ff9f0a", "#ff5a1f", "#c81e1e"]}
+            colors={["#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e"]}
           />
         </div>
       </div>

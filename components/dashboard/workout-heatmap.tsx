@@ -51,10 +51,10 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
 
   const getColor = (level: number) => {
     switch (level) {
-      case 1: return "bg-[color:var(--brand)] opacity-20";
-      case 2: return "bg-[color:var(--brand)] opacity-45";
-      case 3: return "bg-[color:var(--brand)] opacity-70";
-      case 4: return "bg-[color:var(--brand)] opacity-100";
+      case 1: return "bg-[#82ca9d]"; // Soft green
+      case 2: return "bg-[#ffd36b]"; // Yellow
+      case 3: return "bg-[#ff9f0a]"; // Orange
+      case 4: return "bg-[#c81e1e]"; // Deep red
       default: return "bg-black/5";
     }
   };
@@ -80,10 +80,10 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
         <span>Less active</span>
         <div className="flex gap-1">
           <div className="h-2.5 w-2.5 rounded-[2px] bg-black/5" />
-          <div className="h-2.5 w-2.5 rounded-[2px] bg-[color:var(--brand)] opacity-20" />
-          <div className="h-2.5 w-2.5 rounded-[2px] bg-[color:var(--brand)] opacity-45" />
-          <div className="h-2.5 w-2.5 rounded-[2px] bg-[color:var(--brand)] opacity-70" />
-          <div className="h-2.5 w-2.5 rounded-[2px] bg-[color:var(--brand)] opacity-100" />
+          <div className="h-2.5 w-2.5 rounded-[2px] bg-[#82ca9d]" />
+          <div className="h-2.5 w-2.5 rounded-[2px] bg-[#ffd36b]" />
+          <div className="h-2.5 w-2.5 rounded-[2px] bg-[#ff9f0a]" />
+          <div className="h-2.5 w-2.5 rounded-[2px] bg-[#c81e1e]" />
         </div>
         <span>High intensity</span>
       </div>
