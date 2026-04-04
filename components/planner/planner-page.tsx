@@ -17,7 +17,8 @@ import { Combobox } from "@/components/ui/combobox";
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const createDraftId = () => `draft_${crypto.randomUUID()}`;
+const randomId = () => Math.random().toString(36).substring(2, 15);
+const createDraftId = () => `draft_${randomId()}`;
 const isPersistedId = (id: string) => Boolean(id) && !id.startsWith("draft_");
 
 const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
@@ -28,7 +29,7 @@ const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   days: dayNames.map((title, day) => ({
-    id: `draft-day-${crypto.randomUUID()}`,
+    id: `draft-day-${randomId()}`,
     day,
     title,
     focus: "",
@@ -42,7 +43,13 @@ const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
 
 export function PlannerPage({ data }: { data: DashboardData }) {
   const router = useRouter();
-  const initialPlans = data.plans.length ? data.plans : [blankPlan(data.user.id)];
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const initialPlans = useMemo(() => data.plans.length ? data.plans : [blankPlan(data.user.id)], [data.plans, data.user.id]);
   const [plans, setPlans] = useState<WeeklyPlan[]>(initialPlans);
   const [selectedPlanId, setSelectedPlanId] = useState(initialPlans[0]?.id ?? "");
   const [selectedDayValue, setSelectedDayValue] = useState(String(initialPlans[0]?.days[0]?.day ?? 0));
@@ -112,7 +119,7 @@ export function PlannerPage({ data }: { data: DashboardData }) {
               items: [
                 ...day.items,
                 {
-                  id: `draft-item-${crypto.randomUUID()}`,
+                  id: `draft-item-${randomId()}`,
                   exerciseId: data.exercises[0]?.id ?? "",
                   sets: 3,
                   reps: "8-10",
@@ -178,6 +185,8 @@ export function PlannerPage({ data }: { data: DashboardData }) {
     setSelectedDayValue(String(nextPlans[0]?.days[0]?.day ?? 0));
     router.refresh();
   };
+
+  if (!isClient) return null;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
