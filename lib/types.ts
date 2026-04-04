@@ -47,6 +47,8 @@ export type Exercise = {
   equipment: string;
   instructions: string[];
   defaultRestSeconds: number;
+  videoUrl?: string;
+  imageUrl?: string;
 };
 
 export type WeeklyPlanItem = {
