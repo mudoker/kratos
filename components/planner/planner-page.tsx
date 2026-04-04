@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -203,25 +204,27 @@ export function PlannerPage({ data }: { data: DashboardData }) {
           New split
         </Button>
 
-        <div className="mt-6 space-y-3">
-          {plans.map((plan) => (
-            <button
-              key={plan.id}
-              type="button"
-              onClick={() => setSelectedPlanId(plan.id)}
-              className={`w-full rounded-[24px] border p-4 text-left transition ${
-                plan.id === selectedPlan.id
-                  ? "border-[color:var(--brand)] bg-black/6"
-                  : "border-[color:var(--border)] bg-white/55 hover:bg-white/70"
-              }`}
-            >
-              <p className="font-semibold text-[color:var(--foreground)]">{plan.name}</p>
-              <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-                {plan.days.reduce((count, day) => count + day.items.length, 0)} lifts across the week
-              </p>
-            </button>
-          ))}
-        </div>
+        <ScrollArea className="mt-6 h-auto max-h-[400px] pr-3">
+          <div className="space-y-3">
+            {plans.map((plan) => (
+              <button
+                key={plan.id}
+                type="button"
+                onClick={() => setSelectedPlanId(plan.id)}
+                className={`w-full rounded-[24px] border p-4 text-left transition ${
+                  plan.id === selectedPlan.id
+                    ? "border-[color:var(--brand)] bg-black/6"
+                    : "border-[color:var(--border)] bg-white/55 hover:bg-white/70"
+                }`}
+              >
+                <p className="font-semibold text-[color:var(--foreground)]">{plan.name}</p>
+                <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
+                  {plan.days.reduce((count, day) => count + day.items.length, 0)} lifts across the week
+                </p>
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
 
         <Card className="mt-6 p-5">
           <CardTitle className="text-lg">Keep PR tracking separate</CardTitle>
@@ -383,109 +386,111 @@ export function PlannerPage({ data }: { data: DashboardData }) {
                 />
               </div>
 
-              <div className="space-y-4">
-                {day.items.map((item, itemIndex) => (
-                  <div key={item.id} className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <Badge>Lift {itemIndex + 1}</Badge>
-                      <Badge>{item.prGoal ? "PR focus" : "Standard work"}</Badge>
-                    </div>
+              <ScrollArea className="h-auto max-h-[600px] pr-3">
+                <div className="space-y-4">
+                  {day.items.map((item, itemIndex) => (
+                    <div key={item.id} className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <Badge>Lift {itemIndex + 1}</Badge>
+                        <Badge>{item.prGoal ? "PR focus" : "Standard work"}</Badge>
+                      </div>
 
-                    <div className="mt-4 grid gap-3 xl:grid-cols-[1.2fr_0.6fr_0.7fr_0.7fr_0.7fr]">
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Exercise</p>
-                        <Combobox
-                          options={exerciseOptions}
-                          value={item.exerciseId}
-                          onValueChange={(value) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, exerciseId: value }))}
-                          placeholder="Search exercise..."
-                        />
+                      <div className="mt-4 grid gap-3 xl:grid-cols-[1.2fr_0.6fr_0.7fr_0.7fr_0.7fr]">
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Exercise</p>
+                          <Combobox
+                            options={exerciseOptions}
+                            value={item.exerciseId}
+                            onValueChange={(value) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, exerciseId: value }))}
+                            placeholder="Search exercise..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Sets</p>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={String(item.sets)}
+                            onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, sets: Number(event.target.value) }))}
+                            placeholder="Sets"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Reps</p>
+                          <Input
+                            value={item.reps}
+                            onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, reps: event.target.value }))}
+                            placeholder="Reps"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Target load</p>
+                          <Input
+                            value={item.targetLoad}
+                            onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, targetLoad: event.target.value }))}
+                            placeholder="Target load"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Target RPE</p>
+                          <Input
+                            value={item.targetRpe}
+                            onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, targetRpe: event.target.value }))}
+                            placeholder="Target RPE"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Sets</p>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={String(item.sets)}
-                          onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, sets: Number(event.target.value) }))}
-                          placeholder="Sets"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Reps</p>
-                        <Input
-                          value={item.reps}
-                          onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, reps: event.target.value }))}
-                          placeholder="Reps"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Target load</p>
-                        <Input
-                          value={item.targetLoad}
-                          onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, targetLoad: event.target.value }))}
-                          placeholder="Target load"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Target RPE</p>
-                        <Input
-                          value={item.targetRpe}
-                          onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, targetRpe: event.target.value }))}
-                          placeholder="Target RPE"
-                        />
-                      </div>
-                    </div>
 
-                    <div className="mt-3 grid gap-3 xl:grid-cols-[0.8fr_1fr_auto]">
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Rest (s)</p>
-                        <Input
-                          type="number"
-                          min="30"
-                          value={String(item.restSeconds)}
-                          onChange={(event) =>
-                            updateItem(day.id, itemIndex, (entry) => ({ ...entry, restSeconds: Number(event.target.value) }))
-                          }
-                          placeholder="Rest seconds"
-                        />
+                      <div className="mt-3 grid gap-3 xl:grid-cols-[0.8fr_1fr_auto]">
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Rest (s)</p>
+                          <Input
+                            type="number"
+                            min="30"
+                            value={String(item.restSeconds)}
+                            onChange={(event) =>
+                              updateItem(day.id, itemIndex, (entry) => ({ ...entry, restSeconds: Number(event.target.value) }))
+                            }
+                            placeholder="Rest seconds"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">PR Goal</p>
+                          <Input
+                            value={item.prGoal}
+                            onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, prGoal: event.target.value }))}
+                            placeholder="PR target or key performance marker"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() =>
+                              updateDay(day.id, (entry) => ({
+                                ...entry,
+                                items: entry.items.filter((_, currentIndex) => currentIndex !== itemIndex),
+                              }))
+                            }
+                          >
+                            Remove
+                          </Button>
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">PR Goal</p>
-                        <Input
-                          value={item.prGoal}
-                          onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, prGoal: event.target.value }))}
-                          placeholder="PR target or key performance marker"
-                        />
-                      </div>
-                      <div className="flex items-end">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() =>
-                            updateDay(day.id, (entry) => ({
-                              ...entry,
-                              items: entry.items.filter((_, currentIndex) => currentIndex !== itemIndex),
-                            }))
-                          }
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
 
-                    <div className="mt-3 space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Exercise notes</p>
-                      <Textarea
-                        value={item.notes}
-                        onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, notes: event.target.value }))}
-                        placeholder="Technique cue, machine setup, tempo, or swap option"
-                        className="min-h-[88px]"
-                      />
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Exercise notes</p>
+                        <Textarea
+                          value={item.notes}
+                          onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, notes: event.target.value }))}
+                          placeholder="Technique cue, machine setup, tempo, or swap option"
+                          className="min-h-[88px]"
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </ScrollArea>
 
               <Button type="button" variant="secondary" onClick={() => addExercise(day.day)} disabled={!data.exercises.length}>
                 <Plus className="h-4 w-4" />
