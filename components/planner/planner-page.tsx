@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PlanAnalysis } from "./plan-analysis";
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -304,7 +305,16 @@ export function PlannerPage({ data }: { data: DashboardData }) {
                 {day.title.slice(0, 3)}
               </TabsTrigger>
             ))}
+            <div className="mx-1 w-px h-4 bg-[color:var(--border)]" />
+            <TabsTrigger value="analysis" className="gap-2">
+              <ArrowRight className="h-3.5 w-3.5" />
+              Analysis
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analysis">
+            <PlanAnalysis plan={selectedPlan} data={data} />
+          </TabsContent>
 
           {selectedPlan.days.map((day) => (
             <TabsContent key={day.id} value={String(day.day)} className="space-y-4">

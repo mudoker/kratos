@@ -36,30 +36,37 @@ const formatSlug = (slug: BodyHighlightSlug) => slug.replaceAll("-", " ");
 
 export function MuscleMap({
   slugs,
+  intensities,
   profile,
   title,
 }: {
-  slugs: BodyHighlightSlug[];
+  slugs?: BodyHighlightSlug[];
+  intensities?: Array<{ slug: BodyHighlightSlug; intensity: number }>;
   profile: Pick<UserProfile, "bodyGender">;
   title?: string;
 }) {
   const [side, setSide] = useState<"front" | "back">("front");
   const [hoveredSlug, setHoveredSlug] = useState<BodyHighlightSlug | null>(null);
 
-  const uniqueSlugs = useMemo(() => [...new Set(slugs)], [slugs]);
-  const visibleSlugs = useMemo(
-    () => [...new Set(hoveredSlug ? [...uniqueSlugs, hoveredSlug] : uniqueSlugs)],
-    [hoveredSlug, uniqueSlugs]
-  );
+  const data = useMemo(() => {
+    if (intensities) {
+      return intensities.map((item) => ({
+        slug: item.slug,
+        intensity: hoveredSlug === item.slug ? Math.max(item.intensity, 2) : item.intensity,
+      }));
+    }
+    const uniqueSlugs = [...new Set(slugs || [])];
+    const visibleSlugs = [...new Set(hoveredSlug ? [...uniqueSlugs, hoveredSlug] : uniqueSlugs)];
+    return visibleSlugs.map((slug) => ({
+      slug,
+      intensity: hoveredSlug === slug ? 2 : 1,
+    }));
+  }, [hoveredSlug, slugs, intensities]);
 
-  const data = useMemo(
-    () =>
-      visibleSlugs.map((slug) => ({
-        slug,
-        intensity: hoveredSlug === slug ? 2 : 1,
-      })),
-    [hoveredSlug, visibleSlugs]
-  );
+  const uniqueSlugs = useMemo(() => {
+    if (intensities) return intensities.map((i) => i.slug);
+    return [...new Set(slugs || [])];
+  }, [slugs, intensities]);
 
   const activeSlug = hoveredSlug ?? uniqueSlugs[0] ?? null;
 

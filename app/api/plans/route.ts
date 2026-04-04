@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { deletePlan, getPlans, savePlan } from "@/lib/data";
+import { getPlans, savePlan } from "@/lib/data";
 import type { WeeklyPlan } from "@/lib/types";
 
 export async function GET() {
@@ -31,17 +31,4 @@ export async function PUT(request: Request) {
 
   const plan = await savePlan(user.id, body);
   return NextResponse.json({ plan });
-}
-
-export async function DELETE(request: Request) {
-  const user = await requireUser();
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-
-  if (!id) {
-    return NextResponse.json({ error: "Plan ID is required." }, { status: 400 });
-  }
-
-  await deletePlan(user.id, id);
-  return NextResponse.json({ ok: true });
 }
