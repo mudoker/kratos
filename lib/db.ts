@@ -377,7 +377,7 @@ export const hydrateSessions = (
           restSeconds: Number(item.rest_seconds),
           targetLoad: String(item.target_load ?? ""),
           targetRpe: String(item.target_rpe ?? ""),
-          result: String(item.result ?? ""),
+          sets: parseJson(item.result, []),
           notes: String(item.notes ?? ""),
           order: Number(item.order_index),
         })

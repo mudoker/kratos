@@ -321,7 +321,7 @@ export const saveSession = async (userId: string, sessionInput: UpsertSessionInp
           item.restSeconds,
           item.targetLoad.trim(),
           item.targetRpe.trim(),
-          item.result.trim(),
+          JSON.stringify(item.sets || []),
           item.notes.trim(),
           order,
         ]

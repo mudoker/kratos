@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Edit2, Plus, Save, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { WeeklyPlan, WorkoutSession } from "@/lib/types";
+import type { WeeklyPlan, WorkoutSession, WorkoutSessionItem, WorkoutSet } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useData } from "@/components/shared/data-provider";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const baseSession = (): Partial<WorkoutSession> => ({
   id: undefined,
@@ -52,7 +53,7 @@ const createSessionFromDay = (plan: WeeklyPlan, dayId: string): Partial<WorkoutS
       restSeconds: item.restSeconds,
       targetLoad: item.targetLoad,
       targetRpe: item.targetRpe,
-      result: "",
+      sets: Array.from({ length: item.sets }).map(() => ({ weight: "", reps: "" })),
       notes: item.notes,
       order,
     })),
@@ -73,7 +74,10 @@ export function WorkoutsPage() {
 
   const selectedPlan = useMemo(() => data.plans.find((plan) => plan.id === planId) ?? null, [data.plans, planId]);
   const selectedDay = selectedPlan?.days.find((day) => day.id === dayId) ?? null;
-  const completedResults = (draft.items || []).filter((item) => item.result.trim()).length;
+  
+  const completedResults = useMemo(() => {
+    return (draft.items || []).filter((item) => item.sets.some(s => s.weight.trim() || s.reps.trim())).length;
+  }, [draft.items]);
 
   useEffect(() => {
     if (draft.id) return; // Don't overwrite if we are editing
@@ -137,6 +141,44 @@ export function WorkoutsPage() {
     }
   };
 
+  const updateSet = (itemIndex: number, setIndex: number, field: keyof WorkoutSet, value: string) => {
+    setDraft(current => ({
+      ...current,
+      items: (current.items || []).map((item, idx) => 
+        idx === itemIndex 
+          ? {
+              ...item,
+              sets: item.sets.map((s, sIdx) => 
+                sIdx === setIndex ? { ...s, [field]: value } : s
+              )
+            }
+          : item
+      )
+    }));
+  };
+
+  const addSet = (itemIndex: number) => {
+    setDraft(current => ({
+      ...current,
+      items: (current.items || []).map((item, idx) => 
+        idx === itemIndex 
+          ? { ...item, sets: [...item.sets, { weight: "", reps: "" }] }
+          : item
+      )
+    }));
+  };
+
+  const removeSet = (itemIndex: number, setIndex: number) => {
+    setDraft(current => ({
+      ...current,
+      items: (current.items || []).map((item, idx) => 
+        idx === itemIndex 
+          ? { ...item, sets: item.sets.filter((_, sIdx) => sIdx !== setIndex) }
+          : item
+      )
+    }));
+  };
+
   if (!data.plans.length) {
     return (
       <Card className="p-6">
@@ -190,7 +232,9 @@ export function WorkoutsPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
                 {label}
               </p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--foreground)]">{value}</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--foreground)] truncate whitespace-nowrap overflow-hidden max-w-full">
+                {value}
+              </p>
             </div>
           ))}
         </div>
@@ -206,7 +250,7 @@ export function WorkoutsPage() {
                 setDayId(plan?.days.find((day) => day.items.length)?.id ?? plan?.days[0]?.id ?? "");
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full truncate overflow-hidden whitespace-nowrap max-w-[240px]">
                 <SelectValue placeholder="Choose a plan" />
               </SelectTrigger>
               <SelectContent>
@@ -221,7 +265,7 @@ export function WorkoutsPage() {
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Day</p>
             <Select value={dayId} onValueChange={setDayId}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full truncate overflow-hidden whitespace-nowrap max-w-[240px]">
                 <SelectValue placeholder="Choose a day" />
               </SelectTrigger>
               <SelectContent>
@@ -271,87 +315,110 @@ export function WorkoutsPage() {
           />
         </div>
 
-        <div className="mt-6 space-y-4">
-          {(draft.items || []).map((item, index) => {
-            const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-            return (
-              <div
-                key={`${item.exerciseId}-${index}`}
-                className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-4">
-                    {exercise?.imageUrl && (
-                      <div className="h-12 w-12 overflow-hidden rounded-xl border border-[color:var(--border)]">
-                        <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
+        <ScrollArea className="mt-6 h-auto max-h-[800px] pr-4">
+          <div className="space-y-4">
+            {(draft.items || []).map((item, index) => {
+              const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+              return (
+                <div
+                  key={`${item.exerciseId}-${index}`}
+                  className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-4">
+                      {exercise?.imageUrl && (
+                        <div className="h-12 w-12 overflow-hidden rounded-xl border border-[color:var(--border)]">
+                          <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-[color:var(--foreground)]">{item.exerciseName}</p>
+                        <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
+                          Prescription for {selectedDay?.title || "today"}
+                        </p>
                       </div>
-                    )}
-                    <div>
-                      <p className="font-semibold text-[color:var(--foreground)]">{item.exerciseName}</p>
-                      <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-                        Prescription for {selectedDay?.title || "today"}
-                      </p>
                     </div>
-                  </div>
-                  <Badge>{item.restSeconds}s rest</Badge>
-                </div>
-
-                <div className="mt-4 grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
-                  <div className="rounded-[24px] border border-[color:var(--border)] bg-black/[0.03] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                      Prescription
-                    </p>
-                    <div className="mt-4 space-y-3 text-sm text-[color:var(--foreground)]">
-                      <p>
-                        {item.plannedSets} sets x {item.reps}
-                      </p>
-                      <p>Target load: {item.targetLoad || "Not set"}</p>
-                      <p>Target RPE: {item.targetRpe || "Not set"}</p>
-                    </div>
+                    <Badge>{item.restSeconds}s rest</Badge>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-                        Actual result
+                  <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+                    <div className="rounded-[24px] border border-[color:var(--border)] bg-black/[0.03] p-4 h-fit">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
+                        Prescription
                       </p>
-                      <Input
-                        value={item.result}
-                        onChange={(event) =>
-                          setDraft((current) => ({
-                            ...current,
-                            items: (current.items || []).map((entry, currentIndex) =>
-                              currentIndex === index ? { ...entry, result: event.target.value } : entry
-                            ),
-                          }))
-                        }
-                        placeholder="Actual result, e.g. 100kg x 8,8,7"
-                      />
+                      <div className="mt-4 space-y-3 text-sm text-[color:var(--foreground)]">
+                        <p>
+                          {item.plannedSets} sets x {item.reps}
+                        </p>
+                        <p>Target load: {item.targetLoad || "Not set"}</p>
+                        <p>Target RPE: {item.targetRpe || "Not set"}</p>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-                        Execution notes
-                      </p>
-                      <Textarea
-                        value={item.notes}
-                        onChange={(event) =>
-                          setDraft((current) => ({
-                            ...current,
-                            items: (current.items || []).map((entry, currentIndex) =>
-                              currentIndex === index ? { ...entry, notes: event.target.value } : entry
-                            ),
-                          }))
-                        }
-                        placeholder="Execution notes, pain signals, tempo changes, or missed targets"
-                        className="min-h-[110px]"
-                      />
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                            Actual Sets
+                          </p>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => addSet(index)}>
+                            <Plus className="h-3 w-3 mr-1" /> Add Set
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {(item.sets || []).map((set, sIdx) => (
+                            <div key={sIdx} className="flex items-center gap-2">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-[10px] font-bold">
+                                {sIdx + 1}
+                              </div>
+                              <div className="grid flex-1 grid-cols-2 gap-2">
+                                <Input 
+                                  value={set.weight} 
+                                  placeholder="kg" 
+                                  className="h-9 px-3 text-xs"
+                                  onChange={(e) => updateSet(index, sIdx, "weight", e.target.value)}
+                                />
+                                <Input 
+                                  value={set.reps} 
+                                  placeholder="reps" 
+                                  className="h-9 px-3 text-xs"
+                                  onChange={(e) => updateSet(index, sIdx, "reps", e.target.value)}
+                                />
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[color:var(--danger)]" onClick={() => removeSet(index, sIdx)}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                          Execution notes
+                        </p>
+                        <Textarea
+                          value={item.notes}
+                          onChange={(event) =>
+                            setDraft((current) => ({
+                              ...current,
+                              items: (current.items || []).map((entry, currentIndex) =>
+                                currentIndex === index ? { ...entry, notes: event.target.value } : entry
+                              ),
+                            }))
+                          }
+                          placeholder="Execution notes, pain signals, tempo changes, or missed targets"
+                          className="min-h-[80px] text-xs"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
 
         {status ? (
           <div className="mt-5 flex items-center gap-2 text-sm font-medium text-[color:var(--support)]">

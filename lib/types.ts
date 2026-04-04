@@ -97,6 +97,11 @@ export type PersonalRecord = {
   notes: string;
 };
 
+export type WorkoutSet = {
+  weight: string;
+  reps: string;
+};
+
 export type WorkoutSessionItem = {
   id: string;
   exerciseId: string;
@@ -106,7 +111,7 @@ export type WorkoutSessionItem = {
   restSeconds: number;
   targetLoad: string;
   targetRpe: string;
-  result: string;
+  sets: WorkoutSet[];
   notes: string;
   order: number;
 };
