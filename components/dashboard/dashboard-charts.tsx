@@ -103,39 +103,50 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
       <Card className="p-6">
         <CardTitle className="text-base">Muscle Stimulus</CardTitle>
         <CardDescription className="mt-1">Primary muscle focus (Last 30 days).</CardDescription>
-        <div className="h-[240px] w-full mt-6">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart 
-              data={muscleDistribution} 
-              layout="vertical" 
-              margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
-              <XAxis type="number" hide />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                axisLine={false} 
-                tickLine={false}
-                tick={{ fontSize: 10, fontWeight: 700, fill: "var(--foreground)" }}
-                width={80}
-              />
-              <Tooltip 
-                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)' }}
-              />
-              <Bar 
-                dataKey="value" 
-                radius={[0, 6, 6, 0]} 
-                barSize={20}
-                animationDuration={1500}
+        <div className="h-[240px] w-full mt-6 relative">
+          {muscleDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart 
+                data={muscleDistribution} 
+                layout="vertical" 
+                margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
               >
-                {muscleDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={index === 0 ? "var(--brand)" : "var(--support)"} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fontSize: 10, fontWeight: 700, fill: "var(--foreground)" }}
+                  width={80}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)' }}
+                />
+                <Bar 
+                  dataKey="value" 
+                  radius={[0, 6, 6, 0]} 
+                  barSize={20}
+                  animationDuration={1500}
+                >
+                  {muscleDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={index === 0 ? "var(--brand)" : "var(--support)"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center rounded-[24px] border border-dashed border-[color:var(--border-strong)] bg-black/[0.02] p-6 text-center">
+              <p className="text-sm font-medium text-[color:var(--muted-foreground)]">
+                No session data for the last 30 days.
+              </p>
+              <p className="mt-1 text-[10px] text-[color:var(--muted-foreground)] opacity-70">
+                Log a workout to see your stimulus breakdown.
+              </p>
+            </div>
+          )}
         </div>
       </Card>
     </div>

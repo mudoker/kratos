@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { deleteRecord, getRecords, saveRecord } from "@/lib/data";
 import type { PersonalRecord } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const user = await requireUser();
   return NextResponse.json({ records: await getRecords(user.id) });

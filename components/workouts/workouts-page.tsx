@@ -315,110 +315,112 @@ export function WorkoutsPage() {
           />
         </div>
 
-        <ScrollArea className="mt-6 h-auto max-h-[800px] pr-4">
-          <div className="space-y-4">
-            {(draft.items || []).map((item, index) => {
-              const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-              return (
-                <div
-                  key={`${item.exerciseId}-${index}`}
-                  className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-4">
-                      {exercise?.imageUrl && (
-                        <div className="h-12 w-12 overflow-hidden rounded-xl border border-[color:var(--border)]">
-                          <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-semibold text-[color:var(--foreground)]">{item.exerciseName}</p>
-                        <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-                          Prescription for {selectedDay?.title || "today"}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge>{item.restSeconds}s rest</Badge>
-                  </div>
-
-                  <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-                    <div className="rounded-[24px] border border-[color:var(--border)] bg-black/[0.03] p-4 h-fit">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                        Prescription
-                      </p>
-                      <div className="mt-4 space-y-3 text-sm text-[color:var(--foreground)]">
-                        <p>
-                          {item.plannedSets} sets x {item.reps}
-                        </p>
-                        <p>Target load: {item.targetLoad || "Not set"}</p>
-                        <p>Target RPE: {item.targetRpe || "Not set"}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-                            Actual Sets
+        <div className="mt-6 h-[800px] overflow-hidden rounded-2xl border border-[color:var(--border)] bg-black/[0.02]">
+          <ScrollArea className="h-full w-full pr-4 p-4">
+            <div className="space-y-4">
+              {(draft.items || []).map((item, index) => {
+                const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+                return (
+                  <div
+                    key={`${item.exerciseId}-${index}`}
+                    className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-4">
+                        {exercise?.imageUrl && (
+                          <div className="h-12 w-12 overflow-hidden rounded-xl border border-[color:var(--border)]">
+                            <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-[color:var(--foreground)]">{item.exerciseName}</p>
+                          <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
+                            Prescription for {selectedDay?.title || "today"}
                           </p>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => addSet(index)}>
-                            <Plus className="h-3 w-3 mr-1" /> Add Set
-                          </Button>
+                        </div>
+                      </div>
+                      <Badge>{item.restSeconds}s rest</Badge>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+                      <div className="rounded-[24px] border border-[color:var(--border)] bg-black/[0.03] p-4 h-fit">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
+                          Prescription
+                        </p>
+                        <div className="mt-4 space-y-3 text-sm text-[color:var(--foreground)]">
+                          <p>
+                            {item.plannedSets} sets x {item.reps}
+                          </p>
+                          <p>Target load: {item.targetLoad || "Not set"}</p>
+                          <p>Target RPE: {item.targetRpe || "Not set"}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                              Actual Sets
+                            </p>
+                            <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => addSet(index)}>
+                              <Plus className="h-3 w-3 mr-1" /> Add Set
+                            </Button>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            {(item.sets || []).map((set, sIdx) => (
+                              <div key={sIdx} className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-[10px] font-bold">
+                                  {sIdx + 1}
+                                </div>
+                                <div className="grid flex-1 grid-cols-2 gap-2">
+                                  <Input 
+                                    value={set.weight} 
+                                    placeholder="kg" 
+                                    className="h-9 px-3 text-xs"
+                                    onChange={(e) => updateSet(index, sIdx, "weight", e.target.value)}
+                                  />
+                                  <Input 
+                                    value={set.reps} 
+                                    placeholder="reps" 
+                                    className="h-9 px-3 text-xs"
+                                    onChange={(e) => updateSet(index, sIdx, "reps", e.target.value)}
+                                  />
+                                </div>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[color:var(--danger)]" onClick={() => removeSet(index, sIdx)}>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         
                         <div className="space-y-2">
-                          {(item.sets || []).map((set, sIdx) => (
-                            <div key={sIdx} className="flex items-center gap-2">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-[10px] font-bold">
-                                {sIdx + 1}
-                              </div>
-                              <div className="grid flex-1 grid-cols-2 gap-2">
-                                <Input 
-                                  value={set.weight} 
-                                  placeholder="kg" 
-                                  className="h-9 px-3 text-xs"
-                                  onChange={(e) => updateSet(index, sIdx, "weight", e.target.value)}
-                                />
-                                <Input 
-                                  value={set.reps} 
-                                  placeholder="reps" 
-                                  className="h-9 px-3 text-xs"
-                                  onChange={(e) => updateSet(index, sIdx, "reps", e.target.value)}
-                                />
-                              </div>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[color:var(--danger)]" onClick={() => removeSet(index, sIdx)}>
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          ))}
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
+                            Execution notes
+                          </p>
+                          <Textarea
+                            value={item.notes}
+                            onChange={(event) =>
+                              setDraft((current) => ({
+                                ...current,
+                                items: (current.items || []).map((entry, currentIndex) =>
+                                  currentIndex === index ? { ...entry, notes: event.target.value } : entry
+                                ),
+                              }))
+                            }
+                            placeholder="Execution notes, pain signals, tempo changes, or missed targets"
+                            className="min-h-[80px] text-xs"
+                          />
                         </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-                          Execution notes
-                        </p>
-                        <Textarea
-                          value={item.notes}
-                          onChange={(event) =>
-                            setDraft((current) => ({
-                              ...current,
-                              items: (current.items || []).map((entry, currentIndex) =>
-                                currentIndex === index ? { ...entry, notes: event.target.value } : entry
-                              ),
-                            }))
-                          }
-                          placeholder="Execution notes, pain signals, tempo changes, or missed targets"
-                          className="min-h-[80px] text-xs"
-                        />
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </div>
 
         {status ? (
           <div className="mt-5 flex items-center gap-2 text-sm font-medium text-[color:var(--support)]">

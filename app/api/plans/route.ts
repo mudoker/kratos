@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { getPlans, savePlan } from "@/lib/data";
 import type { WeeklyPlan } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const user = await requireUser();
   return NextResponse.json({

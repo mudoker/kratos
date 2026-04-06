@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { appendCoachExchange, getCoachMessages, getPlans, getProfile, getRecords, getSessions } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const user = await requireUser();
   const body = (await request.json()) as { message?: string };

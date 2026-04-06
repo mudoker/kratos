@@ -86,50 +86,6 @@ export function MuscleMap({
         </Button>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[22px] border border-[color:var(--border)] bg-black/[0.03] px-4 py-3 min-h-[64px]">
-        {activeSlug ? (
-          <>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
-                Inspecting Region
-              </span>
-              <span className="text-sm font-semibold text-[color:var(--foreground)]">
-                {formatSlug(activeSlug)}
-              </span>
-            </div>
-            {intensities && (
-              <div className="ml-auto flex flex-col items-end text-right">
-                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--muted-foreground)] opacity-60">
-                  Stimulus Level
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-bold text-[color:var(--foreground)]">
-                    {intensities.find((i) => i.slug === activeSlug)?.intensity || 0} / 4
-                  </span>
-                  <div className="flex gap-0.5">
-                    {[1, 2, 3, 4].map((step) => (
-                      <div
-                        key={step}
-                        className={cn(
-                          "h-1.5 w-3 rounded-full transition-colors",
-                          (intensities.find((i) => i.slug === activeSlug)?.intensity || 0) >= step
-                            ? "bg-[color:var(--brand)]"
-                            : "bg-black/5"
-                        )}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <span className="text-sm font-medium text-[color:var(--muted-foreground)] italic opacity-50">
-            Hover a muscle to inspect stimulus...
-          </span>
-        )}
-      </div>
-
       <div
         className="rounded-[24px] bg-[radial-gradient(circle_at_top,#ffffff_0%,#e4e4e4_100%)] p-4"
         onMouseMove={(event) => {

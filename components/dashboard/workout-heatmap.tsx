@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useRef, cloneElement } from "react";
 import { ActivityCalendar, ThemeInput } from "react-activity-calendar";
 import type { WorkoutSession } from "@/lib/types";
 import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -108,12 +109,21 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
                 if (!containerRef.current) return;
                 const rect = e.currentTarget.getBoundingClientRect();
                 const containerRect = containerRef.current.getBoundingClientRect();
+                
+                const x = rect.left - containerRect.left + rect.width / 2;
+                const y = rect.top - containerRect.top;
+                
+                // If y is too small (top few rows), we should show tooltip below
+                // A safe threshold is the estimated height of the tooltip (around 60-80px)
+                const showBelow = y < 80;
+
                 setHovered({
                   date: activity.date,
                   count: activity.count,
-                  x: rect.left - containerRect.left + rect.width / 2,
-                  y: rect.top - containerRect.top,
-                });
+                  x,
+                  y,
+                  showBelow
+                } as any);
               },
               onMouseLeave: () => {
                 setHovered(null);
@@ -126,14 +136,24 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
       <AnimatePresence>
         {hovered && (
           <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            initial={{ opacity: 0, y: (hovered as any).showBelow ? -4 : 4, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            exit={{ opacity: 0, y: (hovered as any).showBelow ? -4 : 4, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="pointer-events-none absolute z-50 flex -translate-x-1/2 -translate-y-full flex-col gap-1 rounded-xl border border-[color:var(--border)] bg-[linear-gradient(180deg,#1a1a1a,#242424)] px-3 py-2 text-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+            className="pointer-events-none absolute z-50 flex flex-col gap-1 rounded-xl border border-[color:var(--border)] bg-[linear-gradient(180deg,#1a1a1a,#242424)] px-3 py-2 text-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-xl whitespace-nowrap"
             style={{
               left: hovered.x,
-              top: hovered.y - 8,
+              top: (hovered as any).showBelow ? hovered.y + calculatedBlockSize : hovered.y - 8,
+              // Keep the tooltip anchored to the block but shift it horizontally to stay in bounds
+              // We use 100px as a safe half-width estimate
+              x: `calc(-50% + ${
+                hovered.x < 100 
+                  ? 100 - hovered.x 
+                  : hovered.x > containerWidth - 100 
+                    ? (containerWidth - 100) - hovered.x 
+                    : 0
+              }px)`,
+              y: (hovered as any).showBelow ? "8px" : "-100%",
             }}
           >
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">

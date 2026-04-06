@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { deleteSession, getSessions, saveSession } from "@/lib/data";
 import type { WorkoutSession } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const user = await requireUser();
   return NextResponse.json({

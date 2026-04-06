@@ -88,7 +88,6 @@ export function PlanAnalysis({ plan, data }: { plan: WeeklyPlan; data: Dashboard
           <div className="mt-6 grid grid-cols-2 gap-4">
             {Object.entries(stats.muscleSets)
               .sort((a, b) => b[1] - a[1])
-              .slice(0, 6)
               .map(([slug, count]) => (
                 <div key={slug} className="rounded-2xl border border-[color:var(--border)] bg-black/[0.02] p-3">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)] opacity-60">
