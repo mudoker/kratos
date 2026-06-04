@@ -24,6 +24,14 @@ import { useData } from "@/components/shared/data-provider";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+const parseProtocolLines = (text: string) => {
+  if (!text) return [];
+  return text
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+};
+
 const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string) => {
   const tags = [];
   const lowerNotes = (notes || "").toLowerCase();
@@ -38,7 +46,11 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
   if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || exerciseCategory === "Mobility") {
     tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
   }
-  if (lowerNotes.includes("stretch") || lowerNotes.includes("cooldown") || lowerNotes.includes("cool-down") || lowerNotes.includes("flow")) {
+  const hasStretch = (lowerNotes.includes("stretch") && !lowerNotes.includes("deep stretch") && !lowerNotes.includes("tempo")) || 
+                     lowerNotes.includes("cooldown") || 
+                     lowerNotes.includes("cool-down") || 
+                     lowerNotes.includes("flow");
+  if (hasStretch) {
     tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
   }
   return tags;
@@ -143,10 +155,255 @@ export function PlannerPage() {
     };
   }, [plans, selectedPlan]);
 
+  const [isEditingProtocols, setIsEditingProtocols] = useState(false);
+
   const exerciseOptions = useMemo(
     () => data.exercises.map((exercise) => ({ value: exercise.id, label: exercise.name })),
     [data.exercises]
   );
+
+  const visualGroups = useMemo(() => {
+    if (!activeDay || !activeDay.items) return [];
+    
+    const getSupersetKey = (notes: string) => {
+      const match = (notes || "").match(/SUPERSET:\s*([^\n\r]+)/i);
+      return match ? match[0].trim() : null;
+    };
+
+    const groups: Array<{
+      type: "single" | "superset";
+      supersetKey?: string;
+      items: Array<{ item: WeeklyPlan["days"][number]["items"][number]; originalIndex: number }>;
+    }> = [];
+    let currentSupersetKey: string | null = null;
+    let currentSupersetGroup: typeof groups[number] | null = null;
+
+    activeDay.items.forEach((item, index) => {
+      const key = getSupersetKey(item.notes);
+      
+      if (key) {
+        if (currentSupersetGroup && (currentSupersetKey === key)) {
+          currentSupersetGroup.items.push({ item, originalIndex: index });
+        } else {
+          currentSupersetKey = key;
+          currentSupersetGroup = {
+            type: "superset",
+            supersetKey: key,
+            items: [{ item, originalIndex: index }]
+          };
+          groups.push(currentSupersetGroup);
+        }
+      } else {
+        currentSupersetKey = null;
+        currentSupersetGroup = null;
+        groups.push({
+          type: "single",
+          items: [{ item, originalIndex: index }]
+        });
+      }
+    });
+
+    return groups;
+  }, [activeDay]);
+
+  const renderExerciseCard = (
+    item: WeeklyPlan["days"][number]["items"][number], 
+    itemIndex: number,
+    isInsideSuperset = false
+  ) => {
+    const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+    const tags = getItemTags(item.notes, item.exerciseId, exercise?.category);
+    const filteredTags = tags.filter((t) => t.type !== "superset");
+    
+    const primaryTag = tags[0];
+    const borderClass = !isInsideSuperset
+      ? primaryTag
+        ? primaryTag.type === "dropset"
+          ? "border-l-4 border-l-amber-500"
+          : primaryTag.type === "warmup"
+          ? "border-l-4 border-l-blue-500"
+          : primaryTag.type === "stretch"
+          ? "border-l-4 border-l-teal-500"
+          : "border-l border-l-black/5"
+        : "border-l border-l-black/5"
+      : "";
+
+    return (
+      <div 
+        key={item.id} 
+        className={cn(
+          "space-y-4 transition duration-300",
+          isInsideSuperset 
+            ? "p-4 bg-white rounded-xl border border-purple-100/70"
+            : cn("p-5 bg-white/60 hover:bg-white/80 border border-black/5 rounded-[22px]", borderClass)
+        )}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="bg-black text-white text-[9px] font-extrabold px-2 py-0.5">
+              Lift {itemIndex + 1}
+            </Badge>
+            {filteredTags.map((tag) => (
+              <Badge key={tag.label} className={cn("border text-[9px] font-extrabold px-2 py-0.5", tag.color)}>
+                {tag.label}
+              </Badge>
+            ))}
+            {item.prGoal && (
+              <Badge className="bg-indigo-500/10 border-transparent text-indigo-700 text-[9px] font-extrabold px-2 py-0.5 flex gap-1 items-center">
+                <Target className="h-3 w-3" />
+                <span>PR target</span>
+              </Badge>
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() =>
+              updateDay(activeDay.id, (entry) => ({
+                ...entry,
+                items: entry.items.filter((_, currentIndex) => currentIndex !== itemIndex),
+              }))
+            }
+            className="h-8 w-8 p-0 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition flex items-center justify-center"
+            title="Remove Lift"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-xs font-bold text-black/50 block">Select Exercise</label>
+            <Combobox
+              options={exerciseOptions}
+              value={item.exerciseId}
+              onValueChange={(value) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, exerciseId: value }))}
+              placeholder="Search exercise..."
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black/50 block">Target Sets</label>
+            <Select
+              value={String(item.sets)}
+              onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, sets: Number(val) }))}
+            >
+              <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-semibold py-4">
+                <SelectValue placeholder="Sets" />
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 4, 5, 6, 8].map((s) => (
+                  <SelectItem key={s} value={String(s)}>
+                    {s} Sets
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black/50 block">Reps Bracket</label>
+            <Select
+              value={item.reps}
+              onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, reps: val }))}
+            >
+              <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-semibold py-4">
+                <SelectValue placeholder="Reps" />
+              </SelectTrigger>
+              <SelectContent>
+                {["5", "6-8", "8-10", "8-12", "10-12", "12-15", "15", "20", "Max"].map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r} Reps
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black/50 block">Target Rest</label>
+            <Select
+              value={String(item.restSeconds)}
+              onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, restSeconds: Number(val) }))}
+            >
+              <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-semibold py-4">
+                <SelectValue placeholder="Rest" />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  { value: "30", label: "30s" },
+                  { value: "45", label: "45s" },
+                  { value: "60", label: "60s (1m)" },
+                  { value: "90", label: "90s (1.5m)" },
+                  { value: "120", label: "120s (2m)" },
+                  { value: "180", label: "180s (3m)" },
+                ].map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black/50 block">Target Load</label>
+            <Select
+              value={item.targetLoad}
+              onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetLoad: val }))}
+            >
+              <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-semibold py-4">
+                <SelectValue placeholder="Load" />
+              </SelectTrigger>
+              <SelectContent>
+                {["Heavy", "Moderate", "Light", "Bodyweight", "Weighted", "Low"].map((ld) => (
+                  <SelectItem key={ld} value={ld}>
+                    {ld}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black/50 block">Target RPE</label>
+            <Select
+              value={item.targetRpe}
+              onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetRpe: val }))}
+            >
+              <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-semibold py-4">
+                <SelectValue placeholder="Select RPE" />
+              </SelectTrigger>
+              <SelectContent>
+                {["6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10"].map((rpe) => (
+                  <SelectItem key={rpe} value={rpe}>
+                    RPE {rpe}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-black/50 block">PR Goal Target</label>
+            <Input
+              value={item.prGoal}
+              onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, prGoal: event.target.value }))}
+              placeholder="e.g. 105kg x 8 reps"
+              className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-black/50 block">Exercise Setup Notes</label>
+          <Textarea
+            value={item.notes}
+            onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, notes: event.target.value }))}
+            placeholder="Technique cues, bench position slots, tempos..."
+            className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[46px] py-3 px-4 transition"
+          />
+        </div>
+      </div>
+    );
+  };
 
   const weeklyLiftCount = selectedPlan.days.reduce((count, day) => count + day.items.length, 0);
   const prFocusCount = selectedPlan.days.reduce(
@@ -395,33 +652,33 @@ export function PlannerPage() {
         {/* Major Working Panel */}
         <div className="space-y-6">
           <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
-            
-            {/* Split Basic Details Block */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 border-b border-black/5 pb-6">
-              <div className="space-y-4 flex-1">
-                <div className="w-full">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-black/50 block">Split Title</label>
-                    <Input
-                      value={selectedPlan.name}
-                      onChange={(event) => patchSelectedPlan((plan) => ({ ...plan, name: event.target.value }))}
-                      placeholder="e.g. Lower Body Target Focus"
-                      className="bg-white border-black/5 focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
-                    />
-                  </div>
-                </div>
+            {/* Redesigned Split Title Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-black/5 pb-6">
+              <div className="space-y-1 flex-1 min-w-0">
+                <span className="text-[10px] font-extrabold text-indigo-600 uppercase tracking-widest block">Active Program Split</span>
+                <input
+                  value={selectedPlan.name}
+                  onChange={(event) => patchSelectedPlan((plan) => ({ ...plan, name: event.target.value }))}
+                  placeholder="e.g. Lower Body Target Focus"
+                  className="bg-transparent border-none focus:bg-black/5 rounded-xl py-1.5 px-2.5 text-2xl md:text-3xl font-black text-black tracking-tight w-full max-w-xl transition focus:outline-none placeholder-black/20"
+                />
               </div>
 
-              <div className="flex items-center gap-2 self-start shrink-0">
+              <div className="flex items-center gap-3 self-end md:self-center shrink-0">
                 {isAutoSaving && (
-                  <Badge className="bg-emerald-500/10 border-transparent text-emerald-700 text-[9px] font-extrabold flex gap-1 items-center px-2 py-1 animate-pulse">
+                  <Badge className="bg-emerald-500/10 border-transparent text-emerald-700 text-[9px] font-extrabold flex gap-1.5 items-center px-2.5 py-1.5 animate-pulse">
                     <Loader2 className="h-3 w-3 animate-spin" />
                     <span>Auto-Syncing</span>
                   </Badge>
                 )}
-                <Button type="button" variant="ghost" onClick={removePlan} className="rounded-xl border border-black/5 hover:bg-rose-500/10 hover:text-rose-600 transition flex items-center gap-1.5 text-xs font-semibold px-3 py-2">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>Delete Split</span>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={removePlan} 
+                  className="h-10 w-10 p-0 rounded-xl border border-black/5 hover:bg-rose-500/10 hover:text-rose-600 transition flex items-center justify-center"
+                  title="Delete Split"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -595,40 +852,112 @@ export function PlannerPage() {
                             })}
                           </div>
                         </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-black/50 block">Warm-up Protocol</label>
-                            <Textarea
-                              value={activeDay.warmup}
-                              onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, warmup: event.target.value }))}
-                              placeholder="Activation sets, rotational complexes, band protocols..."
-                              className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[58px] py-3 px-4 transition"
-                            />
+                        {isEditingProtocols ? (
+                          <div className="space-y-4 pt-4 border-t border-black/5">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-xs font-bold text-black/60">Edit Protocols & Goals</h4>
+                              <Button 
+                                type="button" 
+                                size="sm"
+                                onClick={() => setIsEditingProtocols(false)} 
+                                className="h-7 bg-black text-white hover:bg-black/90 text-[10px] font-bold rounded-lg px-3"
+                              >
+                                Done
+                              </Button>
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-black/50 block">Warm-up Protocol</label>
+                                <Textarea
+                                  value={activeDay.warmup}
+                                  onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, warmup: event.target.value }))}
+                                  placeholder="Activation sets, rotational complexes, band protocols..."
+                                  className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[100px] py-3 px-4 transition"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-black/50 block">Cool-down & Stretches</label>
+                                <Textarea
+                                  value={activeDay.notes}
+                                  onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, notes: event.target.value }))}
+                                  placeholder="Stretches, release holds, decompression protocols..."
+                                  className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[100px] py-3 px-4 transition"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-black/50 block">Day Goal / Target PRs</label>
+                              <Textarea
+                                value={activeDay.sessionGoal}
+                                onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, sessionGoal: event.target.value }))}
+                                placeholder="Overload bench target, pacing, seat setup settings..."
+                                className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[60px] py-3 px-4 transition"
+                              />
+                            </div>
                           </div>
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-black/50 block">Day Goal / Target PRs</label>
-                            <Textarea
-                              value={activeDay.sessionGoal}
-                              onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, sessionGoal: event.target.value }))}
-                              placeholder="Overload bench target, pacing, seat setup settings..."
-                              className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[58px] py-3 px-4 transition"
-                            />
-                          </div>
-                        </div>
+                        ) : (
+                          <div className="grid gap-4 sm:grid-cols-2 pt-4 border-t border-black/5">
+                            {/* Warm-up list */}
+                            <div className="p-4.5 border border-blue-100 bg-blue-50/10 rounded-[20px] space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs">🛠️</span>
+                                  <h4 className="font-bold text-[11px] text-blue-900 uppercase tracking-wide">Warm-up Protocol</h4>
+                                </div>
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  onClick={() => setIsEditingProtocols(true)} 
+                                  className="h-6 text-[9px] font-bold text-blue-700 hover:bg-blue-100/50 rounded-lg px-2"
+                                >
+                                  Edit
+                                </Button>
+                              </div>
+                              <ul className="space-y-1.5">
+                                {parseProtocolLines(activeDay.warmup).map((line, idx) => (
+                                  <li key={idx} className="text-xs text-slate-700 font-medium flex items-start gap-2">
+                                    <span className="text-blue-500 mt-0.5 shrink-0">•</span>
+                                    <span className="leading-tight">{line}</span>
+                                  </li>
+                                ))}
+                                {parseProtocolLines(activeDay.warmup).length === 0 && (
+                                  <p className="text-xs text-slate-400 italic">No warm-up protocol defined.</p>
+                                )}
+                              </ul>
+                            </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-black/50 block">Relevant Day Notes</label>
-                          <Textarea
-                            value={activeDay.notes}
-                            onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, notes: event.target.value }))}
-                            placeholder="Machine swap options, recovery limits..."
-                            className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[46px] py-3 px-4 transition"
-                          />
-                        </div>
+                            {/* Cool-down list */}
+                            <div className="p-4.5 border border-teal-100 bg-teal-50/10 rounded-[20px] space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs">🧘</span>
+                                  <h4 className="font-bold text-[11px] text-teal-900 uppercase tracking-wide">Cool-down & Stretches</h4>
+                                </div>
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  onClick={() => setIsEditingProtocols(true)} 
+                                  className="h-6 text-[9px] font-bold text-teal-700 hover:bg-teal-100/50 rounded-lg px-2"
+                                >
+                                  Edit
+                                </Button>
+                              </div>
+                              <ul className="space-y-1.5">
+                                {parseProtocolLines(activeDay.notes).map((line, idx) => (
+                                  <li key={idx} className="text-xs text-slate-700 font-medium flex items-start gap-2">
+                                    <span className="text-teal-500 mt-0.5 shrink-0">•</span>
+                                    <span className="leading-tight">{line}</span>
+                                  </li>
+                                ))}
+                                {parseProtocolLines(activeDay.notes).length === 0 && (
+                                  <p className="text-xs text-slate-400 italic">No cool-down stretch protocol defined.</p>
+                                )}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
 
                       </div>
-
                       {/* Programmed Lifts list */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between border-b border-black/5 pb-2">
@@ -639,216 +968,33 @@ export function PlannerPage() {
                         </div>
 
                         <div className="space-y-4">
-                          {activeDay.items.map((item, itemIndex) => {
-                            const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-                            const tags = getItemTags(item.notes, item.exerciseId, exercise?.category);
-                            const primaryTag = tags[0];
-                            const borderClass = primaryTag
-                              ? primaryTag.type === "superset"
-                                ? "border-l-4 border-l-purple-500"
-                                : primaryTag.type === "dropset"
-                                ? "border-l-4 border-l-amber-500"
-                                : primaryTag.type === "warmup"
-                                ? "border-l-4 border-l-blue-500"
-                                : "border-l-4 border-l-teal-500"
-                              : "border-l border-l-black/5";
-
-                            return (
-                              <div key={item.id} className={cn("p-5 border border-black/5 bg-white/60 hover:bg-white/80 rounded-[22px] transition duration-300", borderClass)}>
-                                
-                                <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-3 mb-4">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <Badge className="bg-black text-white text-[9px] font-extrabold px-2 py-0.5">
-                                      Lift {itemIndex + 1}
-                                    </Badge>
-                                    {tags.map((tag) => (
-                                      <Badge key={tag.label} className={cn("border text-[9px] font-extrabold px-2 py-0.5", tag.color)}>
-                                        {tag.label}
-                                      </Badge>
-                                    ))}
-                                    {item.prGoal && (
-                                      <Badge className="bg-indigo-500/10 border-transparent text-indigo-700 text-[9px] font-extrabold px-2 py-0.5 flex gap-1 items-center">
-                                        <Target className="h-3 w-3" />
-                                        <span>PR target</span>
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    onClick={() =>
-                                      updateDay(activeDay.id, (entry) => ({
-                                        ...entry,
-                                        items: entry.items.filter((_, currentIndex) => currentIndex !== itemIndex),
-                                      }))
-                                    }
-                                    className="h-7 px-2 text-xs font-semibold text-rose-500 hover:bg-rose-50 rounded-lg transition"
-                                  >
-                                    Remove
-                                  </Button>
-                                </div>
-
-                                {/* Form Inputs Grid */}
-                                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
-                                  <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-xs font-bold text-black/50 block">Select Exercise</label>
-                                    <Combobox
-                                      options={exerciseOptions}
-                                      value={item.exerciseId}
-                                      onValueChange={(value) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, exerciseId: value }))}
-                                      placeholder="Search exercise..."
-                                    />
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-black/50 block">Target Sets</label>
-                                    <Input
-                                      type="number"
-                                      min="1"
-                                      value={String(item.sets)}
-                                      onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, sets: Number(event.target.value) }))}
-                                      placeholder="Sets"
-                                      className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
-                                    />
-                                    <div className="flex gap-1.5 mt-1.5">
-                                      {[2, 3, 4, 5].map((s) => (
-                                        <button
-                                          key={s}
-                                          type="button"
-                                          onClick={() => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, sets: s }))}
-                                          className={cn(
-                                            "h-6 w-6 rounded-lg border text-[10px] font-semibold flex items-center justify-center transition",
-                                            item.sets === s ? "bg-black text-white border-black" : "bg-white text-black/40 border-black/5 hover:bg-black/5"
-                                          )}
-                                        >
-                                          {s}
-                                        </button>
-                                      ))}
+                          {visualGroups.map((group, groupIndex) => {
+                            if (group.type === "superset") {
+                              return (
+                                <div key={group.supersetKey || groupIndex} className="p-6 border-2 border-purple-200 bg-purple-500/[0.02] rounded-[28px] space-y-6">
+                                  <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="h-6 w-6 rounded-lg bg-purple-500/10 text-purple-700 flex items-center justify-center font-bold text-xs">S</span>
+                                      <div>
+                                        <h5 className="font-extrabold text-xs text-purple-950 uppercase tracking-wider">
+                                          {group.supersetKey || "Superset"}
+                                        </h5>
+                                        <p className="text-[10px] text-purple-600/70 font-semibold mt-0.5">
+                                          Perform these exercises back-to-back without rest.
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-black/50 block">Reps Bracket</label>
-                                    <Input
-                                      value={item.reps}
-                                      onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, reps: event.target.value }))}
-                                      placeholder="e.g. 8-10, 5, 12+"
-                                      className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
-                                    />
-                                    <div className="flex flex-wrap gap-1 mt-1.5">
-                                      {["5", "6-8", "8-12", "10-12", "12-15", "20", "Max"].map((r) => (
-                                        <button
-                                          key={r}
-                                          type="button"
-                                          onClick={() => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, reps: r }))}
-                                          className={cn(
-                                            "px-1.5 py-0.5 rounded-lg border text-[9px] font-semibold transition",
-                                            item.reps === r ? "bg-black text-white border-black" : "bg-white text-black/40 border-black/5 hover:bg-black/5"
-                                          )}
-                                        >
-                                          {r}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-black/50 block">Target Rest (s)</label>
-                                    <Input
-                                      type="number"
-                                      min="30"
-                                      value={String(item.restSeconds)}
-                                      onChange={(event) =>
-                                        updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, restSeconds: Number(event.target.value) }))
-                                      }
-                                      placeholder="Rest seconds"
-                                      className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
-                                    />
-                                    <div className="flex flex-wrap gap-1 mt-1.5">
-                                      {[30, 45, 60, 90, 120, 180].map((rst) => (
-                                        <button
-                                          key={rst}
-                                          type="button"
-                                          onClick={() => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, restSeconds: rst }))}
-                                          className={cn(
-                                            "px-1 py-0.5 rounded-lg border text-[9px] font-semibold transition",
-                                            item.restSeconds === rst ? "bg-black text-white border-black" : "bg-white text-black/40 border-black/5 hover:bg-black/5"
-                                          )}
-                                        >
-                                          {rst === 60 ? "1m" : rst === 90 ? "1.5m" : rst === 120 ? "2m" : rst === 180 ? "3m" : `${rst}s`}
-                                        </button>
-                                      ))}
-                                    </div>
+                                  <div className="space-y-4">
+                                    {group.items.map(({ item, originalIndex }) => renderExerciseCard(item, originalIndex, true))}
                                   </div>
                                 </div>
+                              );
+                            }
 
-                                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                                  <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-black/50 block">Target Load</label>
-                                    <Input
-                                      value={item.targetLoad}
-                                      onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetLoad: event.target.value }))}
-                                      placeholder="e.g. 100kg, 80%, Bodyweight"
-                                      className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
-                                    />
-                                    <div className="flex flex-wrap gap-1 mt-1.5">
-                                      {["Heavy", "Moderate", "Light", "Bodyweight", "Weighted", "Low"].map((ld) => (
-                                        <button
-                                          key={ld}
-                                          type="button"
-                                          onClick={() => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetLoad: ld }))}
-                                          className={cn(
-                                            "px-1.5 py-0.5 rounded-lg border text-[9px] font-semibold transition",
-                                            item.targetLoad === ld ? "bg-black text-white border-black" : "bg-white text-black/40 border-black/5 hover:bg-black/5"
-                                          )}
-                                        >
-                                          {ld}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-black/50 block">Target RPE</label>
-                                    <Select
-                                      value={item.targetRpe}
-                                      onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetRpe: val }))}
-                                    >
-                                      <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-semibold py-4">
-                                        <SelectValue placeholder="Select RPE" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="6">RPE 6</SelectItem>
-                                        <SelectItem value="6.5">RPE 6.5</SelectItem>
-                                        <SelectItem value="7">RPE 7</SelectItem>
-                                        <SelectItem value="7.5">RPE 7.5</SelectItem>
-                                        <SelectItem value="8">RPE 8</SelectItem>
-                                        <SelectItem value="8.5">RPE 8.5</SelectItem>
-                                        <SelectItem value="9">RPE 9</SelectItem>
-                                        <SelectItem value="9.5">RPE 9.5</SelectItem>
-                                        <SelectItem value="10">RPE 10</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-black/50 block">PR Goal Target</label>
-                                    <Input
-                                      value={item.prGoal}
-                                      onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, prGoal: event.target.value }))}
-                                      placeholder="e.g. 105kg x 8 reps"
-                                      className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="mt-4 space-y-1.5">
-                                  <label className="text-xs font-bold text-black/50 block">Exercise Setup Notes</label>
-                                  <Textarea
-                                    value={item.notes}
-                                    onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, notes: event.target.value }))}
-                                    placeholder="Technique cues, bench position slots, tempos..."
-                                    className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[46px] py-3 px-4 transition"
-                                  />
-                                </div>
-
-                              </div>
-                            )})}
+                            const { item, originalIndex } = group.items[0];
+                            return renderExerciseCard(item, originalIndex, false);
+                          })}
                         </div>
 
                         <Button 
