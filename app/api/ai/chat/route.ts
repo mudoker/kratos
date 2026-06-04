@@ -1,4 +1,4 @@
-import { google } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
@@ -15,15 +15,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is required." }, { status: 400 });
   }
 
-  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  // Extract client-supplied API key and model from headers
+  const clientApiKey = request.headers.get("x-gemini-key") || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const clientModel = request.headers.get("x-gemini-model") || process.env.GOOGLE_MODEL || "gemini-2.5-flash";
+
+  if (!clientApiKey) {
     return NextResponse.json(
       {
         error:
-          "GOOGLE_GENERATIVE_AI_API_KEY is missing. Add it to your environment to enable the coach.",
+          "Gemini API key is missing. Please provide your Gemini API key in the AI Coach settings or request modal.",
       },
-      { status: 500 }
+      { status: 400 }
     );
   }
+
+  // Initialize the google provider dynamically with the provided API key
+  const googleProvider = createGoogleGenerativeAI({
+    apiKey: clientApiKey,
+  });
 
   const [profile, sessions, plans, records, messages] = await Promise.all([
     getProfile(user.id),
@@ -34,7 +43,7 @@ export async function POST(request: Request) {
   ]);
 
   const { text } = await generateText({
-    model: google(process.env.GOOGLE_MODEL || "gemini-2.0-flash"),
+    model: googleProvider(clientModel),
     system:
       "You are Kratos Coach, the ultimate gym bro and practical strength/physique assistant. Your vibe is encouraging, high-energy, and deeply knowledgeable about the 'iron game.' Use terms like 'lift,' 'gains,' 'reps,' and 'sets' where appropriate, but remain professional and data-driven. \n\n" +
       "STRICT SAFETY RULES:\n" +
@@ -70,3 +79,4 @@ export async function POST(request: Request) {
     messages: await getCoachMessages(user.id),
   });
 }
+
