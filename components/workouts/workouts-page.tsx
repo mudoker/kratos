@@ -16,20 +16,67 @@ import { useData } from "@/components/shared/data-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string) => {
+const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string, exercises: any[] = []) => {
   const tags: Array<{ label: string; type: string; color: string }> = [];
   const lowerNotes = (notes || "").toLowerCase();
   const lowerId = (exerciseId || "").toLowerCase();
   
+  const exercise = exercises.find(e => e.id === exerciseId);
+  const exerciseName = exercise ? exercise.name.toLowerCase() : "";
+  const categoryLower = (exerciseCategory || exercise?.category || "").toLowerCase();
+
+  // 1. Prepopulated Compound vs Isolation tags based on exercise name keywords
+  if (
+    exerciseName.includes("press") || 
+    exerciseName.includes("squat") || 
+    exerciseName.includes("deadlift") || 
+    exerciseName.includes("row") || 
+    exerciseName.includes("pull-up") || 
+    exerciseName.includes("chin-up") || 
+    exerciseName.includes("dip") ||
+    exerciseName.includes("pullup") ||
+    lowerId.includes("press") ||
+    lowerId.includes("squat") ||
+    lowerId.includes("deadlift") ||
+    lowerId.includes("row") ||
+    lowerId.includes("pull-up")
+  ) {
+    tags.push({ label: "COMPOUND", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
+  } else if (
+    exerciseName.includes("curl") || 
+    exerciseName.includes("raise") || 
+    exerciseName.includes("extension") || 
+    exerciseName.includes("fly") || 
+    exerciseName.includes("shrug") || 
+    exerciseName.includes("crunch") || 
+    exerciseName.includes("twist") ||
+    lowerId.includes("curl") ||
+    lowerId.includes("raise") ||
+    lowerId.includes("extension") ||
+    lowerId.includes("fly")
+  ) {
+    tags.push({ label: "ISOLATION", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
+  }
+
+  if (categoryLower === "mobility") {
+    tags.push({ label: "MOBILITY", type: "prepop", color: "bg-emerald-500/10 text-emerald-700 border-emerald-200" });
+  } else if (categoryLower === "conditioning") {
+    tags.push({ label: "CONDITIONING", type: "prepop", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
+  }
+
+  // 2. Standard auto-detected tags from notes
   if (lowerNotes.includes("superset") || lowerId.includes("superset")) {
     tags.push({ label: "SUPERSET", type: "superset", color: "bg-purple-500/10 text-purple-700 border-purple-200" });
   }
   if (lowerNotes.includes("dropset") || lowerNotes.includes("drop-set") || lowerNotes.includes("drop set")) {
     tags.push({ label: "DROPSET", type: "dropset", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
   }
-  if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || exerciseCategory === "Mobility") {
-    tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
+  if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || categoryLower === "mobility") {
+    if (!tags.some(t => t.label === "WARM-UP")) {
+      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
+    }
   }
+  
   const hasStretch = (lowerNotes.includes("stretch") && !lowerNotes.includes("deep stretch") && !lowerNotes.includes("tempo")) || 
                      lowerNotes.includes("cooldown") || 
                      lowerNotes.includes("cool-down") || 
@@ -38,7 +85,7 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
     tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
   }
 
-  // Parse custom TAGS: line
+  // 3. Parse custom TAGS: line
   const tagsMatch = (notes || "").match(/TAGS:\s*([^\n\r]+)/i);
   if (tagsMatch && tagsMatch[1]) {
     const customList = tagsMatch[1].split(",").map(t => t.trim()).filter(Boolean);
@@ -385,7 +432,7 @@ export function WorkoutsPage() {
               <div className="space-y-4">
                 {(draft.items || []).map((item, index) => {
                   const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-                  const tags = getItemTags(item.notes, item.exerciseId, exercise?.category);
+                  const tags = getItemTags(item.notes, item.exerciseId, exercise?.category, data.exercises);
                   const primaryTag = tags[0];
                   const borderClass = primaryTag
                     ? primaryTag.type === "superset"
@@ -503,15 +550,19 @@ export function WorkoutsPage() {
                           <div className="space-y-1.5">
                             <label className="text-xs font-bold text-black/50 block">Execution Lift Notes</label>
                             <Textarea
-                              value={item.notes}
-                              onChange={(event) =>
+                              value={(item.notes || "").replace(/TAGS:\s*[^\n\r]+/i, "").trim()}
+                              onChange={(event) => {
+                                const cleanNotes = event.target.value;
+                                const match = (item.notes || "").match(/TAGS:\s*([^\n\r]+)/i);
+                                const tagsLine = match ? match[0] : "";
+                                const nextNotes = tagsLine ? `${cleanNotes.trim()}\n${tagsLine}`.trim() : cleanNotes.trim();
                                 setDraft((current) => ({
                                   ...current,
                                   items: (current.items || []).map((entry, currentIndex) =>
-                                    currentIndex === index ? { ...entry, notes: event.target.value } : entry
+                                    currentIndex === index ? { ...entry, notes: nextNotes } : entry
                                   ),
-                                }))
-                              }
+                                }));
+                              }}
                               placeholder="Missed sets, shoulder checks, tempo pacing..."
                               className="bg-white border-black/5 rounded-xl text-xs min-h-[46px] py-2.5 px-3.5 transition"
                             />
