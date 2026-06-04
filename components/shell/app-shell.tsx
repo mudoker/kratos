@@ -60,8 +60,8 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
             : "p-0 rounded-xl w-11 h-11 flex items-center justify-center lg:group-hover:p-5 lg:group-hover:rounded-[26px] lg:group-hover:w-full lg:group-hover:h-auto"
         )}>
           <div className="absolute top-[-20%] right-[-20%] w-24 h-24 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
-          <div className="relative z-10 space-y-3 flex flex-col items-center lg:items-stretch">
-            <div className="flex items-center gap-2">
+          <div className="relative z-10 flex flex-col items-center lg:items-stretch">
+            <div className="flex items-center justify-center lg:justify-start w-full gap-2">
               <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                 <Dumbbell className="h-3.5 w-3.5" />
               </div>
@@ -74,7 +74,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
                 Kratos System
               </span>
             </div>
-            <div className={cn("transition-all duration-300", !isMobile && "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 space-y-1")}>
+            <div className={cn("transition-all duration-300", isMobile ? "mt-3 space-y-1" : "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 lg:group-hover:mt-3 space-y-1")}>
               <h1 className="font-bold text-sm leading-snug tracking-tight text-white">
                 Structured Gym telemetry
               </h1>
