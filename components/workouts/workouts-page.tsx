@@ -228,8 +228,8 @@ export function WorkoutsPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <Badge className="bg-white/10 hover:bg-white/20 border-transparent text-emerald-400 font-bold uppercase tracking-widest text-[10px] px-3 py-1">
-              Active Session telemetry
+            <Badge className="bg-white/10 hover:bg-white/20 border-transparent text-emerald-400 font-bold text-[10px] px-3 py-1">
+              Active session telemetry
             </Badge>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
               Workout Execution Studio
@@ -247,16 +247,16 @@ export function WorkoutsPage() {
                   setDraft(baseSession());
                   setStatus("");
                 }}
-                className="h-12 rounded-2xl border border-white/10 text-white hover:bg-white/10 px-5 text-xs font-bold uppercase tracking-wider transition"
+                className="h-12 rounded-2xl border border-white/10 text-white hover:bg-white/10 px-5 text-xs font-semibold transition"
               >
-                Cancel Edit
+                Cancel edit
               </Button>
             )}
             <Button 
               type="button" 
               onClick={saveSession} 
               disabled={saving || !(draft.items || []).length} 
-              className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold uppercase text-[10px] tracking-wider px-6 py-6 border-none shadow-[0_5px_20px_rgba(16,185,129,0.25)] transition flex items-center gap-2"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-xs px-6 py-6 border-none shadow-[0_5px_20px_rgba(16,185,129,0.25)] transition flex items-center gap-2"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               <span>{draft.id ? "Update Session Log" : "Archive Session Log"}</span>
@@ -275,7 +275,7 @@ export function WorkoutsPage() {
             {/* Split loader bar */}
             <div className="p-5 border border-black/5 bg-white/45 rounded-[24px] grid gap-4 sm:grid-cols-2 md:grid-cols-3 items-end">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Choose Program Split</label>
+                <label className="text-xs font-bold text-black/50 block">Choose Program Split</label>
                 <Select
                   value={planId}
                   onValueChange={(value) => {
@@ -298,7 +298,7 @@ export function WorkoutsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Choose Training Day</label>
+                <label className="text-xs font-bold text-black/50 block">Choose Training Day</label>
                 <Select value={dayId} onValueChange={setDayId}>
                   <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-bold py-4">
                     <SelectValue placeholder="Choose day" />
@@ -313,7 +313,7 @@ export function WorkoutsPage() {
                 </Select>
               </div>
 
-              <div className="text-[11px] text-black/50 font-bold uppercase tracking-wider pb-3.5 pl-2">
+              <div className="text-[11px] text-black/50 font-bold pb-3.5 pl-2">
                 Active Program: <span className="text-black">{selectedPlan?.name}</span>
               </div>
             </div>
@@ -321,7 +321,7 @@ export function WorkoutsPage() {
             {/* Title / effort details */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Session Title</label>
+                <label className="text-xs font-bold text-black/50 block">Session Title</label>
                 <Input
                   value={draft.title}
                   onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
@@ -331,7 +331,7 @@ export function WorkoutsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Readiness / RPE Effort (1-10)</label>
+                <label className="text-xs font-bold text-black/50 block">Readiness / RPE Effort (1-10)</label>
                 <Input
                   value={draft.effort}
                   onChange={(event) => setDraft((current) => ({ ...current, effort: event.target.value }))}
@@ -343,7 +343,7 @@ export function WorkoutsPage() {
 
             {/* Global notes */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Session Notes</label>
+              <label className="text-xs font-bold text-black/50 block">Session Notes</label>
               <Textarea
                 value={draft.notes}
                 onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
@@ -355,8 +355,8 @@ export function WorkoutsPage() {
             {/* Exercises List section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-black/5 pb-2">
-                <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-black/50">Exercise Telemetry Runner</h4>
-                <Badge className="bg-black/5 border-transparent text-black/60 text-[9px] font-bold px-2 py-0.5 uppercase">
+                <h4 className="text-xs font-bold text-black/50">Exercise Telemetry Runner</h4>
+                <Badge className="bg-black/5 border-transparent text-black/60 text-[10px] font-bold px-2 py-0.5">
                   {(draft.items || []).length} exercise{(draft.items || []).length !== 1 && "s"} loaded
                 </Badge>
               </div>
@@ -391,7 +391,7 @@ export function WorkoutsPage() {
                           )}
                           <div>
                             <p className="font-bold text-sm text-black leading-tight">{item.exerciseName}</p>
-                            <p className="text-[10px] text-black/45 mt-1 font-bold uppercase tracking-wider">
+                            <p className="text-[10px] text-black/45 mt-1 font-bold">
                               prescribed rest {item.restSeconds}s
                             </p>
                           </div>
@@ -404,7 +404,7 @@ export function WorkoutsPage() {
                             </Badge>
                           ))}
                           <Badge className="bg-black text-white text-[9px] font-extrabold py-0.5 px-2">
-                            LIFT {index + 1}
+                            Lift {index + 1}
                           </Badge>
                         </div>
                       </div>
@@ -414,7 +414,7 @@ export function WorkoutsPage() {
                         
                         {/* Prescription specifications box */}
                         <div className="rounded-xl border border-black/5 bg-black/[0.02] p-4 text-xs space-y-3">
-                          <div className="flex items-center gap-1.5 text-black/50 border-b border-black/5 pb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                          <div className="flex items-center gap-1.5 text-black/50 border-b border-black/5 pb-1.5 font-bold text-xs">
                             <Sparkles className="h-3 w-3 text-indigo-500" />
                             <span>Planned Prescription</span>
                           </div>
@@ -437,10 +437,10 @@ export function WorkoutsPage() {
                         {/* Outcomes logging form details */}
                         <div className="space-y-4">
                           <div className="flex items-center justify-between border-b border-black/5 pb-1">
-                            <p className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">
+                            <p className="text-xs font-bold text-black/50">
                               Logged Outcomes
                             </p>
-                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px] font-extrabold uppercase tracking-wider text-indigo-600 hover:bg-indigo-50 rounded-lg flex items-center gap-1" onClick={() => addSet(index)}>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg flex items-center gap-1" onClick={() => addSet(index)}>
                               <Plus className="h-3.5 w-3.5" />
                               <span>Add Set</span>
                             </Button>
@@ -460,7 +460,7 @@ export function WorkoutsPage() {
                                       className="h-10 px-3 bg-white text-xs rounded-xl border-black/5 text-center font-bold"
                                       onChange={(e) => updateSet(index, sIdx, "weight", e.target.value)}
                                     />
-                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">KG</span>
+                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">kg</span>
                                   </div>
                                   <div className="relative flex items-center">
                                     <Input 
@@ -469,7 +469,7 @@ export function WorkoutsPage() {
                                       className="h-10 px-3 bg-white text-xs rounded-xl border-black/5 text-center font-bold"
                                       onChange={(e) => updateSet(index, sIdx, "reps", e.target.value)}
                                     />
-                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">RPS</span>
+                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">reps</span>
                                   </div>
                                 </div>
                                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500 hover:bg-rose-50 rounded-lg shrink-0" onClick={() => removeSet(index, sIdx)}>
@@ -480,7 +480,7 @@ export function WorkoutsPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Execution Lift Notes</label>
+                            <label className="text-xs font-bold text-black/50 block">Execution Lift Notes</label>
                             <Textarea
                               value={item.notes}
                               onChange={(event) =>
@@ -520,7 +520,7 @@ export function WorkoutsPage() {
           <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
             <div className="flex items-center gap-2 border-b border-black/5 pb-3">
               <History className="h-4 w-4 text-black/50" />
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/50">Execution Logs</span>
+              <span className="text-xs font-bold text-black/50">Execution Logs</span>
             </div>
 
             <CardDescription className="text-xs text-black/50 mt-1 leading-relaxed">
@@ -545,7 +545,7 @@ export function WorkoutsPage() {
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
-                          <Badge className="bg-black/5 border-transparent text-black/60 text-[9px] uppercase px-1.5 py-0.5">
+                          <Badge className="bg-black/5 border-transparent text-black/60 text-[10px] px-1.5 py-0.5">
                             {session.items.length} lift{session.items.length !== 1 && "s"}
                           </Badge>
                           <Button
