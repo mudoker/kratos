@@ -250,8 +250,18 @@ export function PlannerPage() {
     if (!activeDay || !activeDay.items) return [];
     
     const getSupersetKey = (notes: string) => {
-      const match = (notes || "").match(/SUPERSET:\s*([^\n\r]+)/i);
-      return match ? match[0].trim() : null;
+      const match = (notes || "").match(/SUPERSET\s*([0-9]+)/i);
+      if (match) {
+        return `SUPERSET ${match[1]}`;
+      }
+      const matchColon = (notes || "").match(/SUPERSET:\s*([^\n\r]+)/i);
+      if (matchColon) {
+        return `SUPERSET ${matchColon[1].trim().replace(/\s+[A-Z0-9]$/i, "").toUpperCase()}`;
+      }
+      if ((notes || "").toLowerCase().includes("superset")) {
+        return "SUPERSET";
+      }
+      return null;
     };
 
     const groups: Array<{
@@ -492,7 +502,15 @@ export function PlannerPage() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-black/50 block">Target RPE</label>
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-bold text-black/50 block">Target RPE</label>
+              <span 
+                className="text-[10px] text-black/30 hover:text-black/50 cursor-help"
+                title="Rate of Perceived Exertion (RPE): 10 = max effort/no reps left, 9 = 1 rep left in reserve, 8 = 2 reps left."
+              >
+                <Info className="h-3.5 w-3.5" />
+              </span>
+            </div>
             <Select
               value={item.targetRpe}
               onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetRpe: val }))}
