@@ -61,12 +61,12 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
         )}>
           <div className="absolute top-[-20%] right-[-20%] w-24 h-24 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
           <div className="relative z-10 flex flex-col items-center lg:items-stretch">
-            <div className="flex items-center justify-center lg:justify-start w-full gap-2">
+            <div className={cn("flex items-center justify-center lg:justify-start w-full", isMobile ? "gap-2" : "gap-0 lg:group-hover:gap-2")}>
               <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                 <Dumbbell className="h-3.5 w-3.5" />
               </div>
               <span className={cn(
-                "text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 transition-all duration-300",
+                "text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 transition-all duration-300 inline-block",
                 !isMobile 
                   ? "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-2" 
                   : "ml-2"
@@ -131,7 +131,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               >
                 <Icon className={cn("h-4.5 w-4.5 shrink-0", isActive ? "text-white" : "text-black/60")} />
                 <span className={cn(
-                  "transition-all duration-300 ease-in-out", 
+                  "transition-all duration-300 ease-in-out inline-block", 
                   isMobile 
                     ? "opacity-100 ml-3" 
                     : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-3",
@@ -156,7 +156,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
           <div className="flex items-center gap-2">
             <Sparkles className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
             <span className={cn(
-              "text-[9px] font-extrabold uppercase tracking-wide transition-all duration-300", 
+              "text-[9px] font-extrabold uppercase tracking-wide transition-all duration-300 inline-block", 
               isMobile 
                 ? "opacity-100 ml-2" 
                 : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-2"
@@ -185,7 +185,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
         >
           <LogOut className="h-4.5 w-4.5 shrink-0" />
           <span className={cn(
-            "transition-all duration-300 ease-in-out", 
+            "transition-all duration-300 ease-in-out inline-block", 
             isMobile 
               ? "opacity-100 ml-3" 
               : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-3"
