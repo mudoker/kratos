@@ -48,35 +48,39 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
 
   const activeTitle = items.find((item) => item.href === pathname)?.label || "Kratos";
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className="flex flex-col h-full justify-between">
       <div className="space-y-6">
         
         {/* Core Brand Card */}
-        <div className="p-5 rounded-[26px] bg-gradient-to-br from-slate-900 to-black text-white shadow-xl relative overflow-hidden">
+        <div className={cn("rounded-[26px] bg-gradient-to-br from-slate-900 to-black text-white shadow-xl relative overflow-hidden transition-all duration-300", isMobile ? "p-5" : "p-3 group-hover:p-5")}>
           <div className="absolute top-[-20%] right-[-20%] w-24 h-24 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
           <div className="relative z-10 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                 <Dumbbell className="h-3.5 w-3.5" />
               </div>
-              <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400">Kratos System</span>
+              <span className={cn("text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+                Kratos System
+              </span>
             </div>
-            <h1 className="font-bold text-lg leading-snug tracking-tight text-white">
-              Structured Gym telemetry
-            </h1>
-            <p className="text-[10px] leading-relaxed text-white/50">
-              Synchronize workouts, biology mappings, and coaching parameters.
-            </p>
+            <div className={cn("transition-all duration-300", !isMobile && "h-0 opacity-0 overflow-hidden group-hover:h-auto group-hover:opacity-100 space-y-1")}>
+              <h1 className="font-bold text-sm leading-snug tracking-tight text-white">
+                Structured Gym telemetry
+              </h1>
+              <p className="text-[10px] leading-relaxed text-white/50">
+                Synchronize workouts, biology mappings, and coaching parameters.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Athlete User info */}
-        <div className="p-3.5 rounded-xl border border-black/5 bg-black/[0.01] flex items-center gap-3">
+        <div className={cn("rounded-xl border border-black/5 bg-black/[0.01] flex items-center gap-3 transition-all duration-300", isMobile ? "p-3.5" : "p-1.5 group-hover:p-3.5")}>
           <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-black text-white font-bold text-xs">
             {user.name.slice(0, 2).toUpperCase()}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className={cn("min-w-0 flex-1 transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
             <p className="text-xs font-bold text-black truncate leading-none">{user.name}</p>
             <p className="text-[9px] text-black/40 truncate mt-1 leading-none">{user.email}</p>
           </div>
@@ -95,12 +99,14 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
                 className={cn(
                   "flex items-center gap-3.5 rounded-xl px-4 py-3 text-xs tracking-wide transition duration-200",
                   isActive
-                    ? "bg-black text-white! font-bold shadow-sm"
+                    ? "bg-black text-white font-bold shadow-sm"
                     : "text-black/60 font-medium hover:bg-black/5 hover:text-black"
                 )}
               >
-                <Icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className={cn("transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
@@ -109,29 +115,35 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
 
       {/* Logout button & intelligence badge */}
       <div className="space-y-4 pt-6 border-t border-black/5 mt-6">
-        <div className="rounded-xl border border-black/5 bg-indigo-50/20 p-3.5 text-black">
+        <div className={cn("rounded-xl border border-black/5 bg-indigo-50/20 text-black transition-all duration-300", isMobile ? "p-3.5" : "p-2.5 group-hover:p-3.5")}>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-            <span className="text-[9px] font-extrabold uppercase tracking-wide">Coach Node Ready</span>
+            <Sparkles className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+            <span className={cn("text-[9px] font-extrabold uppercase tracking-wide transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+              Coach Node Ready
+            </span>
           </div>
-          <p className="mt-1 text-[9px] leading-relaxed text-black/45">
+          <p className={cn("mt-1 text-[9px] leading-relaxed text-black/45 transition-all duration-300", !isMobile && "h-0 opacity-0 overflow-hidden group-hover:h-auto group-hover:opacity-100")}>
             Gemini intelligence reads dynamically from settings and physical PR metrics.
           </p>
         </div>
-        <Button variant="ghost" onClick={logout} className="w-full justify-start gap-2 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition py-4">
-          <LogOut className="h-4 w-4" />
-          <span>Sign Out</span>
+        <Button variant="ghost" onClick={logout} className="w-full justify-start gap-2 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition py-4 shrink-0">
+          <LogOut className="h-4 w-4 shrink-0" />
+          <span className={cn("transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+            Sign Out
+          </span>
         </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col lg:grid lg:grid-cols-[280px_1fr] gap-6 px-4 pb-8 pt-4">
+    <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col lg:grid lg:grid-cols-[80px_1fr] gap-6 px-4 pb-8 pt-4">
       
       {/* Desktop Left Sticky Sidebar */}
-      <aside className="hidden lg:block rounded-[36px] border border-black/5 bg-white/70 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.02)] backdrop-blur sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto">
-        <SidebarContent />
+      <aside className="hidden lg:block relative w-20 shrink-0 h-[calc(100vh-2rem)] sticky top-4 z-40">
+        <div className="absolute left-0 top-0 h-full w-20 hover:w-[280px] transition-all duration-300 ease-in-out border border-black/5 bg-white/90 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.04)] backdrop-blur rounded-[36px] overflow-y-auto overflow-x-hidden flex flex-col group">
+          <SidebarContent isMobile={false} />
+        </div>
       </aside>
 
       {/* Responsive Mobile Top Sticky Navigation Header Bar */}
@@ -154,7 +166,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               </Button>
             </DialogTrigger>
             <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[280px] translate-x-0 translate-y-0 rounded-r-3xl rounded-l-none bg-white p-5 border-r border-black/10 overflow-y-auto max-w-full">
-              <SidebarContent />
+              <SidebarContent isMobile={true} />
             </DialogContent>
           </Dialog>
         </div>
