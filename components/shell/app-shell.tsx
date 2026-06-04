@@ -49,22 +49,27 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
   const activeTitle = items.find((item) => item.href === pathname)?.label || "Kratos";
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className="flex flex-col h-full justify-between">
-      <div className="space-y-6">
+    <div className="flex flex-col h-full justify-between items-center lg:items-stretch">
+      <div className="space-y-6 w-full flex flex-col items-center lg:items-stretch">
         
         {/* Core Brand Card */}
-        <div className={cn("rounded-[26px] bg-gradient-to-br from-slate-900 to-black text-white shadow-xl relative overflow-hidden transition-all duration-300", isMobile ? "p-5" : "p-3 group-hover:p-5")}>
+        <div className={cn(
+          "bg-gradient-to-br from-slate-900 to-black text-white shadow-xl relative overflow-hidden transition-all duration-300",
+          isMobile 
+            ? "p-5 rounded-[26px] w-full" 
+            : "p-0 rounded-xl w-11 h-11 flex items-center justify-center lg:group-hover:p-5 lg:group-hover:rounded-[26px] lg:group-hover:w-full lg:group-hover:h-auto"
+        )}>
           <div className="absolute top-[-20%] right-[-20%] w-24 h-24 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
-          <div className="relative z-10 space-y-3">
+          <div className="relative z-10 space-y-3 flex flex-col items-center lg:items-stretch">
             <div className="flex items-center gap-2">
               <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                 <Dumbbell className="h-3.5 w-3.5" />
               </div>
-              <span className={cn("text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+              <span className={cn("text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 transition-opacity duration-300", !isMobile && "opacity-0 lg:group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
                 Kratos System
               </span>
             </div>
-            <div className={cn("transition-all duration-300", !isMobile && "h-0 opacity-0 overflow-hidden group-hover:h-auto group-hover:opacity-100 space-y-1")}>
+            <div className={cn("transition-all duration-300", !isMobile && "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 space-y-1")}>
               <h1 className="font-bold text-sm leading-snug tracking-tight text-white">
                 Structured Gym telemetry
               </h1>
@@ -76,18 +81,28 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
         </div>
 
         {/* Athlete User info */}
-        <div className={cn("rounded-xl border border-black/5 bg-black/[0.01] flex items-center gap-3 transition-all duration-300", isMobile ? "p-3.5" : "p-1.5 group-hover:p-3.5")}>
+        <div className={cn(
+          "border border-black/5 bg-black/[0.01] flex items-center transition-all duration-300",
+          isMobile 
+            ? "p-3.5 rounded-xl w-full" 
+            : "p-0 rounded-xl w-11 h-11 justify-center lg:group-hover:p-3.5 lg:group-hover:w-full lg:group-hover:justify-start"
+        )}>
           <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-black text-white font-bold text-xs">
             {user.name.slice(0, 2).toUpperCase()}
           </div>
-          <div className={cn("min-w-0 flex-1 transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+          <div className={cn(
+            "min-w-0 flex-1 ml-3 transition-opacity duration-300", 
+            isMobile 
+              ? "opacity-100 block" 
+              : "opacity-0 lg:group-hover:opacity-100 hidden lg:group-hover:block overflow-hidden whitespace-nowrap"
+          )}>
             <p className="text-xs font-bold text-black truncate leading-none">{user.name}</p>
             <p className="text-[9px] text-black/40 truncate mt-1 leading-none">{user.email}</p>
           </div>
         </div>
 
         {/* Navigation list (Medium weight, Sentence Case, Not bold when inactive) */}
-        <nav className="grid gap-1">
+        <nav className="flex flex-col items-center lg:items-stretch gap-1.5 w-full">
           {items.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -97,14 +112,26 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-3.5 rounded-xl px-4 py-3 text-xs tracking-wide transition duration-200",
+                  "flex items-center transition-all duration-300 rounded-xl h-11 relative",
+                  // Shrunken desktop style: center icon, square shape
+                  "w-11 justify-center p-0",
+                  // Mobile (always expanded) and expanded hover styles:
+                  isMobile 
+                    ? "w-full justify-start px-4 gap-3.5" 
+                    : "lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:px-4 lg:group-hover:gap-3.5",
                   isActive
                     ? "bg-black text-white font-bold shadow-sm"
                     : "text-black/60 font-medium hover:bg-black/5 hover:text-black"
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className={cn("transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+                <Icon className={cn("h-4.5 w-4.5 shrink-0", isActive ? "text-white" : "text-black/60")} />
+                <span className={cn(
+                  "transition-opacity duration-300", 
+                  isMobile 
+                    ? "opacity-100 ml-3" 
+                    : "opacity-0 lg:group-hover:opacity-100 lg:group-hover:ml-3 overflow-hidden whitespace-nowrap",
+                  isActive ? "!text-white" : "text-black/60"
+                )}>
                   {item.label}
                 </span>
               </Link>
@@ -114,21 +141,50 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </div>
 
       {/* Logout button & intelligence badge */}
-      <div className="space-y-4 pt-6 border-t border-black/5 mt-6">
-        <div className={cn("rounded-xl border border-black/5 bg-indigo-50/20 text-black transition-all duration-300", isMobile ? "p-3.5" : "p-2.5 group-hover:p-3.5")}>
+      <div className="space-y-4 pt-6 border-t border-black/5 mt-6 w-full flex flex-col items-center lg:items-stretch">
+        <div className={cn(
+          "border border-black/5 bg-indigo-50/20 text-indigo-900 transition-all duration-300",
+          isMobile 
+            ? "p-3.5 rounded-xl w-full" 
+            : "p-0 rounded-xl w-11 h-11 flex items-center justify-center lg:group-hover:p-3.5 lg:group-hover:w-full"
+        )}>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-            <span className={cn("text-[9px] font-extrabold uppercase tracking-wide transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+            <Sparkles className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
+            <span className={cn(
+              "text-[9px] font-extrabold uppercase tracking-wide transition-opacity duration-300", 
+              isMobile 
+                ? "opacity-100" 
+                : "opacity-0 lg:group-hover:opacity-100 overflow-hidden whitespace-nowrap"
+            )}>
               Coach Node Ready
             </span>
           </div>
-          <p className={cn("mt-1 text-[9px] leading-relaxed text-black/45 transition-all duration-300", !isMobile && "h-0 opacity-0 overflow-hidden group-hover:h-auto group-hover:opacity-100")}>
+          <p className={cn(
+            "mt-1 text-[9px] leading-relaxed text-indigo-900/60 transition-all duration-300", 
+            isMobile 
+              ? "block" 
+              : "hidden lg:group-hover:block"
+          )}>
             Gemini intelligence reads dynamically from settings and physical PR metrics.
           </p>
         </div>
-        <Button variant="ghost" onClick={logout} className="w-full justify-start gap-2 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition py-4 shrink-0">
-          <LogOut className="h-4 w-4 shrink-0" />
-          <span className={cn("transition-opacity duration-300", !isMobile && "opacity-0 group-hover:opacity-100 overflow-hidden whitespace-nowrap")}>
+        <Button 
+          variant="ghost" 
+          onClick={logout} 
+          className={cn(
+            "justify-start rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition shrink-0",
+            isMobile 
+              ? "w-full px-4 py-4 gap-3.5" 
+              : "w-11 h-11 p-0 justify-center lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:px-4 lg:group-hover:py-4 lg:group-hover:gap-3.5"
+          )}
+        >
+          <LogOut className="h-4.5 w-4.5 shrink-0" />
+          <span className={cn(
+            "transition-opacity duration-300", 
+            isMobile 
+              ? "opacity-100 ml-3" 
+              : "opacity-0 lg:group-hover:opacity-100 lg:group-hover:ml-3 overflow-hidden whitespace-nowrap"
+          )}>
             Sign Out
           </span>
         </Button>
