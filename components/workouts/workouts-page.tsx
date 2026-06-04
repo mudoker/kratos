@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Edit2, Plus, Save, Trash2, X } from "lucide-react";
+import { CheckCircle2, Edit2, Plus, Save, Trash2, X, Play, Dumbbell, History, Sparkles, Flame, Check, CalendarDays, Clock, ArrowRight, UserCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { WeeklyPlan, WorkoutSession, WorkoutSessionItem, WorkoutSet } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useData } from "@/components/shared/data-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const baseSession = (): Partial<WorkoutSession> => ({
   id: undefined,
@@ -181,13 +182,18 @@ export function WorkoutsPage() {
 
   if (!data.plans.length) {
     return (
-      <Card className="p-6">
+      <Card className="p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] text-center max-w-xl mx-auto mt-12 rounded-[36px]">
+        <div className="flex justify-center mb-4">
+          <div className="p-4 bg-emerald-500/10 text-emerald-600 rounded-2xl">
+            <Dumbbell className="h-8 w-8" />
+          </div>
+        </div>
         <PageHeader
           eyebrow="Workout Studio"
-          title="Load a planned day into a live session."
-          description="Create a weekly plan first, then this screen will let you log the actual result beside each prescription."
+          title="Load a planned day to log"
+          description="Build a structured split schedule inside the Weekly Planner first. Once done, this workspace will load plans dynamically."
         />
-        <Button asChild className="mt-6">
+        <Button asChild className="mt-8 py-5 rounded-2xl bg-black text-white hover:bg-black/90 font-bold uppercase tracking-wider text-xs shadow-lg">
           <Link href="/planner">Open Weekly Planner</Link>
         </Button>
       </Card>
@@ -195,294 +201,352 @@ export function WorkoutsPage() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-      <Card className="p-6">
-        <div className="flex items-center justify-between gap-2">
-          <PageHeader
-            eyebrow="Workout Studio"
-            title={draft.id ? "Edit workout session" : "Load a planned day and log the real outcome."}
-            description={
-              draft.id
-                ? "Updating a previously logged session."
-                : "Load a planned day into a live session and log the actual result beside the prescription."
-            }
-          />
-          {draft.id && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setDraft(baseSession());
-                setStatus("");
-              }}
+    <div className="space-y-6">
+      
+      {/* Visual Execution header panel */}
+      <div className="rounded-[36px] bg-gradient-to-r from-emerald-950 via-slate-900 to-black p-6 md:p-10 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <Badge className="bg-white/10 hover:bg-white/20 border-transparent text-emerald-400 font-bold uppercase tracking-widest text-[10px] px-3 py-1">
+              Active Session telemetry
+            </Badge>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
+              Workout Execution Studio
+            </h1>
+            <p className="text-white/60 text-sm md:text-base max-w-xl font-medium leading-relaxed">
+              Load daily prescriptions, log real training loads side-by-side, note seat height coordinates, and archive consistency history.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3 items-center">
+            {draft.id && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setDraft(baseSession());
+                  setStatus("");
+                }}
+                className="h-12 rounded-2xl border border-white/10 text-white hover:bg-white/10 px-5 text-xs font-bold uppercase tracking-wider transition"
+              >
+                Cancel Edit
+              </Button>
+            )}
+            <Button 
+              type="button" 
+              onClick={saveSession} 
+              disabled={saving || !(draft.items || []).length} 
+              className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold uppercase text-[10px] tracking-wider px-6 py-6 border-none shadow-[0_5px_20px_rgba(16,185,129,0.25)] transition flex items-center gap-2"
             >
-              <X className="h-4 w-4" />
-              Cancel edit
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span>{draft.id ? "Update Session Log" : "Archive Session Log"}</span>
             </Button>
-          )}
+          </div>
         </div>
+      </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {[
-            ["Exercises loaded", String((draft.items || []).length)],
-            ["Results logged", String(completedResults)],
-            ["Day focus", selectedDay?.focus || "Unset"],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                {label}
-              </p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--foreground)] truncate whitespace-nowrap overflow-hidden max-w-full">
-                {value}
-              </p>
+      {/* Main Core Layout Grid */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px] items-start">
+        
+        {/* Left Side: Logger Card */}
+        <div className="space-y-6">
+          <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
+            
+            {/* Split loader bar */}
+            <div className="p-5 border border-black/5 bg-white/45 rounded-[24px] grid gap-4 sm:grid-cols-2 md:grid-cols-3 items-end">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Choose Program Split</label>
+                <Select
+                  value={planId}
+                  onValueChange={(value) => {
+                    setPlanId(value);
+                    const plan = data.plans.find((entry) => entry.id === value);
+                    setDayId(plan?.days.find((day) => day.items.length)?.id ?? plan?.days[0]?.id ?? "");
+                  }}
+                >
+                  <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-bold py-4">
+                    <SelectValue placeholder="Choose plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {data.plans.map((plan) => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Choose Training Day</label>
+                <Select value={dayId} onValueChange={setDayId}>
+                  <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-bold py-4">
+                    <SelectValue placeholder="Choose day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(selectedPlan?.days ?? []).map((day) => (
+                      <SelectItem key={day.id} value={day.id}>
+                        {day.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="text-[11px] text-black/50 font-bold uppercase tracking-wider pb-3.5 pl-2">
+                Active Program: <span className="text-black">{selectedPlan?.name}</span>
+              </div>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] items-end">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Plan</p>
-            <Select
-              value={planId}
-              onValueChange={(value) => {
-                setPlanId(value);
-                const plan = data.plans.find((entry) => entry.id === value);
-                setDayId(plan?.days.find((day) => day.items.length)?.id ?? plan?.days[0]?.id ?? "");
-              }}
-            >
-              <SelectTrigger className="w-full truncate overflow-hidden whitespace-nowrap max-w-[240px]">
-                <SelectValue placeholder="Choose a plan" />
-              </SelectTrigger>
-              <SelectContent>
-                {data.plans.map((plan) => (
-                  <SelectItem key={plan.id} value={plan.id}>
-                    {plan.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Day</p>
-            <Select value={dayId} onValueChange={setDayId}>
-              <SelectTrigger className="w-full truncate overflow-hidden whitespace-nowrap max-w-[240px]">
-                <SelectValue placeholder="Choose a day" />
-              </SelectTrigger>
-              <SelectContent>
-                {(selectedPlan?.days ?? []).map((day) => (
-                  <SelectItem key={day.id} value={day.id}>
-                    {day.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="button" onClick={saveSession} disabled={saving || !(draft.items || []).length}>
-            <Save className="h-4 w-4" />
-            {saving ? "Saving..." : draft.id ? "Update session" : "Save session"}
-          </Button>
-        </div>
+            {/* Title / effort details */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Session Title</label>
+                <Input
+                  value={draft.title}
+                  onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
+                  placeholder="e.g. Upper Body Focus - Volume Benchmark"
+                  className="bg-white border-black/5 focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
+                />
+              </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-              Session title
-            </p>
-            <Input
-              value={draft.title}
-              onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
-              placeholder="Session title"
-            />
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-              Readiness / Effort
-            </p>
-            <Input
-              value={draft.effort}
-              onChange={(event) => setDraft((current) => ({ ...current, effort: event.target.value }))}
-              placeholder="Readiness or effort"
-            />
-          </div>
-        </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Readiness / RPE Effort (1-10)</label>
+                <Input
+                  value={draft.effort}
+                  onChange={(event) => setDraft((current) => ({ ...current, effort: event.target.value }))}
+                  placeholder="How strong did you feel? RPE 8..."
+                  className="bg-white border-black/5 focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
+                />
+              </div>
+            </div>
 
-        <div className="mt-4 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Notes</p>
-          <Textarea
-            value={draft.notes}
-            onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
-            placeholder="How did the day go? What changed from the original prescription?"
-          />
-        </div>
+            {/* Global notes */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Session Notes</label>
+              <Textarea
+                value={draft.notes}
+                onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
+                placeholder="Sleep debt, fatigue notes, nutrition details, overall session cues..."
+                className="bg-white border-black/5 focus:border-black rounded-2xl text-sm min-h-[52px] py-3 px-4 transition"
+              />
+            </div>
 
-        <div className="mt-6 h-[800px] overflow-hidden rounded-2xl border border-[color:var(--border)] bg-black/[0.02]">
-          <ScrollArea className="h-full w-full pr-4 p-4">
+            {/* Exercises List section */}
             <div className="space-y-4">
-              {(draft.items || []).map((item, index) => {
-                const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-                return (
-                  <div
-                    key={`${item.exerciseId}-${index}`}
-                    className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-4">
-                        {exercise?.imageUrl && (
-                          <div className="h-12 w-12 overflow-hidden rounded-xl border border-[color:var(--border)]">
-                            <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-semibold text-[color:var(--foreground)]">{item.exerciseName}</p>
-                          <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-                            Prescription for {selectedDay?.title || "today"}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge>{item.restSeconds}s rest</Badge>
-                    </div>
+              <div className="flex items-center justify-between border-b border-black/5 pb-2">
+                <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-black/50">Exercise Telemetry Runner</h4>
+                <Badge className="bg-black/5 border-transparent text-black/60 text-[9px] font-bold px-2 py-0.5 uppercase">
+                  {(draft.items || []).length} exercise{(draft.items || []).length !== 1 && "s"} loaded
+                </Badge>
+              </div>
 
-                    <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-                      <div className="rounded-[24px] border border-[color:var(--border)] bg-black/[0.03] p-4 h-fit">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                          Prescription
-                        </p>
-                        <div className="mt-4 space-y-3 text-sm text-[color:var(--foreground)]">
-                          <p>
-                            {item.plannedSets} sets x {item.reps}
-                          </p>
-                          <p>Target load: {item.targetLoad || "Not set"}</p>
-                          <p>Target RPE: {item.targetRpe || "Not set"}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-                              Actual Sets
+              <div className="space-y-4">
+                {(draft.items || []).map((item, index) => {
+                  const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+                  return (
+                    <div
+                      key={`${item.exerciseId}-${index}`}
+                      className="p-5 border border-black/5 bg-white/60 hover:bg-white/80 rounded-[24px] transition duration-300 space-y-4"
+                    >
+                      {/* Exercise basic header */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 pb-3">
+                        <div className="flex items-center gap-3">
+                          {exercise?.imageUrl && (
+                            <div className="h-10 w-10 overflow-hidden rounded-xl border border-black/5">
+                              <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-bold text-sm text-black leading-tight">{item.exerciseName}</p>
+                            <p className="text-[10px] text-black/45 mt-1 font-bold uppercase tracking-wider">
+                              prescribed rest {item.restSeconds}s
                             </p>
-                            <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px]" onClick={() => addSet(index)}>
-                              <Plus className="h-3 w-3 mr-1" /> Add Set
+                          </div>
+                        </div>
+
+                        <Badge className="bg-black text-white text-[9px] font-extrabold py-0.5 px-2">
+                          LIFT {index + 1}
+                        </Badge>
+                      </div>
+
+                      {/* Log Grid */}
+                      <div className="grid gap-4 md:grid-cols-[200px_1fr] items-start">
+                        
+                        {/* Prescription specifications box */}
+                        <div className="rounded-xl border border-black/5 bg-black/[0.02] p-4 text-xs space-y-3">
+                          <div className="flex items-center gap-1.5 text-black/50 border-b border-black/5 pb-1.5 uppercase font-bold text-[9px] tracking-wider">
+                            <Sparkles className="h-3 w-3 text-indigo-500" />
+                            <span>Planned Prescription</span>
+                          </div>
+                          <div className="space-y-1.5 text-black/70 font-semibold leading-relaxed">
+                            <div className="flex justify-between">
+                              <span className="text-black/40 font-medium">Sets/Reps:</span>
+                              <span>{item.plannedSets} x {item.reps}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-black/40 font-medium">Load Goal:</span>
+                              <span>{item.targetLoad || "No load"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-black/40 font-medium">RPE Goal:</span>
+                              <span>{item.targetRpe || "No RPE"}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Outcomes logging form details */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-black/5 pb-1">
+                            <p className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">
+                              Logged Outcomes
+                            </p>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[9px] font-extrabold uppercase tracking-wider text-indigo-600 hover:bg-indigo-50 rounded-lg flex items-center gap-1" onClick={() => addSet(index)}>
+                              <Plus className="h-3.5 w-3.5" />
+                              <span>Add Set</span>
                             </Button>
                           </div>
-                          
+
                           <div className="space-y-2">
                             {(item.sets || []).map((set, sIdx) => (
-                              <div key={sIdx} className="flex items-center gap-2">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-[10px] font-bold">
+                              <div key={sIdx} className="flex items-center gap-3 bg-black/[0.01] p-1.5 rounded-xl border border-black/[0.02]">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-black text-white text-[9px] font-extrabold">
                                   {sIdx + 1}
                                 </div>
                                 <div className="grid flex-1 grid-cols-2 gap-2">
-                                  <Input 
-                                    value={set.weight} 
-                                    placeholder="kg" 
-                                    className="h-9 px-3 text-xs"
-                                    onChange={(e) => updateSet(index, sIdx, "weight", e.target.value)}
-                                  />
-                                  <Input 
-                                    value={set.reps} 
-                                    placeholder="reps" 
-                                    className="h-9 px-3 text-xs"
-                                    onChange={(e) => updateSet(index, sIdx, "reps", e.target.value)}
-                                  />
+                                  <div className="relative flex items-center">
+                                    <Input 
+                                      value={set.weight} 
+                                      placeholder="Load" 
+                                      className="h-10 px-3 bg-white text-xs rounded-xl border-black/5 text-center font-bold"
+                                      onChange={(e) => updateSet(index, sIdx, "weight", e.target.value)}
+                                    />
+                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">KG</span>
+                                  </div>
+                                  <div className="relative flex items-center">
+                                    <Input 
+                                      value={set.reps} 
+                                      placeholder="Reps" 
+                                      className="h-10 px-3 bg-white text-xs rounded-xl border-black/5 text-center font-bold"
+                                      onChange={(e) => updateSet(index, sIdx, "reps", e.target.value)}
+                                    />
+                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">RPS</span>
+                                  </div>
                                 </div>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[color:var(--danger)]" onClick={() => removeSet(index, sIdx)}>
-                                  <X className="h-3.5 w-3.5" />
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500 hover:bg-rose-50 rounded-lg shrink-0" onClick={() => removeSet(index, sIdx)}>
+                                  <X className="h-4 w-4" />
                                 </Button>
                               </div>
                             ))}
                           </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Execution Lift Notes</label>
+                            <Textarea
+                              value={item.notes}
+                              onChange={(event) =>
+                                setDraft((current) => ({
+                                  ...current,
+                                  items: (current.items || []).map((entry, currentIndex) =>
+                                    currentIndex === index ? { ...entry, notes: event.target.value } : entry
+                                  ),
+                                }))
+                              }
+                              placeholder="Missed sets, shoulder checks, tempo pacing..."
+                              className="bg-white border-black/5 rounded-xl text-xs min-h-[46px] py-2.5 px-3.5 transition"
+                            />
+                          </div>
+
                         </div>
-                        
-                        <div className="space-y-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">
-                            Execution notes
-                          </p>
-                          <Textarea
-                            value={item.notes}
-                            onChange={(event) =>
-                              setDraft((current) => ({
-                                ...current,
-                                items: (current.items || []).map((entry, currentIndex) =>
-                                  currentIndex === index ? { ...entry, notes: event.target.value } : entry
-                                ),
-                              }))
-                            }
-                            placeholder="Execution notes, pain signals, tempo changes, or missed targets"
-                            className="min-h-[80px] text-xs"
-                          />
-                        </div>
+
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </div>
-
-        {status ? (
-          <div className="mt-5 flex items-center gap-2 text-sm font-medium text-[color:var(--support)]">
-            <CheckCircle2 className="h-4 w-4" />
-            {status}
-          </div>
-        ) : null}
-      </Card>
-
-      <Card className="p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-          Logged sessions
-        </p>
-        <CardTitle className="mt-2">Recent execution history</CardTitle>
-        <CardDescription className="mt-2">
-          Review what you actually performed before asking the coach to adjust next week.
-        </CardDescription>
-
-        <div className="mt-6 space-y-3">
-          {sessions.length ? (
-            sessions.map((session) => (
-              <div
-                key={session.id}
-                className="group relative rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4 transition hover:bg-white/80"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-[color:var(--foreground)]">{session.title}</p>
-                    <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{formatDate(session.startedAt)}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge>{session.items.length} exercises</Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 rounded-full p-0 opacity-0 transition group-hover:opacity-100"
-                      onClick={() => startEdit(session)}
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 rounded-full p-0 text-[color:var(--danger)] opacity-0 transition group-hover:opacity-100 hover:bg-[color:var(--danger-soft)]"
-                      onClick={() => removeSession(session.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-[color:var(--muted-foreground)]">
-                  {session.notes || session.effort || "No notes captured."}
-                </p>
+                  );
+                })}
               </div>
-            ))
-          ) : (
-            <p className="rounded-[24px] border border-dashed border-[color:var(--border-strong)] p-5 text-sm text-[color:var(--muted-foreground)]">
-              Session history will appear here once you save a training day.
-            </p>
-          )}
+            </div>
+
+            {status ? (
+              <div className="mt-4 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-700 text-xs font-semibold text-center flex items-center justify-center gap-2">
+                <Check className="h-4 w-4" />
+                <span>{status}</span>
+              </div>
+            ) : null}
+
+          </Card>
         </div>
-      </Card>
+
+        {/* Right Side: Execution Logs */}
+        <div className="space-y-6 lg:sticky lg:top-4">
+          <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
+            <div className="flex items-center gap-2 border-b border-black/5 pb-3">
+              <History className="h-4 w-4 text-black/50" />
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/50">Execution Logs</span>
+            </div>
+
+            <CardDescription className="text-xs text-black/50 mt-1 leading-relaxed">
+              Verify your completed logs. Scrub records, edit details, or trace pacing timelines.
+            </CardDescription>
+
+            <ScrollArea className="h-[450px] -mr-2 pr-2">
+              <div className="space-y-4 relative border-l border-black/5 pl-4 ml-2 pb-6">
+                {sessions.length ? (
+                  sessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="relative group p-4 rounded-2xl border border-black/5 bg-white/45 hover:bg-white/80 hover:shadow-sm transition duration-300"
+                    >
+                      {/* Timeline bullet */}
+                      <div className="absolute left-[-22px] top-5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
+                      
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <p className="font-bold text-sm text-black leading-snug">{session.title}</p>
+                          <p className="text-[10px] text-black/40 mt-1 font-semibold">{formatDate(session.startedAt)}</p>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Badge className="bg-black/5 border-transparent text-black/60 text-[9px] uppercase px-1.5 py-0.5">
+                            {session.items.length} lift{session.items.length !== 1 && "s"}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 rounded-md p-0 hover:bg-black/5 text-black/70 hover:text-black transition"
+                            onClick={() => startEdit(session)}
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 rounded-md p-0 text-rose-500 hover:bg-rose-50 transition"
+                            onClick={() => removeSession(session.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <p className="mt-2 text-xs leading-relaxed text-black/60 italic border-t border-black/5 pt-2">
+                        {session.notes || session.effort || "No qualitative log captured."}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-black/40">
+                    <Dumbbell className="h-10 w-10 mx-auto text-black/20 mb-3" />
+                    <p className="text-xs font-semibold">No Sessions Logged</p>
+                    <p className="text-[10px] mt-1 leading-relaxed text-black/30">Sync an active day above to establish your telemetry database.</p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </Card>
+        </div>
+
+      </div>
+
     </div>
   );
 }
