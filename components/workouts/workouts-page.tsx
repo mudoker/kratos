@@ -30,7 +30,11 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
   if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || exerciseCategory === "Mobility") {
     tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
   }
-  if (lowerNotes.includes("stretch") || lowerNotes.includes("cooldown") || lowerNotes.includes("cool-down") || lowerNotes.includes("flow")) {
+  const hasStretch = (lowerNotes.includes("stretch") && !lowerNotes.includes("deep stretch") && !lowerNotes.includes("tempo")) || 
+                     lowerNotes.includes("cooldown") || 
+                     lowerNotes.includes("cool-down") || 
+                     lowerNotes.includes("flow");
+  if (hasStretch) {
     tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
   }
   return tags;
