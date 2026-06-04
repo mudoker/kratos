@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string) => {
-  const tags = [];
+  const tags: Array<{ label: string; type: string; color: string }> = [];
   const lowerNotes = (notes || "").toLowerCase();
   const lowerId = (exerciseId || "").toLowerCase();
   
@@ -37,6 +37,23 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
   if (hasStretch) {
     tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
   }
+
+  // Parse custom TAGS: line
+  const tagsMatch = (notes || "").match(/TAGS:\s*([^\n\r]+)/i);
+  if (tagsMatch && tagsMatch[1]) {
+    const customList = tagsMatch[1].split(",").map(t => t.trim()).filter(Boolean);
+    customList.forEach(tagName => {
+      const upperName = tagName.toUpperCase();
+      if (!tags.some(t => t.label === upperName)) {
+        tags.push({ 
+          label: upperName, 
+          type: "custom", 
+          color: "bg-slate-500/10 text-slate-700 border-slate-200" 
+        });
+      }
+    });
+  }
+
   return tags;
 };
 
