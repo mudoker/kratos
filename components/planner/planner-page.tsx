@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PlanAnalysis } from "./plan-analysis";
 import { useData } from "@/components/shared/data-provider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,20 +50,67 @@ const setCustomTagsInNotes = (notes: string, tags: string[]): string => {
   return cleanNotes ? `${cleanNotes}\n${tagsLine}` : tagsLine;
 };
 
-const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string) => {
+const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string, exercises: any[] = []) => {
   const tags: Array<{ label: string; type: string; color: string }> = [];
   const lowerNotes = (notes || "").toLowerCase();
   const lowerId = (exerciseId || "").toLowerCase();
   
+  const exercise = exercises.find(e => e.id === exerciseId);
+  const exerciseName = exercise ? exercise.name.toLowerCase() : "";
+  const categoryLower = (exerciseCategory || exercise?.category || "").toLowerCase();
+
+  // 1. Prepopulated Compound vs Isolation tags based on exercise name keywords
+  if (
+    exerciseName.includes("press") || 
+    exerciseName.includes("squat") || 
+    exerciseName.includes("deadlift") || 
+    exerciseName.includes("row") || 
+    exerciseName.includes("pull-up") || 
+    exerciseName.includes("chin-up") || 
+    exerciseName.includes("dip") ||
+    exerciseName.includes("pullup") ||
+    lowerId.includes("press") ||
+    lowerId.includes("squat") ||
+    lowerId.includes("deadlift") ||
+    lowerId.includes("row") ||
+    lowerId.includes("pull-up")
+  ) {
+    tags.push({ label: "COMPOUND", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
+  } else if (
+    exerciseName.includes("curl") || 
+    exerciseName.includes("raise") || 
+    exerciseName.includes("extension") || 
+    exerciseName.includes("fly") || 
+    exerciseName.includes("shrug") || 
+    exerciseName.includes("crunch") || 
+    exerciseName.includes("twist") ||
+    lowerId.includes("curl") ||
+    lowerId.includes("raise") ||
+    lowerId.includes("extension") ||
+    lowerId.includes("fly")
+  ) {
+    tags.push({ label: "ISOLATION", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
+  }
+
+  if (categoryLower === "mobility") {
+    tags.push({ label: "MOBILITY", type: "prepop", color: "bg-emerald-500/10 text-emerald-700 border-emerald-200" });
+  } else if (categoryLower === "conditioning") {
+    tags.push({ label: "CONDITIONING", type: "prepop", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
+  }
+
+  // 2. Standard auto-detected tags from notes
   if (lowerNotes.includes("superset") || lowerId.includes("superset")) {
     tags.push({ label: "SUPERSET", type: "superset", color: "bg-purple-500/10 text-purple-700 border-purple-200" });
   }
   if (lowerNotes.includes("dropset") || lowerNotes.includes("drop-set") || lowerNotes.includes("drop set")) {
     tags.push({ label: "DROPSET", type: "dropset", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
   }
-  if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || exerciseCategory === "Mobility") {
-    tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
+  if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || categoryLower === "mobility") {
+    if (!tags.some(t => t.label === "WARM-UP")) {
+      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
+    }
   }
+  
   const hasStretch = (lowerNotes.includes("stretch") && !lowerNotes.includes("deep stretch") && !lowerNotes.includes("tempo")) || 
                      lowerNotes.includes("cooldown") || 
                      lowerNotes.includes("cool-down") || 
@@ -71,7 +119,7 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
     tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
   }
 
-  // Parse custom TAGS: line
+  // 3. Parse custom TAGS: line
   const tagsMatch = (notes || "").match(/TAGS:\s*([^\n\r]+)/i);
   if (tagsMatch && tagsMatch[1]) {
     const customList = tagsMatch[1].split(",").map(t => t.trim()).filter(Boolean);
@@ -126,6 +174,8 @@ export function PlannerPage() {
   const data = useData();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [tagModalItem, setTagModalItem] = useState<{ id: string; index: number } | null>(null);
+  const [newTagInputValue, setNewTagInputValue] = useState("");
   
   const [plans, setPlans] = useState<WeeklyPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
@@ -246,7 +296,7 @@ export function PlannerPage() {
     isInsideSuperset = false
   ) => {
     const exercise = data.exercises.find((e) => e.id === item.exerciseId);
-    const tags = getItemTags(item.notes, item.exerciseId, exercise?.category);
+    const tags = getItemTags(item.notes, item.exerciseId, exercise?.category, data.exercises);
     const filteredTags = tags.filter((t) => t.type !== "superset");
     
     const customTags = getCustomTagsFromNotes(item.notes);
@@ -320,24 +370,19 @@ export function PlannerPage() {
                 <span>PR target</span>
               </Badge>
             )}
-
-            {/* Dynamic Custom Tag Creator Dropdown */}
-            <Select onValueChange={(val) => addTag(val)} value="">
-              <SelectTrigger className="h-6 w-20 bg-black/5 border-transparent hover:bg-black/10 rounded-lg text-[9px] font-bold py-0.5 px-2 flex gap-1 items-center justify-center cursor-pointer select-none">
-                <SelectValue placeholder="+ Tag" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="isolation">Isolation</SelectItem>
-                <SelectItem value="compound">Compound</SelectItem>
-                <SelectItem value="superset">Superset</SelectItem>
-                <SelectItem value="dropset">Dropset</SelectItem>
-                <SelectItem value="power">Power</SelectItem>
-                <SelectItem value="finisher">Finisher</SelectItem>
-                <SelectItem value="hypertrophy">Hypertrophy</SelectItem>
-                <SelectItem value="unilateral">Unilateral</SelectItem>
-              </SelectContent>
-            </Select>
+            <button
+              type="button"
+              onClick={() => {
+                setTagModalItem({ id: item.id, index: itemIndex });
+                setNewTagInputValue("");
+              }}
+              className="inline-flex items-center justify-center h-[18px] w-[18px] rounded-full border border-dashed border-black/25 bg-transparent hover:bg-black/5 text-black/60 hover:text-black transition-colors duration-150 cursor-pointer shrink-0"
+              title="Add custom badge"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
           </div>
+          
           <Button
             type="button"
             variant="ghost"
@@ -478,8 +523,13 @@ export function PlannerPage() {
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-black/50 block">Exercise Setup Notes</label>
           <Textarea
-            value={item.notes}
-            onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, notes: event.target.value }))}
+            value={(item.notes || "").replace(/TAGS:\s*[^\n\r]+/i, "").trim()}
+            onChange={(event) => {
+              const cleanNotes = event.target.value;
+              const currentTags = getCustomTagsFromNotes(item.notes);
+              const nextNotes = setCustomTagsInNotes(cleanNotes, currentTags);
+              updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, notes: nextNotes }));
+            }}
             placeholder="Technique cues, bench position slots, tempos..."
             className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[46px] py-3 px-4 transition"
           />
@@ -1054,7 +1104,7 @@ export function PlannerPage() {
                           {visualGroups.map((group, groupIndex) => {
                             if (group.type === "superset") {
                               return (
-                                <div key={group.supersetKey || groupIndex} className="p-6 border-2 border-purple-200 bg-purple-500/[0.02] rounded-[28px] space-y-6">
+                                <div key={group.supersetKey || groupIndex} className="p-6 border border-purple-200/60 bg-purple-500/[0.01] rounded-[28px] space-y-6 shadow-sm">
                                   <div className="flex items-center justify-between border-b border-purple-100 pb-3">
                                     <div className="flex items-center gap-2">
                                       <span className="h-6 w-6 rounded-lg bg-purple-500/10 text-purple-700 flex items-center justify-center font-bold text-xs">S</span>
@@ -1068,8 +1118,13 @@ export function PlannerPage() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="space-y-4">
-                                    {group.items.map(({ item, originalIndex }) => renderExerciseCard(item, originalIndex, true))}
+                                  <div className="space-y-6 relative pl-6 ml-3 border-l border-dashed border-purple-300">
+                                    {group.items.map(({ item, originalIndex }) => (
+                                      <div key={item.id} className="relative">
+                                        <div className="absolute left-[-31px] top-6 w-3 h-3 rounded-full bg-purple-600 border-2 border-white shadow-sm z-10" />
+                                        {renderExerciseCard(item, originalIndex, true)}
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               );
@@ -1108,6 +1163,84 @@ export function PlannerPage() {
         </div>
 
       </div>
+
+      <Dialog 
+        open={tagModalItem !== null} 
+        onOpenChange={(open) => { 
+          if (!open) setTagModalItem(null); 
+        }}
+      >
+        <DialogContent className="sm:max-w-[420px] rounded-[32px] border border-black/5 bg-white p-6 shadow-2xl">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-lg font-extrabold tracking-tight text-neutral-900">Add Custom Badge</DialogTitle>
+            <DialogDescription className="text-xs font-semibold text-neutral-500 leading-relaxed">
+              Create a custom tag for your exercise (e.g. PR TARGET, FINISHER, TEMPO). Prepopulated badges are automatically generated.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-3">
+            <Input
+              value={newTagInputValue}
+              onChange={(e) => setNewTagInputValue(e.target.value)}
+              placeholder="e.g. PR TARGET, FINISHER"
+              className="w-full bg-neutral-50 border-neutral-200 focus:border-black rounded-xl text-xs py-3 px-4 font-semibold"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const clean = newTagInputValue.trim().toUpperCase();
+                  if (clean && tagModalItem) {
+                    const item = activeDay.items[tagModalItem.index];
+                    if (item) {
+                      const customTags = getCustomTagsFromNotes(item.notes);
+                      if (!customTags.some(t => t.toLowerCase() === clean.toLowerCase())) {
+                        const nextTags = [...customTags, clean];
+                        const nextNotes = setCustomTagsInNotes(item.notes, nextTags);
+                        updateItem(activeDay.id, tagModalItem.index, (entry) => ({ ...entry, notes: nextNotes }));
+                      }
+                    }
+                  }
+                  setNewTagInputValue("");
+                  setTagModalItem(null);
+                }
+              }}
+            />
+            <div className="flex justify-end gap-2.5 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setNewTagInputValue("");
+                  setTagModalItem(null);
+                }}
+                className="rounded-xl px-4 py-2 text-xs font-bold hover:bg-black/5 transition"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const clean = newTagInputValue.trim().toUpperCase();
+                  if (clean && tagModalItem) {
+                    const item = activeDay.items[tagModalItem.index];
+                    if (item) {
+                      const customTags = getCustomTagsFromNotes(item.notes);
+                      if (!customTags.some(t => t.toLowerCase() === clean.toLowerCase())) {
+                        const nextTags = [...customTags, clean];
+                        const nextNotes = setCustomTagsInNotes(item.notes, nextTags);
+                        updateItem(activeDay.id, tagModalItem.index, (entry) => ({ ...entry, notes: nextNotes }));
+                      }
+                    }
+                  }
+                  setNewTagInputValue("");
+                  setTagModalItem(null);
+                }}
+                className="bg-black text-white hover:bg-black/90 rounded-xl px-4 py-2 text-xs font-bold transition"
+              >
+                Add Badge
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
