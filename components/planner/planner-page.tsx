@@ -26,14 +26,31 @@ import { cn } from "@/lib/utils";
 
 const parseProtocolLines = (text: string) => {
   if (!text) return [];
-  return text
-    .split(/\r?\n/)
+  const clean = text.replace(/^(cool-down stretch|cool-down stretches|cool-down|cooldown|warm-up|warmup|stretches|stretch):\s*/i, "");
+  const rawLines = clean.split(/(?:\r?\n)|(?:\.\s+(?=[A-Z0-9]))|(?<=\))\s*,\s*(?=[A-Z0-9])/);
+  return rawLines
     .map(line => line.trim())
-    .filter(line => line.length > 0);
+    .filter(line => line.length > 0)
+    .map(line => line.replace(/,$/, "").trim());
+};
+
+const getCustomTagsFromNotes = (notes: string): string[] => {
+  const tagsMatch = (notes || "").match(/TAGS:\s*([^\n\r]+)/i);
+  if (tagsMatch && tagsMatch[1]) {
+    return tagsMatch[1].split(",").map(t => t.trim()).filter(Boolean);
+  }
+  return [];
+};
+
+const setCustomTagsInNotes = (notes: string, tags: string[]): string => {
+  const cleanNotes = notes.replace(/TAGS:\s*[^\n\r]+/i, "").trim();
+  if (tags.length === 0) return cleanNotes;
+  const tagsLine = `TAGS: ${tags.join(", ")}`;
+  return cleanNotes ? `${cleanNotes}\n${tagsLine}` : tagsLine;
 };
 
 const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string) => {
-  const tags = [];
+  const tags: Array<{ label: string; type: string; color: string }> = [];
   const lowerNotes = (notes || "").toLowerCase();
   const lowerId = (exerciseId || "").toLowerCase();
   
@@ -53,6 +70,23 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
   if (hasStretch) {
     tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
   }
+
+  // Parse custom TAGS: line
+  const tagsMatch = (notes || "").match(/TAGS:\s*([^\n\r]+)/i);
+  if (tagsMatch && tagsMatch[1]) {
+    const customList = tagsMatch[1].split(",").map(t => t.trim()).filter(Boolean);
+    customList.forEach(tagName => {
+      const upperName = tagName.toUpperCase();
+      if (!tags.some(t => t.label === upperName)) {
+        tags.push({ 
+          label: upperName, 
+          type: "custom", 
+          color: "bg-slate-500/10 text-slate-700 border-slate-200" 
+        });
+      }
+    });
+  }
+
   return tags;
 };
 
@@ -215,6 +249,23 @@ export function PlannerPage() {
     const tags = getItemTags(item.notes, item.exerciseId, exercise?.category);
     const filteredTags = tags.filter((t) => t.type !== "superset");
     
+    const customTags = getCustomTagsFromNotes(item.notes);
+
+    const deleteTag = (tagToDelete: string) => {
+      const nextTags = customTags.filter(t => t.toLowerCase() !== tagToDelete.toLowerCase());
+      const nextNotes = setCustomTagsInNotes(item.notes, nextTags);
+      updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, notes: nextNotes }));
+    };
+
+    const addTag = (newTag: string) => {
+      const clean = newTag.trim();
+      if (!clean) return;
+      if (customTags.some(t => t.toLowerCase() === clean.toLowerCase())) return;
+      const nextTags = [...customTags, clean];
+      const nextNotes = setCustomTagsInNotes(item.notes, nextTags);
+      updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, notes: nextNotes }));
+    };
+
     const primaryTag = tags[0];
     const borderClass = !isInsideSuperset
       ? primaryTag
@@ -244,8 +295,23 @@ export function PlannerPage() {
               Lift {itemIndex + 1}
             </Badge>
             {filteredTags.map((tag) => (
-              <Badge key={tag.label} className={cn("border text-[9px] font-extrabold px-2 py-0.5", tag.color)}>
-                {tag.label}
+              <Badge 
+                key={tag.label} 
+                className={cn(
+                  "border text-[9px] font-extrabold px-2 py-0.5 flex items-center gap-1", 
+                  tag.color
+                )}
+              >
+                <span>{tag.label}</span>
+                {tag.type === "custom" && (
+                  <button 
+                    type="button" 
+                    onClick={() => deleteTag(tag.label.toLowerCase())}
+                    className="hover:text-rose-500 transition-colors text-[10px] font-bold leading-none ml-1 cursor-pointer shrink-0"
+                  >
+                    ×
+                  </button>
+                )}
               </Badge>
             ))}
             {item.prGoal && (
@@ -254,6 +320,23 @@ export function PlannerPage() {
                 <span>PR target</span>
               </Badge>
             )}
+
+            {/* Dynamic Custom Tag Creator Dropdown */}
+            <Select onValueChange={(val) => addTag(val)} value="">
+              <SelectTrigger className="h-6 w-20 bg-black/5 border-transparent hover:bg-black/10 rounded-lg text-[9px] font-bold py-0.5 px-2 flex gap-1 items-center justify-center cursor-pointer select-none">
+                <SelectValue placeholder="+ Tag" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="isolation">Isolation</SelectItem>
+                <SelectItem value="compound">Compound</SelectItem>
+                <SelectItem value="superset">Superset</SelectItem>
+                <SelectItem value="dropset">Dropset</SelectItem>
+                <SelectItem value="power">Power</SelectItem>
+                <SelectItem value="finisher">Finisher</SelectItem>
+                <SelectItem value="hypertrophy">Hypertrophy</SelectItem>
+                <SelectItem value="unilateral">Unilateral</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button
             type="button"
