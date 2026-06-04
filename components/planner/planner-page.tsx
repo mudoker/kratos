@@ -5,7 +5,7 @@ import Link from "next/link";
 import { 
   ArrowRight, Plus, Save, Trash2, Loader2, Dumbbell, Sparkles, 
   BarChart3, Clock, Flame, Target, CalendarDays, ChevronRight,
-  TrendingUp, Compass, PlusCircle, AlertCircle, Info, ChevronDown, Check
+  TrendingUp, Compass, PlusCircle, AlertCircle, Info, ChevronDown, Check, X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { WeeklyPlan } from "@/lib/types";
@@ -176,6 +176,8 @@ export function PlannerPage() {
   const [isClient, setIsClient] = useState(false);
   const [tagModalItem, setTagModalItem] = useState<{ id: string; index: number } | null>(null);
   const [newTagInputValue, setNewTagInputValue] = useState("");
+  const [supersetModalOpen, setSupersetModalOpen] = useState(false);
+  const [supersetExercises, setSupersetExercises] = useState<string[]>([]);
   
   const [plans, setPlans] = useState<WeeklyPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
@@ -613,6 +615,43 @@ export function PlannerPage() {
         },
       ],
     }));
+  };
+
+  const createSuperset = () => {
+    if (supersetExercises.length < 2) return;
+    
+    let maxNumber = 0;
+    activeDay.items.forEach(item => {
+      const match = (item.notes || "").match(/SUPERSET\s*([0-9]+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNumber) maxNumber = num;
+      }
+    });
+    const nextNumber = maxNumber + 1;
+
+    const newItems = supersetExercises.map((exId, idx) => {
+      const letter = String.fromCharCode(65 + idx);
+      return {
+        id: `draft-item-${randomId()}`,
+        exerciseId: exId,
+        sets: 3,
+        reps: "8-10",
+        restSeconds: 90,
+        targetLoad: "Moderate",
+        targetRpe: "8",
+        prGoal: "",
+        notes: `SUPERSET ${nextNumber}${letter}. Perform back-to-back without rest.`,
+        order: activeDay.items.length + idx,
+      };
+    });
+
+    updateDay(activeDay.id, (day) => ({
+      ...day,
+      items: [...day.items, ...newItems],
+    }));
+
+    setSupersetModalOpen(false);
   };
 
   const addDay = () => {
@@ -1153,15 +1192,33 @@ export function PlannerPage() {
                           })}
                         </div>
 
-                        <Button 
-                          type="button" 
-                          onClick={() => addExercise(activeDay.id)} 
-                          disabled={!data.exercises.length} 
-                          className="w-full border border-dashed border-black/20 bg-black/5 hover:bg-black/10 text-black py-6 rounded-[22px] font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
-                        >
-                          <PlusCircle className="h-4.5 w-4.5" />
-                          <span>Add exercise to Day {activeDay.day + 1}</span>
-                        </Button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <Button 
+                            type="button" 
+                            onClick={() => addExercise(activeDay.id)} 
+                            disabled={!data.exercises.length} 
+                            className="border border-dashed border-black/20 bg-black/5 hover:bg-black/10 text-black py-6 rounded-[22px] font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <PlusCircle className="h-4.5 w-4.5" />
+                            <span>Add Single Exercise</span>
+                          </Button>
+                          <Button 
+                            type="button" 
+                            onClick={() => {
+                              if (data.exercises.length >= 2) {
+                                setSupersetExercises([data.exercises[0].id, data.exercises[1].id]);
+                              } else if (data.exercises.length === 1) {
+                                setSupersetExercises([data.exercises[0].id, data.exercises[0].id]);
+                              }
+                              setSupersetModalOpen(true);
+                            }} 
+                            disabled={!data.exercises.length} 
+                            className="border border-dashed border-purple-200 bg-purple-500/5 hover:bg-purple-500/10 text-purple-700 py-6 rounded-[22px] font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm"
+                          >
+                            <PlusCircle className="h-4.5 w-4.5 text-purple-600" />
+                            <span>Create Superset</span>
+                          </Button>
+                        </div>
                       </div>
 
                     </motion.div>
@@ -1255,6 +1312,98 @@ export function PlannerPage() {
               >
                 Add Badge
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog 
+        open={supersetModalOpen} 
+        onOpenChange={(open) => { 
+          if (!open) setSupersetModalOpen(false); 
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px] rounded-[32px] border border-black/5 bg-white p-6 shadow-2xl">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-lg font-extrabold tracking-tight text-neutral-900 flex items-center gap-2">
+              <span className="h-6 w-6 rounded-lg bg-purple-500/10 text-purple-700 flex items-center justify-center font-bold text-xs">S</span>
+              <span>Create Superset</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs font-semibold text-neutral-500 leading-relaxed">
+              Group two or more exercises to perform back-to-back without rest. Visual connection lines and sequence tags will be automatically created.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-4">
+            <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+              {supersetExercises.map((exId, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <span className="h-7 w-7 shrink-0 rounded-lg bg-purple-500/10 text-purple-700 flex items-center justify-center font-extrabold text-[11px] uppercase">
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <div className="flex-1">
+                    <Combobox
+                      options={exerciseOptions}
+                      value={exId}
+                      onValueChange={(val) => {
+                        setSupersetExercises(curr => curr.map((id, i) => i === idx ? val : id));
+                      }}
+                      placeholder="Select exercise..."
+                    />
+                  </div>
+                  {supersetExercises.length > 2 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setSupersetExercises(curr => curr.filter((_, i) => i !== idx));
+                      }}
+                      className="h-8 w-8 p-0 text-rose-500 hover:bg-rose-55 rounded-lg transition flex items-center justify-center"
+                      title="Remove from superset"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setSupersetExercises(curr => [...curr, data.exercises[0]?.id || ""]);
+              }}
+              className="w-full border border-dashed border-black/10 text-black/60 hover:text-black hover:bg-black/5 rounded-xl text-xs py-5 font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Add Exercise to Superset</span>
+            </Button>
+
+            <div className="flex justify-between items-center pt-2 border-t border-black/5 mt-4">
+              <span className="text-[10px] text-amber-600 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md">
+                Validation: Min. 2 exercises required
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setSupersetModalOpen(false);
+                  }}
+                  className="rounded-xl px-4 py-2 text-xs font-bold hover:bg-black/5 transition"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={createSuperset}
+                  disabled={supersetExercises.length < 2}
+                  className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 py-2 text-xs font-bold transition shadow-sm"
+                >
+                  Create Superset
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
