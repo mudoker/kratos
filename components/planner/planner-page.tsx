@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Plus, Save, Trash2, Loader2 } from "lucide-react";
+import { 
+  ArrowRight, Plus, Save, Trash2, Loader2, Dumbbell, Sparkles, 
+  BarChart3, Clock, Flame, Target, CalendarDays, ChevronRight,
+  TrendingUp, Compass, PlusCircle, AlertCircle, Info, ChevronDown, Check
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { WeeklyPlan } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
@@ -16,10 +20,8 @@ import { Combobox } from "@/components/ui/combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlanAnalysis } from "./plan-analysis";
 import { useData } from "@/components/shared/data-provider";
-import { motion, Reorder, useDragControls } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
 const createDraftId = () => `draft_${randomId()}`;
@@ -48,58 +50,6 @@ const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
   ],
 });
 
-function DayTab({ day }: { day: WeeklyPlan["days"][number] }) {
-  const controls = useDragControls();
-  const [isPressing, setIsPressing] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setIsPressing(true);
-    timerRef.current = setTimeout(() => {
-      controls.start(e);
-      setIsPressing(false);
-    }, 1000);
-  };
-
-  const handlePointerUp = () => {
-    setIsPressing(false);
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  return (
-    <Reorder.Item
-      value={day}
-      dragListener={false}
-      dragControls={controls}
-      className="relative"
-    >
-      <TabsTrigger 
-        value={String(day.day)}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-        className={cn(
-          "transition-all duration-300",
-          isPressing && "scale-95 opacity-80 bg-black/5"
-        )}
-      >
-        {day.title.slice(0, 3)}
-      </TabsTrigger>
-      {isPressing && (
-        <motion.div 
-          initial={{ width: 0 }}
-          animate={{ width: "100%" }}
-          transition={{ duration: 1.0, ease: "linear" }}
-          className="absolute bottom-0 left-0 h-0.5 bg-[color:var(--brand)]"
-        />
-      )}
-    </Reorder.Item>
-  );
-}
-
 export function PlannerPage() {
   const data = useData();
   const router = useRouter();
@@ -107,7 +57,7 @@ export function PlannerPage() {
   
   const [plans, setPlans] = useState<WeeklyPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
-  const [selectedDayValue, setSelectedDayValue] = useState("0");
+  const [activeDayId, setActiveDayId] = useState("");
   const [saving, setSaving] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -120,11 +70,22 @@ export function PlannerPage() {
     const initial = data.plans.length ? data.plans : [blankPlan(data.user.id)];
     setPlans(initial);
     setSelectedPlanId(initial[0].id);
-    setSelectedDayValue(String(initial[0].days[0]?.day ?? 0));
+    setActiveDayId(initial[0].days[0]?.id ?? "");
   }, [data.plans, data.user.id]);
 
-  const selectedPlan =
-    plans.find((plan) => plan.id === selectedPlanId) || plans[0] || blankPlan(data.user.id);
+  const selectedPlan = useMemo(() => {
+    return plans.find((plan) => plan.id === selectedPlanId) || plans[0] || blankPlan(data.user.id);
+  }, [plans, selectedPlanId]);
+
+  const activeDay = useMemo(() => {
+    return selectedPlan.days.find((day) => day.id === activeDayId) || selectedPlan.days[0];
+  }, [selectedPlan, activeDayId]);
+
+  useEffect(() => {
+    if (activeDay && activeDay.id !== activeDayId) {
+      setActiveDayId(activeDay.id);
+    }
+  }, [selectedPlanId, activeDay]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -156,22 +117,12 @@ export function PlannerPage() {
     };
   }, [plans, selectedPlan]);
 
-  useEffect(() => {
-    if (selectedPlan) {
-      // Keep selected day value in sync when switching plans
-      setSelectedDayValue(String(selectedPlan.days[0]?.day ?? 0));
-    }
-  }, [selectedPlanId]);
-
   const exerciseOptions = useMemo(
     () => data.exercises.map((exercise) => ({ value: exercise.id, label: exercise.name })),
     [data.exercises]
   );
 
   const weeklyLiftCount = selectedPlan.days.reduce((count, day) => count + day.items.length, 0);
-  const programmedDays = selectedPlan.days.filter(
-    (day) => day.items.length || day.focus || day.sessionGoal || day.warmup || day.notes
-  ).length;
   const prFocusCount = selectedPlan.days.reduce(
     (count, day) => count + day.items.filter((item) => item.prGoal.trim()).length,
     0
@@ -205,15 +156,12 @@ export function PlannerPage() {
     const next = blankPlan(data.user.id, `Split ${plans.length + 1}`);
     setPlans((current) => [next, ...current]);
     setSelectedPlanId(next.id);
-    setSelectedDayValue(String(next.days[0]?.day ?? 0));
+    setActiveDayId(next.days[0]?.id ?? "");
     setMessage("");
   };
 
-  const addExercise = (dayIndex: number) => {
-    const targetDay = selectedPlan.days.find(d => d.day === dayIndex);
-    if (!targetDay) return;
-
-    updateDay(targetDay.id, (day) => ({
+  const addExercise = (dayId: string) => {
+    updateDay(dayId, (day) => ({
       ...day,
       items: [
         ...day.items,
@@ -237,12 +185,14 @@ export function PlannerPage() {
     if (selectedPlan.days.length >= 7) return;
     const maxDay = Math.max(...selectedPlan.days.map(d => d.day), -1);
     const nextDay = maxDay + 1;
+    const nextDayId = `draft-day-${randomId()}`;
+    
     patchSelectedPlan((plan) => ({
       ...plan,
       days: [
         ...plan.days,
         {
-          id: `draft-day-${randomId()}`,
+          id: nextDayId,
           day: nextDay,
           title: `Day ${nextDay + 1}`,
           focus: "",
@@ -254,28 +204,7 @@ export function PlannerPage() {
         },
       ],
     }));
-    setSelectedDayValue(String(nextDay));
-  };
-
-  const reorderDays = (newDays: WeeklyPlan["days"]) => {
-    const reindexedDays = newDays.map((d, idx) => ({
-      ...d,
-      day: idx,
-    }));
-    patchSelectedPlan((plan) => ({
-      ...plan,
-      days: reindexedDays,
-    }));
-    // We update the selection to follow the new index of the currently active day if it moved
-    // but here it's simpler to just keep the visual content.
-    // If we want to keep the same day selected:
-    const currentDayId = selectedPlan.days.find(d => String(d.day) === selectedDayValue)?.id;
-    if (currentDayId) {
-      const newIndex = reindexedDays.findIndex(d => d.id === currentDayId);
-      if (newIndex !== -1) {
-        setSelectedDayValue(String(newIndex));
-      }
-    }
+    setActiveDayId(nextDayId);
   };
 
   const removeDay = (dayId: string) => {
@@ -284,11 +213,11 @@ export function PlannerPage() {
       const remainingDays = plan.days.filter((d) => d.id !== dayId);
       return {
         ...plan,
-        days: remainingDays,
+        days: remainingDays.map((d, idx) => ({ ...d, day: idx })),
       };
     });
-    // Fallback to first day after removal
-    setSelectedDayValue(String(selectedPlan.days[0].day));
+    const remaining = selectedPlan.days.filter((d) => d.id !== dayId);
+    setActiveDayId(remaining[0]?.id ?? "");
   };
 
   const savePlan = async () => {
@@ -316,7 +245,7 @@ export function PlannerPage() {
       ...current.filter((plan) => plan.id !== selectedPlan.id && plan.id !== payload.plan!.id),
     ]);
     setSelectedPlanId(payload.plan.id);
-    setMessage("Plan saved.");
+    setMessage("Plan saved successfully.");
     setSaving(false);
     router.refresh();
   };
@@ -328,7 +257,7 @@ export function PlannerPage() {
       const nextPlans = remainingDrafts.length ? remainingDrafts : [blankPlan(data.user.id)];
       setPlans(nextPlans);
       setSelectedPlanId(nextPlans[0]?.id ?? "");
-      setSelectedDayValue(String(nextPlans[0]?.days[0]?.day ?? 0));
+      setActiveDayId(nextPlans[0]?.days[0]?.id ?? "");
       return;
     }
 
@@ -337,377 +266,475 @@ export function PlannerPage() {
     const nextPlans = remaining.length ? remaining : [blankPlan(data.user.id)];
     setPlans(nextPlans);
     setSelectedPlanId(nextPlans[0]?.id ?? "");
-    setSelectedDayValue(String(nextPlans[0]?.days[0]?.day ?? 0));
+    setActiveDayId(nextPlans[0]?.days[0]?.id ?? "");
     router.refresh();
   };
 
   if (!isClient) return null;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-      <Card className="h-fit p-5">
-        <PageHeader
-          eyebrow="Planner"
-          title="Map the full training week."
-          description="Program each day with focus, warm-up, target load, RPE, PR goals, and exercise notes."
-        />
-
-        <Button type="button" variant="secondary" onClick={createPlan} className="mt-5 w-full">
-          <Plus className="h-4 w-4" />
-          New split
-        </Button>
-
-        <ScrollArea className="mt-6 h-auto max-h-[400px] pr-3">
-          <div className="space-y-3">
-            {plans.map((plan) => (
-              <button
-                key={plan.id}
-                type="button"
-                onClick={() => setSelectedPlanId(plan.id)}
-                className={`w-full rounded-[24px] border p-4 text-left transition ${
-                  plan.id === selectedPlan.id
-                    ? "border-[color:var(--brand)] bg-black/6"
-                    : "border-[color:var(--border)] bg-white/55 hover:bg-white/70"
-                }`}
-              >
-                <p className="font-semibold text-[color:var(--foreground)]">{plan.name}</p>
-                <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
-                  {plan.days.reduce((count, day) => count + day.items.length, 0)} lifts across the week
-                </p>
-              </button>
-            ))}
+    <div className="space-y-6">
+      
+      {/* Workspace Header Panel */}
+      <div className="rounded-[36px] bg-gradient-to-r from-indigo-950 via-slate-900 to-black p-6 md:p-10 text-white shadow-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <Badge className="bg-white/10 hover:bg-white/20 border-transparent text-emerald-400 font-bold uppercase tracking-widest text-[10px] px-3 py-1">
+              Active Program Vault
+            </Badge>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
+              Weekly Split Planner
+            </h1>
+            <p className="text-white/60 text-sm md:text-base max-w-xl font-medium leading-relaxed">
+              Program daily splits, configure specific seat targets, outline rest constraints, and check weekly biological stimulus coverage.
+            </p>
           </div>
-        </ScrollArea>
 
-        <Card className="mt-6 p-5">
-          <CardTitle className="text-lg">Keep PR tracking separate</CardTitle>
-          <CardDescription className="mt-2 leading-6">
-            The planner stays focused on weekly programming. PRs, momentum, and performance review live in Progress Lab.
-          </CardDescription>
-          <Button asChild className="mt-5 w-full text-white!">
-            <Link href="/progress">
-              Open Progress Lab
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </Card>
-      </Card>
-
-      <Card className="p-6 overflow-hidden flex flex-col">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <CardTitle>{selectedPlan.name}</CardTitle>
-            <CardDescription className="mt-2">
-              Separate the weekly intent from day-by-day prescription, then keep PR targets attached to the exact lift.
-            </CardDescription>
-          </div>
-          <div className="flex flex-wrap gap-2 items-center">
-            {isAutoSaving && (
-              <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-[color:var(--brand)] animate-pulse mr-2">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Auto-Saving
-              </div>
-            )}
-            <Button type="button" variant="secondary" onClick={removePlan}>
-              <Trash2 className="h-4 w-4" />
-              Delete
+          {/* Quick config stats */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <Button type="button" onClick={createPlan} className="h-12 px-5 bg-white hover:bg-white/90 text-neutral-900 font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200">
+              <Plus className="h-4 w-4" />
+              <span>Create Split</span>
             </Button>
-            <Button type="button" onClick={savePlan} disabled={saving}>
-              <Save className="h-4 w-4" />
-              {saving ? "Saving..." : "Save plan"}
+            <Button type="button" onClick={savePlan} disabled={saving} className="h-12 px-5 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl font-semibold text-xs shadow-md border-none flex items-center gap-2 transition duration-200">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span>Save Changes</span>
             </Button>
           </div>
         </div>
+      </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {[
-            ["Programmed days", String(programmedDays)],
-            ["Total lifts", String(weeklyLiftCount)],
-            ["PR focus points", String(prFocusCount)],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-[24px] border border-[color:var(--border)] bg-white/60 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                {label}
-              </p>
-              <p className="mt-2 font-[family:var(--font-display)] text-3xl font-semibold text-[color:var(--foreground)]">
-                {value}
-              </p>
+      {/* Main Core Layout: Splits Library Selector + Large Day Panel Grid */}
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr] items-start">
+        
+        {/* Selector Pane */}
+        <div className="space-y-4 lg:sticky lg:top-4">
+          <Card className="p-5 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[28px] space-y-4">
+            <div className="flex items-center gap-2 border-b border-black/5 pb-3">
+              <Compass className="h-4 w-4 text-black/50" />
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/50">Splits Library</span>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr]">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Plan name</p>
-            <Input
-              value={selectedPlan.name}
-              onChange={(event) => patchSelectedPlan((plan) => ({ ...plan, name: event.target.value }))}
-              placeholder="Plan name"
-            />
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">General notes</p>
-            <Textarea
-              value={selectedPlan.notes}
-              onChange={(event) => patchSelectedPlan((plan) => ({ ...plan, notes: event.target.value }))}
-              placeholder="High-level notes"
-              className="min-h-[96px]"
-            />
-          </div>
-        </div>
+            <ScrollArea className="h-[250px] -mr-2 pr-2">
+              <div className="space-y-2">
+                {plans.map((p) => {
+                  const isActive = p.id === selectedPlan.id;
+                  const totalLifts = p.days.reduce((count, day) => count + day.items.length, 0);
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setSelectedPlanId(p.id)}
+                      className={cn(
+                        "w-full rounded-2xl border p-4 text-left transition duration-300 relative group",
+                        isActive
+                          ? "border-black/20 bg-black/5 shadow-sm"
+                          : "border-black/5 bg-white/40 hover:bg-white/80"
+                      )}
+                    >
+                      <p className="font-bold text-sm text-black">{p.name}</p>
+                      <div className="mt-2.5 flex items-center justify-between text-[10px] text-black/40 font-bold uppercase tracking-wider">
+                        <span>{p.days.length} Days</span>
+                        <span className="flex items-center gap-1">
+                          <Dumbbell className="h-3.5 w-3.5" />
+                          {totalLifts} Lifts
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </Card>
 
-        <Tabs value={selectedDayValue} onValueChange={setSelectedDayValue} className="mt-6 flex flex-col flex-1 min-h-0">
-          <TabsList className="shrink-0 flex-wrap h-auto gap-y-1 items-center bg-transparent border-none p-0">
-            <Reorder.Group 
-              axis="x" 
-              values={selectedPlan.days} 
-              onReorder={reorderDays}
-              className="flex flex-wrap gap-1 items-center"
-            >
-              {selectedPlan.days.map((day) => (
-                <DayTab key={day.id} day={day} />
-              ))}
-            </Reorder.Group>
-            
-            {selectedPlan.days.length < 7 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  addDay();
-                }}
-                className="h-8 px-2 text-xs gap-1 opacity-60 hover:opacity-100 self-center"
-              >
-                <Plus className="h-3 w-3" />
-                Add day
+          {/* Quick link to execution */}
+          <Card className="p-5 border-transparent bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-[28px] relative overflow-hidden shadow-xl">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_35%)]" />
+            <div className="relative z-10 space-y-3">
+              <TrendingUp className="h-5 w-5 text-emerald-400" />
+              <h4 className="font-bold text-sm">Execution Mode</h4>
+              <p className="text-white/60 text-[10px] leading-relaxed">
+                Log outcomes, track completed reps, and compare live performance against planner presets.
+              </p>
+              <Button asChild className="w-full bg-white text-black hover:bg-white/90 rounded-xl font-bold uppercase text-[9px] tracking-wider py-4 shadow-sm border-none">
+                <Link href="/workouts" className="flex items-center justify-center gap-1.5">
+                  <span>Open Studio</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </Button>
-            )}
-            <div className="mx-1 w-px h-4 bg-[color:var(--border)]" />
-            <TabsTrigger value="analysis" className="gap-2">
-              <ArrowRight className="h-3.5 w-3.5" />
-              Analysis
-            </TabsTrigger>
-          </TabsList>
+            </div>
+          </Card>
+        </div>
 
-          <TabsContent value="analysis" className="mt-6 flex-1 min-h-0 overflow-auto">
-            <PlanAnalysis plan={selectedPlan} data={data} />
-          </TabsContent>
-
-          {selectedPlan.days.map((day) => (
-            <TabsContent key={day.id} value={String(day.day)} className="mt-6 flex-1 min-h-0 outline-none">
-              <ScrollArea className="h-screen -mx-4 px-4 pr-6">
-                <div className="space-y-8 pb-10">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {[
-                      ["Focus", day.focus || "Unset"],
-                      ["Warm-up", day.warmup ? "Defined" : "Unset"],
-                      ["Exercises", String(day.items.length)],
-                    ].map(([label, value]) => (
-                      <div key={label} className="rounded-[24px] border border-[color:var(--border)] bg-white/55 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                          {label}
-                        </p>
-                        <p className="mt-2 text-base font-semibold text-[color:var(--foreground)]">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Day title</p>
-                        {selectedPlan.days.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-[10px] text-[color:var(--danger)] hover:bg-[color:var(--danger)]/10"
-                            onClick={() => removeDay(day.id)}
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Remove Day
-                          </Button>
-                        )}
-                      </div>
-                      <Input
-                        value={day.title}
-                        onChange={(event) => updateDay(day.id, (entry) => ({ ...entry, title: event.target.value }))}
-                        placeholder="Day title"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Focus</p>
-                      <Input
-                        value={day.focus}
-                        onChange={(event) => updateDay(day.id, (entry) => ({ ...entry, focus: event.target.value }))}
-                        placeholder="Focus"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Warm-up flow</p>
-                      <Textarea
-                        value={day.warmup}
-                        onChange={(event) => updateDay(day.id, (entry) => ({ ...entry, warmup: event.target.value }))}
-                        placeholder="Warm-up flow"
-                        className="min-h-[96px]"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Session goal</p>
-                      <Textarea
-                        value={day.sessionGoal}
-                        onChange={(event) => updateDay(day.id, (entry) => ({ ...entry, sessionGoal: event.target.value }))}
-                        placeholder="Session goal"
-                        className="min-h-[96px]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Target muscles</p>
+        {/* Major Working Panel */}
+        <div className="space-y-6">
+          <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
+            
+            {/* Split Basic Details Block */}
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 border-b border-black/5 pb-6">
+              <div className="space-y-4 flex-1">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Split Title</label>
                     <Input
-                      value={day.targetMuscles.join(", ")}
-                      onChange={(event) =>
-                        updateDay(day.id, (entry) => ({
-                          ...entry,
-                          targetMuscles: event.target.value
-                            .split(",")
-                            .map((value) => value.trim())
-                            .filter(Boolean),
-                        }))
-                      }
-                      placeholder="Target muscles, comma separated"
+                      value={selectedPlan.name}
+                      onChange={(event) => patchSelectedPlan((plan) => ({ ...plan, name: event.target.value }))}
+                      placeholder="e.g. Lower Body Target Focus"
+                      className="bg-white border-black/5 focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Relevant notes</p>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Split Strategy Directives</label>
                     <Textarea
-                      value={day.notes}
-                      onChange={(event) => updateDay(day.id, (entry) => ({ ...entry, notes: event.target.value }))}
-                      placeholder="Relevant notes, machine setup, time cap, or recovery constraints"
+                      value={selectedPlan.notes}
+                      onChange={(event) => patchSelectedPlan((plan) => ({ ...plan, notes: event.target.value }))}
+                      placeholder="Outlining block targets, progression structures, recovery slots..."
+                      className="bg-white border-black/5 focus:border-black rounded-2xl text-sm min-h-[52px] py-3.5 px-4.5 transition"
                     />
                   </div>
+                </div>
+              </div>
 
-                  <div className="space-y-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">Programmed exercises</p>
-                    <div className="space-y-4">
-                      {day.items.map((item, itemIndex) => (
-                        <div key={item.id} className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-4">
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <Badge>Lift {itemIndex + 1}</Badge>
-                            <Badge>{item.prGoal ? "PR focus" : "Standard work"}</Badge>
+              <div className="flex items-center gap-2 self-start shrink-0">
+                {isAutoSaving && (
+                  <Badge className="bg-emerald-500/10 border-transparent text-emerald-700 text-[9px] font-extrabold flex gap-1 items-center px-2 py-1 animate-pulse">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Auto-Syncing</span>
+                  </Badge>
+                )}
+                <Button type="button" variant="ghost" onClick={removePlan} className="rounded-xl border border-black/5 hover:bg-rose-500/10 hover:text-rose-600 transition flex items-center gap-1.5 text-xs font-semibold px-3 py-2">
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Split</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Split Days Timeline Bar (Ultra Short Tabs - fits single row) */}
+            <div className="bg-black/5 p-1 rounded-2xl flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-1">
+                {selectedPlan.days.map((day) => {
+                  const isActive = day.id === activeDayId;
+                  return (
+                    <button
+                      key={day.id}
+                      onClick={() => setActiveDayId(day.id)}
+                      className={cn(
+                        "rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 relative",
+                        isActive
+                          ? "bg-white text-black shadow-sm"
+                          : "text-black/50 hover:text-black hover:bg-white/40"
+                      )}
+                    >
+                      D{day.day + 1}
+                    </button>
+                  );
+                })}
+
+                {selectedPlan.days.length < 7 && (
+                  <button
+                    onClick={addDay}
+                    className="rounded-xl px-3 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition flex items-center gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Day</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex gap-2 items-center pr-2">
+                <div className="mx-2 w-px h-5 bg-black/10 hidden sm:block" />
+                <button
+                  onClick={() => setActiveDayId("analysis")}
+                  className={cn(
+                    "px-4 py-2.5 text-xs font-bold rounded-xl flex gap-1.5 items-center transition",
+                    activeDayId === "analysis"
+                      ? "bg-white text-black shadow-sm"
+                      : "text-black/50 hover:text-black"
+                  )}
+                >
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  <span>Stimulus Audit</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Day Specific Config Forms */}
+            <div className="mt-6">
+              <AnimatePresence mode="wait">
+                {activeDayId === "analysis" ? (
+                  <motion.div
+                    key="analysis"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <PlanAnalysis plan={selectedPlan} data={data} />
+                  </motion.div>
+                ) : (
+                  activeDay && (
+                    <motion.div
+                      key={activeDay.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-6"
+                    >
+                      {/* Day Metadata card */}
+                      <div className="p-5 md:p-6 border border-black/5 bg-white/50 rounded-[24px] space-y-5">
+                        
+                        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-4">
+                          <div className="flex items-center gap-2">
+                            <span className="h-7 w-7 rounded-xl bg-black text-white text-xs font-bold flex items-center justify-center">
+                              {activeDay.day + 1}
+                            </span>
+                            <h3 className="font-extrabold text-sm uppercase tracking-wider text-black">Configure Split Day {activeDay.day + 1}</h3>
                           </div>
 
-                          <div className="mt-4 grid gap-3 xl:grid-cols-[1.2fr_0.6fr_0.7fr_0.7fr_0.7fr]">
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Exercise</p>
-                              <Combobox
-                                options={exerciseOptions}
-                                value={item.exerciseId}
-                                onValueChange={(value) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, exerciseId: value }))}
-                                placeholder="Search exercise..."
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Sets</p>
-                              <Input
-                                type="number"
-                                min="1"
-                                value={String(item.sets)}
-                                onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, sets: Number(event.target.value) }))}
-                                placeholder="Sets"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Reps</p>
-                              <Input
-                                value={item.reps}
-                                onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, reps: event.target.value }))}
-                                placeholder="Reps"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Target load</p>
-                              <Input
-                                value={item.targetLoad}
-                                onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, targetLoad: event.target.value }))}
-                                placeholder="Target load"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Target RPE</p>
-                              <Input
-                                value={item.targetRpe}
-                                onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, targetRpe: event.target.value }))}
-                                placeholder="Target RPE"
-                              />
-                            </div>
-                          </div>
+                          {selectedPlan.days.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => removeDay(activeDay.id)}
+                              className="h-8 px-2.5 text-[10px] font-extrabold uppercase tracking-wider text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 rounded-lg transition"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-1" />
+                              <span>Remove Day</span>
+                            </Button>
+                          )}
+                        </div>
 
-                          <div className="mt-3 grid gap-3 xl:grid-cols-[0.8fr_1fr_auto]">
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Rest (s)</p>
-                              <Input
-                                type="number"
-                                min="30"
-                                value={String(item.restSeconds)}
-                                onChange={(event) =>
-                                  updateItem(day.id, itemIndex, (entry) => ({ ...entry, restSeconds: Number(event.target.value) }))
-                                }
-                                placeholder="Rest seconds"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">PR Goal</p>
-                              <Input
-                                value={item.prGoal}
-                                onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, prGoal: event.target.value }))}
-                                placeholder="PR target or key performance marker"
-                              />
-                            </div>
-                            <div className="flex items-end">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={() =>
-                                  updateDay(day.id, (entry) => ({
-                                    ...entry,
-                                    items: entry.items.filter((_, currentIndex) => currentIndex !== itemIndex),
-                                  }))
-                                }
-                              >
-                                Remove
-                              </Button>
-                            </div>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Display Title</label>
+                            <Input
+                              value={activeDay.title}
+                              onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, title: event.target.value }))}
+                              placeholder="e.g. Heavy Upper Split A"
+                              className="bg-white border-black/5 focus:border-black rounded-xl text-xs font-semibold py-3.5 px-4 transition"
+                            />
                           </div>
-
-                          <div className="mt-3 space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)]">Exercise notes</p>
-                            <Textarea
-                              value={item.notes}
-                              onChange={(event) => updateItem(day.id, itemIndex, (entry) => ({ ...entry, notes: event.target.value }))}
-                              placeholder="Technique cue, machine setup, tempo, or swap option"
-                              className="min-h-[88px]"
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Day Stimulus Focus</label>
+                            <Input
+                              value={activeDay.focus}
+                              onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, focus: event.target.value }))}
+                              placeholder="e.g. Pectorals & Deltoids"
+                              className="bg-white border-black/5 focus:border-black rounded-xl text-xs font-semibold py-3.5 px-4 transition"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Target Muscles</label>
+                            <Input
+                              value={activeDay.targetMuscles.join(", ")}
+                              onChange={(event) =>
+                                updateDay(activeDay.id, (entry) => ({
+                                  ...entry,
+                                  targetMuscles: event.target.value
+                                    .split(",")
+                                    .map((value) => value.trim())
+                                    .filter(Boolean),
+                                }))
+                              }
+                              placeholder="e.g. Chest, Shoulders, Triceps"
+                              className="bg-white border-black/5 focus:border-black rounded-xl text-xs font-semibold py-3.5 px-4 transition"
                             />
                           </div>
                         </div>
-                      ))}
-                    </div>
 
-                    <Button type="button" variant="secondary" onClick={() => addExercise(day.day)} disabled={!data.exercises.length} className="w-full border-dashed">
-                      <Plus className="h-4 w-4" />
-                      Add exercise
-                    </Button>
-                  </div>
-                </div>
-              </ScrollArea>
-            </TabsContent>
-          ))}
-        </Tabs>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Warm-up Protocol</label>
+                            <Textarea
+                              value={activeDay.warmup}
+                              onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, warmup: event.target.value }))}
+                              placeholder="Activation sets, rotational complexes, band protocols..."
+                              className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[58px] py-3 px-4 transition"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Day Goal / Target PRs</label>
+                            <Textarea
+                              value={activeDay.sessionGoal}
+                              onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, sessionGoal: event.target.value }))}
+                              placeholder="Overload bench target, pacing, seat setup settings..."
+                              className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[58px] py-3 px-4 transition"
+                            />
+                          </div>
+                        </div>
 
-        {message ? <Badge className="mt-5">{message}</Badge> : null}
-      </Card>
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Relevant Day Notes</label>
+                          <Textarea
+                            value={activeDay.notes}
+                            onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, notes: event.target.value }))}
+                            placeholder="Machine swap options, recovery limits..."
+                            className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[46px] py-3 px-4 transition"
+                          />
+                        </div>
+
+                      </div>
+
+                      {/* Programmed Lifts list */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-black/5 pb-2">
+                          <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-black/50">Day Exercise Telemetry</h4>
+                          <Badge className="bg-black/5 border-transparent text-black/60 text-[9px] font-bold px-2 py-0.5 uppercase">
+                            {activeDay.items.length} lift{activeDay.items.length !== 1 && "s"} planned
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-4">
+                          {activeDay.items.map((item, itemIndex) => (
+                            <div key={item.id} className="p-5 border border-black/5 bg-white/60 hover:bg-white/80 rounded-[22px] transition duration-300">
+                              
+                              <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-3 mb-4">
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-black text-white text-[9px] font-extrabold px-2 py-0.5">
+                                    LIFT {itemIndex + 1}
+                                  </Badge>
+                                  {item.prGoal && (
+                                    <Badge className="bg-indigo-500/10 border-transparent text-indigo-700 text-[9px] font-extrabold px-2 py-0.5 flex gap-1 items-center">
+                                      <Target className="h-3 w-3" />
+                                      <span>PR target</span>
+                                    </Badge>
+                                  )}
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    updateDay(activeDay.id, (entry) => ({
+                                      ...entry,
+                                      items: entry.items.filter((_, currentIndex) => currentIndex !== itemIndex),
+                                    }))
+                                  }
+                                  className="h-7 px-2 text-[10px] font-extrabold uppercase tracking-wider text-rose-500 hover:bg-rose-50 rounded-lg transition"
+                                >
+                                  Remove Lift
+                                </Button>
+                              </div>
+
+                              {/* Form Inputs Grid */}
+                              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
+                                <div className="space-y-1.5 md:col-span-2">
+                                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Select Exercise</label>
+                                  <Combobox
+                                    options={exerciseOptions}
+                                    value={item.exerciseId}
+                                    onValueChange={(value) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, exerciseId: value }))}
+                                    placeholder="Search exercise..."
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Target Sets</label>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    value={String(item.sets)}
+                                    onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, sets: Number(event.target.value) }))}
+                                    placeholder="Sets"
+                                    className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Reps Bracket</label>
+                                  <Input
+                                    value={item.reps}
+                                    onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, reps: event.target.value }))}
+                                    placeholder="e.g. 8-10, 5, 12+"
+                                    className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Target Rest (s)</label>
+                                  <Input
+                                    type="number"
+                                    min="30"
+                                    value={String(item.restSeconds)}
+                                    onChange={(event) =>
+                                      updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, restSeconds: Number(event.target.value) }))
+                                    }
+                                    placeholder="Rest seconds"
+                                    className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Target Load</label>
+                                  <Input
+                                    value={item.targetLoad}
+                                    onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetLoad: event.target.value }))}
+                                    placeholder="e.g. 100kg, 80%, Bodyweight"
+                                    className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Target RPE</label>
+                                  <Input
+                                    value={item.targetRpe}
+                                    onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetRpe: event.target.value }))}
+                                    placeholder="e.g. 8, 9, 9.5"
+                                    className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">PR Goal Target</label>
+                                  <Input
+                                    value={item.prGoal}
+                                    onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, prGoal: event.target.value }))}
+                                    placeholder="e.g. 105kg x 8 reps"
+                                    className="bg-white border-black/5 focus:border-black rounded-xl text-xs py-3.5 px-4 font-semibold"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="mt-4 space-y-1.5">
+                                <label className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">Exercise Setup Notes</label>
+                                <Textarea
+                                  value={item.notes}
+                                  onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, notes: event.target.value }))}
+                                  placeholder="Technique cues, bench position slots, tempos..."
+                                  className="bg-white border-black/5 focus:border-black rounded-xl text-xs min-h-[46px] py-3 px-4 transition"
+                                />
+                              </div>
+
+                            </div>
+                          ))}
+                        </div>
+
+                        <Button 
+                          type="button" 
+                          onClick={() => addExercise(activeDay.id)} 
+                          disabled={!data.exercises.length} 
+                          className="w-full border border-dashed border-black/20 bg-black/5 hover:bg-black/10 text-black py-6 rounded-[22px] font-bold uppercase text-[10px] tracking-wider transition flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <PlusCircle className="h-4.5 w-4.5" />
+                          <span>Add Exercise to Day {activeDay.day + 1}</span>
+                        </Button>
+                      </div>
+
+                    </motion.div>
+                  )
+                )}
+              </AnimatePresence>
+            </div>
+
+            {message ? (
+              <div className="mt-4 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-700 text-xs font-semibold text-center flex items-center justify-center gap-2">
+                <Check className="h-4 w-4" />
+                <span>{message}</span>
+              </div>
+            ) : null}
+
+          </Card>
+        </div>
+
+      </div>
+
     </div>
   );
 }
