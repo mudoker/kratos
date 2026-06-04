@@ -16,6 +16,26 @@ import { useData } from "@/components/shared/data-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
+const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: string) => {
+  const tags = [];
+  const lowerNotes = (notes || "").toLowerCase();
+  const lowerId = (exerciseId || "").toLowerCase();
+  
+  if (lowerNotes.includes("superset") || lowerId.includes("superset")) {
+    tags.push({ label: "SUPERSET", type: "superset", color: "bg-purple-500/10 text-purple-700 border-purple-200" });
+  }
+  if (lowerNotes.includes("dropset") || lowerNotes.includes("drop-set") || lowerNotes.includes("drop set")) {
+    tags.push({ label: "DROPSET", type: "dropset", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
+  }
+  if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || exerciseCategory === "Mobility") {
+    tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
+  }
+  if (lowerNotes.includes("stretch") || lowerNotes.includes("cooldown") || lowerNotes.includes("cool-down") || lowerNotes.includes("flow")) {
+    tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
+  }
+  return tags;
+};
+
 const baseSession = (): Partial<WorkoutSession> => ({
   id: undefined,
   planId: null,
@@ -344,10 +364,22 @@ export function WorkoutsPage() {
               <div className="space-y-4">
                 {(draft.items || []).map((item, index) => {
                   const exercise = data.exercises.find((e) => e.id === item.exerciseId);
+                  const tags = getItemTags(item.notes, item.exerciseId, exercise?.category);
+                  const primaryTag = tags[0];
+                  const borderClass = primaryTag
+                    ? primaryTag.type === "superset"
+                      ? "border-l-4 border-l-purple-500"
+                      : primaryTag.type === "dropset"
+                      ? "border-l-4 border-l-amber-500"
+                      : primaryTag.type === "warmup"
+                      ? "border-l-4 border-l-blue-500"
+                      : "border-l-4 border-l-teal-500"
+                    : "border-l border-l-black/5";
+
                   return (
                     <div
                       key={`${item.exerciseId}-${index}`}
-                      className="p-5 border border-black/5 bg-white/60 hover:bg-white/80 rounded-[24px] transition duration-300 space-y-4"
+                      className={cn("p-5 border border-black/5 bg-white/60 hover:bg-white/80 rounded-[24px] transition duration-300 space-y-4", borderClass)}
                     >
                       {/* Exercise basic header */}
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 pb-3">
@@ -365,9 +397,16 @@ export function WorkoutsPage() {
                           </div>
                         </div>
 
-                        <Badge className="bg-black text-white text-[9px] font-extrabold py-0.5 px-2">
-                          LIFT {index + 1}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {tags.map((tag) => (
+                            <Badge key={tag.label} className={cn("border text-[9px] font-extrabold px-2 py-0.5", tag.color)}>
+                              {tag.label}
+                            </Badge>
+                          ))}
+                          <Badge className="bg-black text-white text-[9px] font-extrabold py-0.5 px-2">
+                            LIFT {index + 1}
+                          </Badge>
+                        </div>
                       </div>
 
                       {/* Log Grid */}
