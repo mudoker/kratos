@@ -119,7 +119,7 @@ export function CoachPage() {
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] items-start">
       
       {/* LEFT COLUMN: Chat Interface */}
-      <Card className="flex h-[780px] flex-col p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
+      <Card className="flex h-[calc(100vh-140px)] min-h-[500px] lg:h-[780px] flex-col p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
