@@ -3,7 +3,7 @@ import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getMigrations } from "better-auth/db/migration";
-import { kysely } from "@/lib/db";
+import { kysely, pool } from "@/lib/db";
 import type { AppUser } from "@/lib/types";
 
 export const auth = betterAuth({
@@ -39,18 +39,26 @@ export const ensureAuthTables = async () => {
 
 export const getCurrentUser = async (): Promise<AppUser | null> => {
   await ensureAuthTables();
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
 
-  if (!session?.user) return null;
-
-  return {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name || session.user.email,
-    image: session.user.image ?? null,
+  const mockUser: AppUser = {
+    id: "mudoker-id",
+    email: "mudoker@kratos.app",
+    name: "mudoker",
+    image: null,
   };
+
+  try {
+    await pool.query(
+      `INSERT INTO "user" (id, email, name, "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, NOW(), NOW())
+       ON CONFLICT (id) DO NOTHING`,
+      [mockUser.id, mockUser.email, mockUser.name]
+    );
+  } catch (err) {
+    console.error("Failed to seed mock user:", err);
+  }
+
+  return mockUser;
 };
 
 export const requireUser = async () => {
