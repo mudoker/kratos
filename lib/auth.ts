@@ -49,8 +49,8 @@ export const getCurrentUser = async (): Promise<AppUser | null> => {
 
   try {
     await pool.query(
-      `INSERT INTO "user" (id, email, name, "createdAt", "updatedAt")
-       VALUES ($1, $2, $3, NOW(), NOW())
+      `INSERT INTO "user" (id, email, name, "emailVerified", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, true, NOW(), NOW())
        ON CONFLICT (id) DO NOTHING`,
       [mockUser.id, mockUser.email, mockUser.name]
     );
