@@ -77,7 +77,7 @@ export function ProgressCharts({ data }: { data: DashboardData }) {
         </div>
         <div className="w-full sm:w-64">
           <Select value={selectedExerciseId} onValueChange={setSelectedExerciseId}>
-            <SelectTrigger className="rounded-2xl border-[color:var(--border)] bg-white/50">
+            <SelectTrigger>
               <SelectValue placeholder="Select exercise" />
             </SelectTrigger>
             <SelectContent>
@@ -117,11 +117,11 @@ export function ProgressCharts({ data }: { data: DashboardData }) {
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: '1px solid var(--border)', 
-                    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
-                    fontSize: '12px',
-                    fontWeight: 'bold'
+                    borderRadius: '8px', 
+                    border: '1px solid rgba(0,0,0,0.06)', 
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                    fontSize: '11px',
+                    fontWeight: '600'
                   }} 
                 />
                 <Area 
