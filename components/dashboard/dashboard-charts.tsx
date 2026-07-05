@@ -86,7 +86,13 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
               />
               <Tooltip 
                 cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                contentStyle={{ 
+                  borderRadius: '8px', 
+                  border: '1px solid rgba(0,0,0,0.06)', 
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                  fontSize: '11px',
+                  fontWeight: '600'
+                }} 
               />
               <Bar 
                 dataKey="volume" 
@@ -123,7 +129,13 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                 />
                 <Tooltip 
                   cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                  contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)' }}
+                  contentStyle={{ 
+                    borderRadius: '8px', 
+                    border: '1px solid rgba(0,0,0,0.06)', 
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                    fontSize: '11px',
+                    fontWeight: '600'
+                  }} 
                 />
                 <Bar 
                   dataKey="value" 
