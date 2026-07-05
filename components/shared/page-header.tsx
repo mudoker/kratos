@@ -13,19 +13,19 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="space-y-4">
-        <Badge>{eyebrow}</Badge>
-        <div className="space-y-3">
-          <h1 className="max-w-3xl font-[family:var(--font-display)] text-4xl font-semibold tracking-tight text-[color:var(--foreground)] md:text-6xl">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-2">
+        <Badge className="text-[9px] font-extrabold tracking-wider">{eyebrow}</Badge>
+        <div className="space-y-1.5">
+          <h1 className="max-w-3xl font-[family:var(--font-display)] text-2xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-3xl md:text-4xl lg:text-5xl">
             {title}
           </h1>
-          <p className="max-w-2xl text-base leading-7 text-[color:var(--muted-foreground)] md:text-lg">
+          <p className="max-w-2xl text-xs leading-relaxed text-[color:var(--muted-foreground)] sm:text-sm md:text-base">
             {description}
           </p>
         </div>
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
+      {actions ? <div className="flex flex-wrap items-center gap-2 mt-2 lg:mt-0">{actions}</div> : null}
     </div>
   );
 }
