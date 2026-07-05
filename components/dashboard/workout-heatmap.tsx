@@ -68,8 +68,8 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
   }, [sessions]);
 
   const explicitTheme: ThemeInput = {
-    light: ['#0000000D', '#82ca9d', '#ffd36b', '#ff9f0a', '#c81e1e'], // bg-black/5 for level 0
-    dark: ['#ffffff0D', '#82ca9d', '#ffd36b', '#ff9f0a', '#c81e1e'], // bg-white/5 for level 0
+    light: ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0.40)', 'rgba(0,0,0,0.65)', 'rgba(0,0,0,0.92)'],
+    dark: ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0.40)', 'rgba(0,0,0,0.65)', 'rgba(0,0,0,0.92)'],
   };
 
   // Calculate dynamic block size. Cap it at a minimum of 9px for mobile usability/readability.
