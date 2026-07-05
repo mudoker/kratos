@@ -16,7 +16,18 @@ dev:
   fi
   @PORT=$(python3 -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()'); \
   echo "Assigned dynamic port: $PORT"; \
-  sed -i "s/addr: .*/addr: $PORT/" /home/mudoker/.config/ngrok/ngrok.yml; \
+  DOMAIN=$(grep -E "^NGROK_DOMAIN=" .env | cut -d'=' -f2- || true); \
+  echo 'version: "3"' > /home/mudoker/.config/ngrok/ngrok.yml; \
+  echo 'agent:' >> /home/mudoker/.config/ngrok/ngrok.yml; \
+  echo '    authtoken: 2Xi3MUbSCpa4aEKrgRxYaYQvCaA_sb9H9JUFNHkFkiZEXHTT' >> /home/mudoker/.config/ngrok/ngrok.yml; \
+  echo 'tunnels:' >> /home/mudoker/.config/ngrok/ngrok.yml; \
+  echo '    kratos:' >> /home/mudoker/.config/ngrok/ngrok.yml; \
+  echo '        proto: http' >> /home/mudoker/.config/ngrok/ngrok.yml; \
+  echo "        addr: $PORT" >> /home/mudoker/.config/ngrok/ngrok.yml; \
+  if [ -n "$DOMAIN" ]; then \
+    echo "Using static ngrok domain: $DOMAIN"; \
+    echo "        domain: $DOMAIN" >> /home/mudoker/.config/ngrok/ngrok.yml; \
+  fi; \
   echo "Restarting ngrok service to bind to port $PORT..."; \
   systemctl --user restart ngrok; \
   echo "Checking for old Kratos server instance on port $PORT..."; \
