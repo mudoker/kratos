@@ -281,8 +281,8 @@ export function SettingsPage() {
 
             {/* CREDENTIALS TAB */}
             <TabsContent value="credentials" className="mt-0 outline-none space-y-6">
-              <div className="p-5 border border-indigo-500/10 bg-indigo-500/[0.02] rounded-2xl space-y-4">
-                <div className="flex items-center gap-2 text-indigo-700">
+              <div className="p-5 border border-black/5 bg-neutral-50/50 rounded-2xl space-y-4">
+                <div className="flex items-center gap-2 text-neutral-800">
                   <Key className="h-4.5 w-4.5" />
                   <h3 className="text-xs font-bold uppercase tracking-wider">Client-Side Gemini API Key</h3>
                 </div>
@@ -339,10 +339,10 @@ export function SettingsPage() {
 
           <div className="mt-6 space-y-3.5">
             {[
-              { label: "BMI (Estimated)", value: profile.weight && profile.height ? (profile.weight / Math.pow(profile.height / 100, 2)).toFixed(1) : "N/A", icon: HeartPulse, colorClass: "text-rose-500 bg-rose-50" },
-              { label: "Programmed Splits", value: String(data.plans.length), icon: CalendarCheck, colorClass: "text-indigo-500 bg-indigo-50" },
-              { label: "Logged Sessions", value: String(data.sessions.length), icon: Activity, colorClass: "text-emerald-500 bg-emerald-50" },
-              { label: "Recorded PRs", value: String(data.records.length), icon: Trophy, colorClass: "text-amber-500 bg-amber-50" },
+              { label: "BMI (Estimated)", value: profile.weight && profile.height ? (profile.weight / Math.pow(profile.height / 100, 2)).toFixed(1) : "N/A", icon: HeartPulse, colorClass: "text-neutral-700 bg-neutral-100" },
+              { label: "Programmed Splits", value: String(data.plans.length), icon: CalendarCheck, colorClass: "text-neutral-700 bg-neutral-100" },
+              { label: "Logged Sessions", value: String(data.sessions.length), icon: Activity, colorClass: "text-neutral-700 bg-neutral-100" },
+              { label: "Recorded PRs", value: String(data.records.length), icon: Trophy, colorClass: "text-neutral-700 bg-neutral-100" },
             ].map(({ label, value, icon: Icon, colorClass }) => (
               <div key={label} className="rounded-2xl border border-black/5 bg-white/45 p-4 flex items-center gap-4 hover:border-black/10 transition">
                 <div className={`p-2.5 rounded-xl ${colorClass}`}>
@@ -362,7 +362,7 @@ export function SettingsPage() {
             <div className="absolute top-0 right-0 p-3 opacity-15">
               <Sparkles className="h-10 w-10 text-white" />
             </div>
-            <p className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400">Coach Vector Alignment</p>
+            <p className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400">Coach Vector Alignment</p>
             <p className="mt-3 text-xs leading-relaxed text-white/80">
               {profile.nickname ? `Stay sharp, ${profile.nickname}. ` : "Stay sharp. "}
               Biological inputs programmed here calibrate the chat advisor's telemetry safety margins.

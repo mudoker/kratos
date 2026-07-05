@@ -123,10 +123,10 @@ export function CoachPage() {
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="p-2 bg-emerald-500/10 text-emerald-600 rounded-xl">
+              <span className="p-2 bg-black/5 text-black/60 rounded-xl">
                 <BrainCircuit className="h-4 w-4" />
               </span>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600">Cognitive Neural Core</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-black/50">Cognitive Neural Core</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-black mt-2">Kratos Coach intelligence</h2>
           </div>
@@ -134,7 +134,7 @@ export function CoachPage() {
           {/* Model selection & settings button */}
           <div className="flex items-center gap-2">
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-black/5 border border-black/5 rounded-xl text-[10px] font-bold text-black/60 uppercase">
-              <Sparkles className="h-3 w-3 text-indigo-500" />
+              <Sparkles className="h-3 w-3 text-neutral-500" />
               <span>Model: {aiModel}</span>
             </div>
             <Button
@@ -248,16 +248,16 @@ export function CoachPage() {
         
         {/* API Credentials Warning banner (if missing) */}
         {!hasApiKey && (
-          <Card className="p-6 border-transparent bg-amber-500/10 text-amber-900 rounded-[32px] flex gap-4">
-            <div className="p-2 bg-amber-500/10 rounded-xl text-amber-700 h-fit">
+          <Card className="p-6 border border-black/5 bg-neutral-50/50 text-neutral-800 rounded-[32px] flex gap-4">
+            <div className="p-2 bg-neutral-100 rounded-xl text-neutral-600 h-fit">
               <Key className="h-5 w-5" />
             </div>
             <div className="space-y-2">
               <h4 className="font-bold text-xs uppercase tracking-wide">API Credentials Required</h4>
-              <p className="text-xs text-amber-800 leading-relaxed">
+              <p className="text-xs text-neutral-500 leading-relaxed">
                 To activate AI capabilities, Kratos requires a Gemini API key. Setting up a local key enables secure, serverless processing.
               </p>
-              <Button onClick={() => setShowConfigModal(true)} className="h-10 px-4 rounded-xl text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white transition border-none shadow-sm mt-1">
+              <Button onClick={() => setShowConfigModal(true)} className="h-10 px-4 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-900 text-white transition border-none shadow-sm mt-1">
                 Configure Credentials
               </Button>
             </div>
@@ -267,7 +267,7 @@ export function CoachPage() {
         {/* Recent context panel */}
         <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
           <CardTitle className="text-lg font-bold text-black flex items-center gap-2">
-            <Info className="h-4.5 w-4.5 text-indigo-500" />
+            <Info className="h-4.5 w-4.5 text-neutral-600" />
             <span>Active context telemetry</span>
           </CardTitle>
           <p className="mt-2 text-xs leading-relaxed text-black/50">
@@ -320,7 +320,7 @@ export function CoachPage() {
         <DialogContent className="rounded-[32px] p-6 max-w-md bg-white border border-black/10">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Settings className="h-5 w-5 text-indigo-500 animate-spin-slow" />
+              <Settings className="h-5 w-5 text-black animate-spin-slow" />
               <span>Configure AI Coach credentials</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-black/50 mt-1 leading-relaxed">
