@@ -1,409 +1,161 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo } from "react";
 import { 
   Activity, 
   BrainCircuit, 
   CalendarClock, 
   Trophy, 
-  Flame, 
-  ChevronDown, 
-  ChevronRight, 
-  LayoutList, 
-  GripVertical, 
-  FileDown,
-  Loader2
+  Flame
 } from "lucide-react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
-import type { BodyHighlightSlug, WeeklyPlan } from "@/lib/types";
 import { PageHeader } from "@/components/shared/page-header";
 import { MetricTile } from "@/components/shared/metric-tile";
-import { MuscleMap } from "@/components/shared/muscle-map";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
-import { GlowCard } from "@/components/ui/glow-card";
 import { TextGenerate } from "@/components/ui/text-generate";
 import { WorkoutHeatmap } from "./workout-heatmap";
 import { DashboardCharts } from "./dashboard-charts";
 import { useData } from "@/components/shared/data-provider";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { calculateMuscleIntensities } from "@/lib/stimulus";
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 
 export function DashboardPage() {
   const data = useData();
-  const router = useRouter();
-  
-  const [plans, setPlans] = useState<WeeklyPlan[]>(data.plans);
-  const [selectedPlanId, setSelectedPlanId] = useState(data.plans[0]?.id || "");
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const [expandedPlans, setExpandedPlans] = useState<Record<string, boolean>>({
-    [data.plans[0]?.id || ""]: true
-  });
-
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-  const isInitialMount = useRef(true);
-
-  useEffect(() => {
-    setPlans(data.plans);
-  }, [data.plans]);
-
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    const initialOrderIds = data.plans.map(p => p.id).join(",");
-    const currentOrderIds = plans.map(p => p.id).join(",");
-    
-    if (initialOrderIds === currentOrderIds) return;
-
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-
-    debounceTimer.current = setTimeout(async () => {
-      setIsAutoSaving(true);
-      try {
-        const updates = plans.map((p, idx) => ({
-          ...p,
-          orderIndex: idx
-        }));
-        
-        for (const p of updates) {
-          await fetch("/api/plans", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(p),
-          });
-        }
-        router.refresh();
-      } catch (err) {
-        console.error("Auto-save failed", err);
-      } finally {
-        setIsAutoSaving(false);
-      }
-    }, 800);
-
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    };
-  }, [plans, data.plans, router]);
-
-  const togglePlan = (id: string) => {
-    setExpandedPlans(prev => ({ ...prev, [id]: !prev[id] }));
-    setSelectedPlanId(id);
-  };
-
-  const activePlan = useMemo(() => 
-    plans.find(p => p.id === selectedPlanId) || plans[0], 
-  [plans, selectedPlanId]);
-
   const recentSession = data.sessions[0];
-
-  const muscleIntensities = useMemo(() => {
-    if (!activePlan) return [];
-    return calculateMuscleIntensities(activePlan, data.exercises);
-  }, [activePlan, data.exercises]);
-
-  const exportPlanToMarkdown = (plan: WeeklyPlan) => {
-    let md = `# ${plan.name}\n\n`;
-    md += `**Notes:** ${plan.notes || "None"}\n\n`;
-    md += `**Last Updated:** ${formatDate(plan.updatedAt)}\n\n---\n\n`;
-
-    plan.days.forEach(day => {
-      md += `## ${day.title}\n`;
-      md += `**Focus:** ${day.focus || "Recovery"}\n`;
-      if (day.warmup) md += `**Warm-up:** ${day.warmup}\n`;
-      if (day.sessionGoal) md += `**Session Goal:** ${day.sessionGoal}\n`;
-      md += `\n| Exercise | Sets | Reps | Rest | Load/RPE | Notes |\n`;
-      md += `| :--- | :---: | :---: | :---: | :---: | :--- |\n`;
-      
-      day.items.forEach(item => {
-        const exercise = data.exercises.find(e => e.id === item.exerciseId);
-        const name = exercise?.name || item.exerciseId;
-        md += `| ${name} | ${item.sets} | ${item.reps} | ${item.restSeconds}s | ${item.targetLoad || "-"}/${item.targetRpe || "-"} | ${item.notes || "-"} |\n`;
-      });
-      md += `\n---\n\n`;
-    });
-
-    const blob = new Blob([md], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${plan.name.replace(/\s+/g, "_")}.md`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden border-transparent bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(230,230,230,0.9))] p-7 md:p-10">
+      <Card className="overflow-hidden p-5 md:p-8">
         <PageHeader
-          eyebrow="Command Deck"
+          eyebrow="Summary"
           title={<TextGenerate text={`Welcome back, ${data.user.name.split(" ")[0]}.`} />}
-          description="Track the current week across plans, PRs, completed sessions, and your real coach conversation history."
+          description="Track your consistency, active training splits, personal records, and telemetry."
         />
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <MetricTile
           label="Weekly target"
           value={data.profile.weeklySessions ? `${data.profile.weeklySessions} sessions` : "Not set"}
           detail={data.profile.goal ? `Goal: ${data.profile.goal}` : "Add your training goal in Settings."}
-          icon={<CalendarClock className="h-5 w-5 text-[color:var(--brand)]" />}
+          icon={<CalendarClock className="h-5 w-5 text-neutral-800" />}
         />
         <MetricTile
-          label="Saved plans"
+          label="Saved splits"
           value={`${data.plans.length}`}
-          detail={activePlan ? `Latest update ${formatDate(activePlan.updatedAt)}` : "Create your first structured split."}
-          icon={<Activity className="h-5 w-5 text-[color:var(--support)]" />}
+          detail={data.plans[0] ? `Latest update ${formatDate(data.plans[0].updatedAt)}` : "Create your first structure."}
+          icon={<Activity className="h-5 w-5 text-neutral-800" />}
         />
         <MetricTile
           label="PR board"
           value={`${data.records.length}`}
-          detail={data.records[0] ? `Latest record ${formatDate(data.records[0].achievedAt)}` : "No personal records logged yet."}
-          icon={<Trophy className="h-5 w-5 text-[color:var(--brand)]" />}
+          detail={data.records[0] ? `Latest record ${formatDate(data.records[0].achievedAt)}` : "No records logged."}
+          icon={<Trophy className="h-5 w-5 text-neutral-800" />}
         />
         <MetricTile
           label="Coach memory"
           value={`${data.coachMessages.length}`}
-          detail={data.coachMessages.length ? "Conversation history is persisted per account." : "Start a chat when you want feedback."}
-          icon={<BrainCircuit className="h-5 w-5 text-[color:var(--support)]" />}
+          detail={data.coachMessages.length ? "Persisted telemetry" : "Chat to gain insights."}
+          icon={<BrainCircuit className="h-5 w-5 text-neutral-800" />}
         />
       </div>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-2 text-[color:var(--foreground)]">
-          <Flame className="h-4 w-4 text-[color:var(--brand)]" />
-          <CardTitle className="text-lg">Workout Activity</CardTitle>
+      <Card className="p-4 md:p-6">
+        <div className="flex items-center gap-2 text-neutral-900">
+          <Flame className="h-4 w-4 text-black" />
+          <CardTitle className="text-base font-semibold">Workout Consistency</CardTitle>
         </div>
-        <CardDescription className="mt-2">
-          Tracking consistency and relative intensity based on volume and logged results.
+        <CardDescription className="mt-1">
+          Tracking set volume and logged training logs over the past 365 days.
         </CardDescription>
         <div className="mt-6">
           <WorkoutHeatmap sessions={data.sessions} />
         </div>
       </Card>
 
-      <BentoGrid className="xl:grid-cols-[1.25fr_0.85fr]">
-        <BentoGridItem className="p-0">
-          <GlowCard className="h-full">
-            <Card className="border-transparent bg-[linear-gradient(145deg,rgba(255,255,255,0.92),rgba(234,234,234,0.88))] p-6 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <LayoutList className="h-4 w-4 text-[color:var(--brand)]" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                    Split Library
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {isAutoSaving && (
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-[color:var(--brand)] animate-pulse">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Auto-Saving
-                    </div>
-                  )}
-                  <Badge className="bg-black/5 border-none text-[10px]">{data.plans.length} plans</Badge>
-                </div>
-              </div>
-
-              <ScrollArea className="flex-1 -mx-2 px-2">
-                <Reorder.Group 
-                  axis="y" 
-                  values={plans} 
-                  onReorder={setPlans} 
-                  className="space-y-3 pb-4"
-                >
-                  {plans.map((p) => {
-                    const isExpanded = expandedPlans[p.id];
-                    const isActive = p.id === selectedPlanId;
-                    
-                    return (
-                      <Reorder.Item 
-                        key={p.id} 
-                        value={p}
-                        initial={false}
-                        layout
-                        whileDrag={{ 
-                          scale: 1.02, 
-                          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" 
-                        }}
-                        transition={{ 
-                          type: "spring", 
-                          stiffness: 700, 
-                          damping: 40, 
-                          mass: 0.8 
-                        }}
-                        className={cn(
-                          "rounded-[28px] border border-[color:var(--border)] transition-opacity duration-200 overflow-hidden",
-                          isActive ? "bg-white/80 shadow-md scale-[1.01]" : "bg-white/30 opacity-60 grayscale-[40%]"
-                        )}
-                      >
-                        <div className="flex items-center">
-                          <div className="pl-4 cursor-grab active:cursor-grabbing opacity-20 hover:opacity-50 h-full py-6 flex items-center">
-                            <GripVertical className="h-4 w-4" />
-                          </div>
-                          <button
-                            onClick={() => togglePlan(p.id)}
-                            className="flex-1 flex items-center justify-between p-4 pl-2 text-left"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <p className="font-bold text-[color:var(--foreground)] truncate">{p.name}</p>
-                                  {isActive && <Badge className="h-4 px-1.5 text-[8px] bg-[color:var(--brand)] text-white! border-none font-black">ACTIVE</Badge>}
-                                </div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)] opacity-60">
-                                  {p.days.reduce((acc, d) => acc + d.items.length, 0)} Lifts • {formatDate(p.updatedAt)}
-                                </p>
-                              </div>
-                            </div>
-                          </button>
-                          <div className="pr-4">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 rounded-full text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)]"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                exportPlanToMarkdown(p);
-                              }}
-                              title="Export to Markdown"
-                            >
-                              <FileDown className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="pr-4">
-                            {isExpanded ? <ChevronDown className="h-4 w-4 opacity-40" /> : <ChevronRight className="h-4 w-4 opacity-40" />}
-                          </div>
-                        </div>
-
-                        <AnimatePresence initial={false}>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.25, ease: "easeInOut" }}
-                            >
-                              <div className="border-t border-[color:var(--border)] bg-black/[0.02] p-4 pt-2">
-                                <p className="text-[11px] leading-5 text-[color:var(--muted-foreground)] italic mb-4">
-                                  {p.notes || "No additional notes for this split phase."}
-                                </p>
-                                <div className="grid gap-2 sm:grid-cols-2">
-                                  {p.days.map(day => (
-                                    <div key={day.id} className="rounded-2xl border border-[color:var(--border)] bg-white/60 p-3">
-                                      <div className="flex justify-between items-start gap-2">
-                                        <p className="text-[11px] font-bold text-[color:var(--foreground)] truncate">{day.title}</p>
-                                        <Badge className="h-4 px-1.5 text-[8px] shrink-0 border-none">{day.items.length}</Badge>
-                                      </div>
-                                      <p className="mt-1 text-[9px] font-medium text-[color:var(--muted-foreground)] truncate">
-                                        {day.focus || "Recovery / Misc"}
-                                      </p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </Reorder.Item>
-                    );
-                  })}
-                </Reorder.Group>
-              </ScrollArea>
-            </Card>
-          </GlowCard>
-        </BentoGridItem>
-
-        <BentoGridItem className="p-0">
-          <MuscleMap intensities={muscleIntensities} profile={data.profile} title={`${activePlan?.name || 'Active'} Split Target`} />
-        </BentoGridItem>
-      </BentoGrid>
-
       <DashboardCharts data={data} />
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card className="p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="p-4 md:p-6">
+          <p className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400">
             Recent sessions
           </p>
           <div className="mt-4 space-y-3">
             {data.sessions.length ? (
-              data.sessions.slice(0, 5).map((session) => (
-                <div key={session.id} className="rounded-[24px] border border-[color:var(--border)] bg-white/55 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+              data.sessions.slice(0, 3).map((session) => (
+                <div key={session.id} className="rounded-xl border border-black/[0.04] bg-neutral-50 p-4 transition hover:bg-neutral-100/50">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-semibold text-[color:var(--foreground)] truncate">{session.title}</p>
-                      <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
+                      <p className="font-bold text-sm text-neutral-900 truncate">{session.title}</p>
+                      <p className="mt-1 text-xs text-neutral-500 font-medium">
                         {formatDate(session.startedAt)} • Day {session.day + 1}
                       </p>
                     </div>
-                    <Badge className="shrink-0">{session.items.length} exercises</Badge>
+                    <Badge className="shrink-0 text-[10px] bg-neutral-200/50 text-neutral-700 font-bold border-transparent">{session.items.length} Lifts</Badge>
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-[color:var(--muted-foreground)] line-clamp-2">
-                    {session.effort || session.notes || "No execution notes yet."}
-                  </p>
+                  {session.effort || session.notes ? (
+                    <p className="mt-2 text-xs leading-normal text-neutral-600 line-clamp-2">
+                      {session.effort || session.notes}
+                    </p>
+                  ) : null}
                 </div>
               ))
             ) : (
-              <p className="rounded-[24px] border border-dashed border-[color:var(--border-strong)] p-5 text-sm text-[color:var(--muted-foreground)]">
-                Logged sessions will appear here as soon as you save them from Workout Studio.
+              <p className="rounded-xl border border-dashed border-neutral-200 p-5 text-xs text-neutral-500 text-center">
+                Completed logs will appear here.
               </p>
             )}
           </div>
         </Card>
 
-        <Card className="p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-            PR board
+        <Card className="p-4 md:p-6">
+          <p className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400">
+            Personal Records (PRs)
           </p>
           <div className="mt-4 space-y-3">
             {data.records.length ? (
-              data.records.slice(0, 6).map((record) => {
+              data.records.slice(0, 3).map((record) => {
                 const exercise = data.exercises.find((item) => item.id === record.exerciseId);
                 return (
-                  <div key={record.id} className="rounded-[24px] border border-[color:var(--border)] bg-white/55 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div key={record.id} className="rounded-xl border border-black/[0.04] bg-neutral-50 p-4 transition hover:bg-neutral-100/50">
+                    <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-semibold text-[color:var(--foreground)] truncate">{exercise?.name || record.exerciseId}</p>
-                        <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">{formatDate(record.achievedAt)}</p>
+                        <p className="font-bold text-sm text-neutral-900 truncate">{exercise?.name || record.exerciseId}</p>
+                        <p className="mt-1 text-xs text-neutral-500 font-medium">{formatDate(record.achievedAt)}</p>
                       </div>
-                      <Badge className="shrink-0">
-                        {record.value} {record.unit} x {record.reps}
+                      <Badge className="shrink-0 text-[10px] bg-black text-white font-extrabold border-transparent">
+                        {record.value} {record.unit} × {record.reps}
                       </Badge>
                     </div>
                     {record.notes ? (
-                      <p className="mt-3 text-sm leading-6 text-[color:var(--muted-foreground)] line-clamp-2">{record.notes}</p>
+                      <p className="mt-2 text-xs leading-normal text-neutral-600 line-clamp-2">{record.notes}</p>
                     ) : null}
                   </div>
                 );
               })
             ) : (
-              <p className="rounded-[24px] border border-dashed border-[color:var(--border-strong)] p-5 text-sm text-[color:var(--muted-foreground)]">
-                Log a PR from the planner to keep a structured performance history.
+              <p className="rounded-xl border border-dashed border-neutral-200 p-5 text-xs text-neutral-500 text-center">
+                Log breakthroughs in the Planner to track records.
               </p>
             )}
           </div>
-          {recentSession ? (
-            <div className="mt-6 rounded-[24px] border border-[color:var(--border)] bg-[linear-gradient(135deg,rgba(16,16,16,0.03),rgba(16,16,16,0.08))] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
-                Latest execution note
-              </p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--foreground)] truncate">{recentSession.title}</p>
-              <p className="mt-2 text-sm leading-7 text-[color:var(--muted-foreground)] line-clamp-3">
-                {recentSession.notes || recentSession.effort || "Capture how the day moved, what felt strong, and what needs adjusting."}
-              </p>
-            </div>
-          ) : null}
         </Card>
       </div>
+
+      {recentSession && (
+        <Card className="p-4 md:p-6">
+          <p className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400">
+            Latest Execution Telemetry
+          </p>
+          <div className="mt-4 rounded-xl border border-black/[0.04] bg-neutral-50 p-4">
+            <p className="font-bold text-sm text-neutral-950 truncate">{recentSession.title}</p>
+            <p className="mt-1.5 text-xs leading-relaxed text-neutral-600">
+              {recentSession.notes || recentSession.effort || "No setup notes added to this session."}
+            </p>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

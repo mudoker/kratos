@@ -72,66 +72,66 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
     dark: ['#ffffff0D', '#82ca9d', '#ffd36b', '#ff9f0a', '#c81e1e'], // bg-white/5 for level 0
   };
 
-  // 53 weeks * (blockSize + blockMargin) - blockMargin = totalWidth
-  // blockSize + blockMargin = (totalWidth + blockMargin) / 53
-  // Let blockMargin be roughly 20% of blockSize, or a fixed value like 4.
-  // We also have to account for labels or right/left padding if any.
-  // The library uses 53 weeks. Let's assume a margin of 4.
+  // Calculate dynamic block size. Cap it at a minimum of 9px for mobile usability/readability.
   const blockMargin = 4;
   const weeks = 53;
-  // Account for the month labels and legend if they take up space? The library doesn't strictly increase width for month labels (they hover over).
-  // Calculate dynamic block size. Default to 12 if containerWidth is 0.
   const calculatedBlockSize = containerWidth > 0 
-    ? Math.max(Math.floor((containerWidth - (weeks - 1) * blockMargin) / weeks), 2)
+    ? Math.max(Math.floor((containerWidth - (weeks - 1) * blockMargin) / weeks), 9)
     : 12;
 
-  return (
-    <div className="relative w-full overflow-hidden pb-4" ref={containerRef}>
-      {containerWidth > 0 && (
-        <ActivityCalendar
-          data={heatmapData}
-          theme={explicitTheme}
-          colorScheme="light"
-          blockSize={calculatedBlockSize}
-          blockMargin={blockMargin}
-          blockRadius={2}
-          fontSize={10}
-          labels={{
-            legend: {
-              less: 'Less',
-              more: 'More',
-            },
-            totalCount: '{{count}} exercises/sets in {{year}}',
-          }}
-          renderBlock={(block, activity) => {
-            return cloneElement(block, {
-              onMouseEnter: (e: any) => {
-                if (!containerRef.current) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const containerRect = containerRef.current.getBoundingClientRect();
-                
-                const x = rect.left - containerRect.left + rect.width / 2;
-                const y = rect.top - containerRect.top;
-                
-                // If y is too small (top few rows), we should show tooltip below
-                // A safe threshold is the estimated height of the tooltip (around 60-80px)
-                const showBelow = y < 80;
+  const minHeatmapWidth = weeks * (calculatedBlockSize + blockMargin) - blockMargin + 10;
 
-                setHovered({
-                  date: activity.date,
-                  count: activity.count,
-                  x,
-                  y,
-                  showBelow
-                } as any);
-              },
-              onMouseLeave: () => {
-                setHovered(null);
-              },
-            });
-          }}
-        />
-      )}
+  return (
+    <div className="relative w-full overflow-hidden" ref={containerRef}>
+      <div className="w-full overflow-x-auto scrollbar-none pb-2">
+        <div style={{ minWidth: containerWidth > 0 ? Math.max(containerWidth, minHeatmapWidth) : "100%" }}>
+          {containerWidth > 0 && (
+            <ActivityCalendar
+              data={heatmapData}
+              theme={explicitTheme}
+              colorScheme="light"
+              blockSize={calculatedBlockSize}
+              blockMargin={blockMargin}
+              blockRadius={2}
+              fontSize={10}
+              labels={{
+                legend: {
+                  less: 'Less',
+                  more: 'More',
+                },
+                totalCount: '{{count}} exercises/sets in {{year}}',
+              }}
+              renderBlock={(block, activity) => {
+                return cloneElement(block, {
+                  onMouseEnter: (e: any) => {
+                    if (!containerRef.current) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const containerRect = containerRef.current.getBoundingClientRect();
+                    
+                    const x = rect.left - containerRect.left + rect.width / 2;
+                    const y = rect.top - containerRect.top;
+                    
+                    // If y is too small (top few rows), we should show tooltip below
+                    // A safe threshold is the estimated height of the tooltip (around 60-80px)
+                    const showBelow = y < 80;
+
+                    setHovered({
+                      date: activity.date,
+                      count: activity.count,
+                      x,
+                      y,
+                      showBelow
+                    } as any);
+                  },
+                  onMouseLeave: () => {
+                    setHovered(null);
+                  },
+                });
+              }}
+            />
+          )}
+        </div>
+      </div>
       
       <AnimatePresence>
         {hovered && (
