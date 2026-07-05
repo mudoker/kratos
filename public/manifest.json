@@ -1,0 +1,19 @@
+{
+  "name": "Kratos Strength System",
+  "short_name": "Kratos",
+  "description": "Strength planning, workout execution, and AI coaching.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#09090b",
+  "orientation": "portrait-primary",
+  "categories": ["sports", "health", "fitness"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
