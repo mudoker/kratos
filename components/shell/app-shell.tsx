@@ -50,23 +50,23 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
 
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className="flex flex-col h-full justify-between items-center lg:group-hover:items-stretch">
-      <div className="space-y-6 w-full flex flex-col items-center lg:group-hover:items-stretch">
+      <div className="space-y-5 w-full flex flex-col items-center lg:group-hover:items-stretch">
         
         {/* Core Brand Card */}
         <div className={cn(
-          "bg-gradient-to-br from-slate-900 to-black text-white shadow-xl relative overflow-hidden transition-all duration-300",
+          "bg-black text-white shadow-sm relative overflow-hidden transition-all duration-200",
           isMobile 
-            ? "p-5 rounded-[26px] w-full" 
-            : "p-0 rounded-xl w-11 h-11 flex items-center justify-center lg:group-hover:p-5 lg:group-hover:rounded-[26px] lg:group-hover:w-full lg:group-hover:h-auto"
+            ? "p-4.5 rounded-2xl w-full" 
+            : "p-0 rounded-lg w-9 h-9 flex items-center justify-center lg:group-hover:p-4.5 lg:group-hover:rounded-2xl lg:group-hover:w-full lg:group-hover:h-auto"
         )}>
-          <div className="absolute top-[-20%] right-[-20%] w-24 h-24 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
+          <div className="absolute top-[-20%] right-[-20%] w-20 h-20 rounded-full bg-emerald-500/10 blur-lg pointer-events-none" />
           <div className="relative z-10 flex flex-col items-center lg:group-hover:items-stretch">
             <div className={cn("flex items-center justify-center lg:group-hover:justify-start w-full", isMobile ? "gap-2" : "gap-0 lg:group-hover:gap-2")}>
-              <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                <Dumbbell className="h-3.5 w-3.5" />
+              <div className="h-5 w-5 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                <Dumbbell className="h-3 w-3" />
               </div>
               <span className={cn(
-                "text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 transition-all duration-300 inline-block",
+                "text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 transition-all duration-200 inline-block",
                 !isMobile 
                   ? "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-2" 
                   : "ml-2"
@@ -74,11 +74,11 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
                 Kratos System
               </span>
             </div>
-            <div className={cn("transition-all duration-300", isMobile ? "mt-3 space-y-1" : "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 lg:group-hover:mt-3 space-y-1")}>
-              <h1 className="font-bold text-sm leading-snug tracking-tight text-white">
+            <div className={cn("transition-all duration-200", isMobile ? "mt-2.5 space-y-1" : "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 lg:group-hover:mt-2.5 space-y-1")}>
+              <h1 className="font-bold text-xs leading-snug tracking-tight text-white">
                 Structured Gym telemetry
               </h1>
-              <p className="text-[10px] leading-relaxed text-white/50">
+              <p className="text-[9px] leading-relaxed text-white/50">
                 Synchronize workouts, biology mappings, and coaching parameters.
               </p>
             </div>
@@ -87,27 +87,27 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
 
         {/* Athlete User info */}
         <div className={cn(
-          "border border-black/5 bg-black/[0.01] flex items-center transition-all duration-300",
+          "border border-black/[0.04] bg-neutral-50 flex items-center transition-all duration-200",
           isMobile 
-            ? "p-3.5 rounded-xl w-full" 
-            : "p-0 rounded-xl w-11 h-11 justify-center lg:group-hover:p-3.5 lg:group-hover:w-full lg:group-hover:justify-start"
+            ? "p-3 rounded-xl w-full" 
+            : "p-0 rounded-lg w-9 h-9 justify-center lg:group-hover:p-3 lg:group-hover:w-full lg:group-hover:justify-start"
         )}>
-          <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-black text-white font-bold text-xs">
+          <div className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md bg-black text-white font-bold text-[10px]">
             {user.name.slice(0, 2).toUpperCase()}
           </div>
           <div className={cn(
-            "min-w-0 flex-1 ml-3 transition-opacity duration-300", 
+            "min-w-0 flex-1 ml-2.5 transition-opacity duration-200", 
             isMobile 
               ? "opacity-100 block" 
               : "opacity-0 lg:group-hover:opacity-100 hidden lg:group-hover:block overflow-hidden whitespace-nowrap"
           )}>
-            <p className="text-xs font-bold text-black truncate leading-none">{user.name}</p>
-            <p className="text-[9px] text-black/40 truncate mt-1 leading-none">{user.email}</p>
+            <p className="text-xs font-bold text-neutral-800 truncate leading-none">{user.name}</p>
+            <p className="text-[9px] text-neutral-400 truncate mt-1 leading-none">{user.email}</p>
           </div>
         </div>
 
-        {/* Navigation list (Medium weight, Sentence Case, Not bold when inactive) */}
-        <nav className="flex flex-col items-center lg:group-hover:items-stretch gap-1.5 w-full">
+        {/* Navigation list */}
+        <nav className="flex flex-col items-center lg:group-hover:items-stretch gap-1 w-full">
           {items.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -117,25 +117,23 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center transition-all duration-300 rounded-xl h-11 relative",
-                  // Shrunken desktop style: center icon, square shape
-                  "w-11 justify-center p-0",
-                  // Mobile (always expanded) and expanded hover styles:
+                  "flex items-center transition-all duration-200 rounded-lg h-9 relative",
+                  "w-9 justify-center p-0",
                   isMobile 
-                    ? "w-full justify-start px-4 gap-3.5" 
-                    : "lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:px-4 lg:group-hover:gap-3.5",
+                    ? "w-full justify-start px-3 gap-2.5" 
+                    : "lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:px-3 lg:group-hover:gap-2.5",
                   isActive
-                    ? "bg-black text-white font-bold shadow-sm"
-                    : "text-black/60 font-medium hover:bg-black/5 hover:text-black"
+                    ? "bg-neutral-100 text-neutral-900 font-semibold"
+                    : "text-neutral-600 font-medium hover:bg-neutral-50 hover:text-neutral-900"
                 )}
               >
-                <Icon className={cn("h-4.5 w-4.5 shrink-0", isActive ? "text-white" : "text-black/60")} />
+                <Icon className={cn("h-4.5 w-4.5 shrink-0 transition-colors", isActive ? "text-black" : "text-neutral-500")} />
                 <span className={cn(
-                  "transition-all duration-300 ease-in-out inline-block", 
+                  "transition-all duration-200 ease-in-out inline-block text-xs font-semibold", 
                   isMobile 
-                    ? "opacity-100 ml-3" 
-                    : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-3",
-                  isActive ? "!text-white" : "text-black/60"
+                    ? "opacity-100 ml-2.5" 
+                    : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-2.5",
+                  isActive ? "text-black font-semibold" : "text-neutral-600 font-medium"
                 )}>
                   {item.label}
                 </span>
@@ -146,17 +144,17 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </div>
 
       {/* Logout button & intelligence badge */}
-      <div className="space-y-4 pt-6 border-t border-black/5 mt-6 w-full flex flex-col items-center lg:group-hover:items-stretch">
+      <div className="space-y-3 pt-4 border-t border-black/[0.04] mt-4 w-full flex flex-col items-center lg:group-hover:items-stretch">
         <div className={cn(
-          "border border-black/5 bg-indigo-50/20 text-indigo-900 transition-all duration-300",
+          "border border-indigo-100 bg-indigo-50/10 text-indigo-700 transition-all duration-200",
           isMobile 
-            ? "p-3.5 rounded-xl w-full" 
-            : "p-0 rounded-xl w-11 h-11 flex items-center justify-center lg:group-hover:p-3.5 lg:group-hover:w-full"
+            ? "p-3 rounded-lg w-full" 
+            : "p-0 rounded-lg w-9 h-9 flex items-center justify-center lg:group-hover:p-3 lg:group-hover:w-full"
         )}>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4.5 w-4.5 text-indigo-600 shrink-0" />
+            <Sparkles className="h-4 w-4 text-indigo-600 shrink-0" />
             <span className={cn(
-              "text-[9px] font-extrabold uppercase tracking-wide transition-all duration-300 inline-block", 
+              "text-[9px] font-extrabold uppercase tracking-wide transition-all duration-200 inline-block", 
               isMobile 
                 ? "opacity-100 ml-2" 
                 : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-2"
@@ -169,18 +167,18 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
           variant="ghost" 
           onClick={logout} 
           className={cn(
-            "justify-start rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-50 hover:text-rose-600 transition shrink-0",
+            "justify-start rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition shrink-0",
             isMobile 
-              ? "w-full px-4 py-4 gap-3.5" 
-              : "w-11 h-11 p-0 justify-center lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:px-4 lg:group-hover:py-4 lg:group-hover:gap-3.5"
+              ? "w-full px-3 py-3 gap-2.5" 
+              : "w-9 h-9 p-0 justify-center lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:px-3 lg:group-hover:py-3 lg:group-hover:gap-2.5"
           )}
         >
           <LogOut className="h-4.5 w-4.5 shrink-0" />
           <span className={cn(
-            "transition-all duration-300 ease-in-out inline-block", 
+            "transition-all duration-200 ease-in-out inline-block text-xs font-semibold", 
             isMobile 
-              ? "opacity-100 ml-3" 
-              : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-3"
+              ? "opacity-100 ml-2.5" 
+              : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-2.5"
           )}>
             Sign Out
           </span>
@@ -190,7 +188,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
   );
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col lg:grid lg:grid-cols-[80px_1fr] gap-6 px-4 pb-8 pt-4">
+    <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col px-3 pt-3 pb-24 lg:grid lg:grid-cols-[80px_1fr] lg:gap-6 lg:px-4 lg:pb-8 lg:pt-4">
       
       {/* Desktop Left Sticky Sidebar */}
       <aside className="hidden lg:block relative w-20 shrink-0 h-[calc(100vh-2rem)] sticky top-4 z-40">
@@ -199,36 +197,63 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
         </div>
       </aside>
 
-      {/* Responsive Mobile Top Sticky Navigation Header Bar */}
-      <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-white/75 backdrop-blur border border-black/5 rounded-2xl sticky top-2 z-40 shadow-sm">
+      {/* Responsive Mobile Top Sticky Navigation Header Bar (Flush edge-to-edge) */}
+      <header className="lg:hidden flex items-center justify-between -mx-3 -mt-3 mb-4 rounded-none border-b border-black/5 px-4 py-2.5 bg-white/75 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black text-white">
-            <Dumbbell className="h-4.5 w-4.5" />
+          <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <Dumbbell className="h-3.5 w-3.5" />
           </div>
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-black/40 block leading-none">Kratos</span>
-            <span className="text-xs font-bold text-black mt-0.5 block leading-none">{activeTitle}</span>
-          </div>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-black/40 block leading-none">Kratos</span>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" className="h-9 w-9 p-0 rounded-xl hover:bg-black/5 text-black">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[280px] translate-x-0 translate-y-0 rounded-r-3xl rounded-l-none bg-white p-5 border-r border-black/10 overflow-y-auto max-w-full">
-              <SidebarContent isMobile={true} />
-            </DialogContent>
-          </Dialog>
-        </div>
+        <span className="text-[11px] font-extrabold text-black/80 tracking-tight">{activeTitle}</span>
       </header>
 
       {/* Main Work Area Content */}
       <main className="space-y-6 flex-1 min-w-0 mt-2 lg:mt-0">
         {children}
       </main>
+
+      {/* Responsive Mobile Bottom Tab Navigation Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-t border-black/[0.04] px-2 pt-1 pb-[calc(env(safe-area-inset-bottom)+4px)] shadow-[0_-4px_24px_rgba(0,0,0,0.015)] flex items-center justify-around">
+        {[
+          { href: "/dashboard" as Route, label: "Summary", icon: BarChart3 },
+          { href: "/planner" as Route, label: "Planner", icon: TableProperties },
+          { href: "/workouts" as Route, label: "Workouts", icon: Dumbbell },
+          { href: "/coach" as Route, label: "AI Coach", icon: Bot },
+        ].map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center pt-1.5 pb-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
+                isActive ? "text-black" : "text-[#8e8e93]"
+              )}
+            >
+              <Icon className="h-5.5 w-5.5" strokeWidth={isActive ? 2.25 : 1.8} />
+              <span className="text-[10px] font-semibold tracking-tight mt-0.5">{item.label}</span>
+            </Link>
+          );
+        })}
+
+        {/* More Button to trigger sidebar menu */}
+        <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              className="flex flex-col items-center justify-center pt-1.5 pb-0.5 flex-1 transition-colors duration-150 active:scale-98 text-[#8e8e93] select-none"
+            >
+              <Menu className="h-5.5 w-5.5" strokeWidth={1.8} />
+              <span className="text-[10px] font-semibold tracking-tight mt-0.5">More</span>
+            </button>
+          </DialogTrigger>
+          <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[280px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-white p-5 border-r border-black/10 overflow-y-auto max-w-full z-50">
+            <SidebarContent isMobile={true} />
+          </DialogContent>
+        </Dialog>
+      </nav>
     </div>
   );
 }
