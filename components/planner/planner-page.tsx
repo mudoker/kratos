@@ -59,55 +59,16 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
   const exerciseName = exercise ? exercise.name.toLowerCase() : "";
   const categoryLower = (exerciseCategory || exercise?.category || "").toLowerCase();
 
-  // 1. Prepopulated Compound vs Isolation tags based on exercise name keywords
-  if (
-    exerciseName.includes("press") || 
-    exerciseName.includes("squat") || 
-    exerciseName.includes("deadlift") || 
-    exerciseName.includes("row") || 
-    exerciseName.includes("pull-up") || 
-    exerciseName.includes("chin-up") || 
-    exerciseName.includes("dip") ||
-    exerciseName.includes("pullup") ||
-    lowerId.includes("press") ||
-    lowerId.includes("squat") ||
-    lowerId.includes("deadlift") ||
-    lowerId.includes("row") ||
-    lowerId.includes("pull-up")
-  ) {
-    tags.push({ label: "COMPOUND", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
-  } else if (
-    exerciseName.includes("curl") || 
-    exerciseName.includes("raise") || 
-    exerciseName.includes("extension") || 
-    exerciseName.includes("fly") || 
-    exerciseName.includes("shrug") || 
-    exerciseName.includes("crunch") || 
-    exerciseName.includes("twist") ||
-    lowerId.includes("curl") ||
-    lowerId.includes("raise") ||
-    lowerId.includes("extension") ||
-    lowerId.includes("fly")
-  ) {
-    tags.push({ label: "ISOLATION", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
-  }
-
-  if (categoryLower === "mobility") {
-    tags.push({ label: "MOBILITY", type: "prepop", color: "bg-emerald-500/10 text-emerald-700 border-emerald-200" });
-  } else if (categoryLower === "conditioning") {
-    tags.push({ label: "CONDITIONING", type: "prepop", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
-  }
-
   // 2. Standard auto-detected tags from notes
   if (lowerNotes.includes("superset") || lowerId.includes("superset")) {
-    tags.push({ label: "SUPERSET", type: "superset", color: "bg-purple-500/10 text-purple-700 border-purple-200" });
+    tags.push({ label: "SUPERSET", type: "superset", color: "bg-neutral-100 text-neutral-600 border-transparent" });
   }
   if (lowerNotes.includes("dropset") || lowerNotes.includes("drop-set") || lowerNotes.includes("drop set")) {
-    tags.push({ label: "DROPSET", type: "dropset", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
+    tags.push({ label: "DROPSET", type: "dropset", color: "bg-neutral-100 text-neutral-600 border-transparent" });
   }
   if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || categoryLower === "mobility") {
     if (!tags.some(t => t.label === "WARM-UP")) {
-      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
+      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-neutral-100 text-neutral-600 border-transparent" });
     }
   }
   
@@ -116,7 +77,7 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
                      lowerNotes.includes("cool-down") || 
                      lowerNotes.includes("flow");
   if (hasStretch) {
-    tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
+    tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-neutral-100 text-neutral-600 border-transparent" });
   }
 
   // 3. Parse custom TAGS: line
@@ -345,10 +306,10 @@ export function PlannerPage() {
       <div 
         key={item.id} 
         className={cn(
-          "space-y-4 transition duration-300",
+          "space-y-3.5 transition duration-200 relative",
           isInsideSuperset 
-            ? "p-4 bg-white rounded-xl border border-purple-100/70"
-            : cn("p-5 bg-white/60 hover:bg-white/80 border border-black/5 rounded-[22px]", borderClass)
+            ? "p-3.5 bg-neutral-50/50 rounded-xl border border-black/[0.04]"
+            : cn("p-4.5 bg-white hover:bg-neutral-50/30", borderClass)
         )}
       >
         <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-3">
@@ -411,9 +372,9 @@ export function PlannerPage() {
           </Button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-5">
-          <div className="space-y-1.5 md:col-span-2">
-            <label className="text-xs font-bold text-black/50 block">Select Exercise</label>
+        <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-5">
+          <div className="space-y-1.5 col-span-3 sm:col-span-2 md:col-span-2">
+            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Select Exercise</label>
             <Combobox
               options={exerciseOptions}
               value={item.exerciseId}
@@ -422,7 +383,7 @@ export function PlannerPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-black/50 block">Target Sets</label>
+            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Target Sets</label>
             <Select
               value={String(item.sets)}
               onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, sets: Number(val) }))}
@@ -440,7 +401,7 @@ export function PlannerPage() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-black/50 block">Reps Bracket</label>
+            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Reps Bracket</label>
             <Select
               value={item.reps}
               onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, reps: val }))}
@@ -458,7 +419,7 @@ export function PlannerPage() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-black/50 block">Target Rest</label>
+            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Target Rest</label>
             <Select
               value={String(item.restSeconds)}
               onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, restSeconds: Number(val) }))}
@@ -484,9 +445,9 @@ export function PlannerPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-black/50 block">Target Load</label>
+            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Target Load</label>
             <Select
               value={item.targetLoad}
               onValueChange={(val) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, targetLoad: val }))}
@@ -505,7 +466,7 @@ export function PlannerPage() {
           </div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-1">
-              <label className="text-xs font-bold text-black/50 block">Target RPE</label>
+              <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Target RPE</label>
               <span 
                 className="text-[10px] text-black/30 hover:text-black/50 cursor-help"
                 title="Rate of Perceived Exertion (RPE): 10 = max effort/no reps left, 9 = 1 rep left in reserve, 8 = 2 reps left."
@@ -529,8 +490,8 @@ export function PlannerPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-black/50 block">PR Goal Target</label>
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">PR Goal Target</label>
             <Input
               value={item.prGoal}
               onChange={(event) => updateItem(activeDay.id, itemIndex, (entry) => ({ ...entry, prGoal: event.target.value }))}
@@ -541,7 +502,7 @@ export function PlannerPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-black/50 block">Exercise Setup Notes</label>
+          <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Exercise Setup Notes</label>
           <Textarea
             value={(item.notes || "").replace(/TAGS:\s*[^\n\r]+/i, "").trim()}
             onChange={(event) => {
@@ -783,7 +744,7 @@ export function PlannerPage() {
         
         {/* Selector Pane */}
         <div className="space-y-4 lg:sticky lg:top-4">
-          <Card className="p-5 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[28px] space-y-4">
+          <Card className="p-4 md:p-5 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[24px] md:rounded-[28px] space-y-4">
             <div className="flex items-center gap-2 border-b border-black/5 pb-3">
               <Compass className="h-4 w-4 text-black/50" />
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/50">Splits Library</span>
@@ -821,7 +782,7 @@ export function PlannerPage() {
           </Card>
 
           {/* Quick link to execution */}
-          <Card className="p-5 border-transparent bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-[28px] relative overflow-hidden shadow-xl">
+          <Card className="p-4 md:p-5 border-transparent bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-[24px] md:rounded-[28px] relative overflow-hidden shadow-xl">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent_35%)]" />
             <div className="relative z-10 space-y-3">
               <TrendingUp className="h-5 w-5 text-emerald-400" />
@@ -841,7 +802,7 @@ export function PlannerPage() {
 
         {/* Major Working Panel */}
         <div className="space-y-6">
-          <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
+          <Card className="p-4 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[24px] md:rounded-[32px] space-y-6">
             {/* Redesigned Split Title Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-black/5 pb-6">
               <div className="space-y-1 flex-1 min-w-0">
@@ -879,7 +840,7 @@ export function PlannerPage() {
                 <span className="text-[11px] font-bold text-black/50 uppercase tracking-wider">Training Days Schedule</span>
                 <span className="text-[10px] font-extrabold text-black/40 uppercase tracking-widest">{selectedPlan.days.length} Days Block</span>
               </div>
-              <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 md:grid-cols-9">
+              <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2 flex-nowrap md:grid md:grid-cols-9 md:overflow-visible md:pb-0">
                 {selectedPlan.days.map((day) => {
                   const isActive = day.id === activeDayId;
                   return (
@@ -888,21 +849,21 @@ export function PlannerPage() {
                       type="button"
                       onClick={() => setActiveDayId(day.id)}
                       className={cn(
-                        "flex flex-col items-start p-3 rounded-2xl border text-left transition duration-300 relative overflow-hidden group",
+                        "flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-250 relative overflow-hidden group shrink-0 w-[110px] md:w-auto select-none",
                         isActive
-                          ? "bg-black text-white border-black shadow-lg"
-                          : "bg-white/50 border-black/5 hover:border-black/10 hover:bg-white text-black"
+                          ? "bg-white text-black border-black/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                          : "bg-neutral-100/60 border-transparent hover:bg-neutral-200/50 text-neutral-600"
                       )}
                     >
-                      <span className={cn("text-[9px] font-black tracking-widest uppercase mb-1", isActive ? "text-emerald-400" : "text-black/40")}>
+                      <span className={cn("text-[9px] font-extrabold tracking-widest uppercase mb-1", isActive ? "text-black" : "text-neutral-400")}>
                         Day {day.day + 1}
                       </span>
-                      <span className="font-bold text-xs truncate w-full leading-tight">{day.title || `Day ${day.day + 1}`}</span>
-                      <span className={cn("text-[9px] font-medium mt-1 truncate w-full", isActive ? "text-white/60" : "text-black/40")}>
+                      <span className="font-semibold text-xs truncate w-full leading-tight">{day.title || `Day ${day.day + 1}`}</span>
+                      <span className={cn("text-[9px] font-medium mt-1 truncate w-full", isActive ? "text-neutral-600" : "text-neutral-400")}>
                         {day.focus || "Recovery"}
                       </span>
                       {isActive && (
-                        <div className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <div className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-black" />
                       )}
                     </button>
                   );
@@ -912,10 +873,10 @@ export function PlannerPage() {
                   <button
                     type="button"
                     onClick={addDay}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-dashed border-black/10 bg-black/[0.02] hover:bg-black/5 text-indigo-600 transition"
+                    className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-black/10 bg-transparent hover:bg-neutral-100 text-neutral-600 transition shrink-0 w-[110px] md:w-auto cursor-pointer"
                   >
                     <Plus className="h-4 w-4 mb-1" />
-                    <span className="font-bold text-xs">Add Day</span>
+                    <span className="font-semibold text-xs">Add Day</span>
                   </button>
                 )}
 
@@ -923,20 +884,20 @@ export function PlannerPage() {
                   type="button"
                   onClick={() => setActiveDayId("analysis")}
                   className={cn(
-                    "flex flex-col items-start p-3 rounded-2xl border text-left transition duration-300 sm:col-span-2 md:col-span-1",
+                    "flex flex-col items-start p-3 rounded-xl border text-left transition-all duration-250 sm:col-span-2 md:col-span-1 shrink-0 w-[110px] md:w-auto select-none",
                     activeDayId === "analysis"
-                      ? "bg-black text-white border-black shadow-lg"
-                      : "bg-white/50 border-black/5 hover:border-black/10 hover:bg-white text-black"
+                      ? "bg-white text-black border-black/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                      : "bg-neutral-100/60 border-transparent hover:bg-neutral-200/50 text-neutral-600"
                   )}
                 >
-                  <span className={cn("text-[9px] font-black tracking-widest uppercase mb-1", activeDayId === "analysis" ? "text-emerald-400" : "text-black/40")}>
+                  <span className={cn("text-[9px] font-extrabold tracking-widest uppercase mb-1", activeDayId === "analysis" ? "text-black" : "text-neutral-400")}>
                     Audit
                   </span>
-                  <span className="font-bold text-xs truncate w-full leading-tight flex items-center gap-1">
+                  <span className="font-semibold text-xs truncate w-full leading-tight flex items-center gap-1">
                     <BarChart3 className="h-3 w-3" />
                     <span>Stimulus</span>
                   </span>
-                  <span className={cn("text-[9px] font-medium mt-1 w-full", activeDayId === "analysis" ? "text-white/60" : "text-black/40")}>
+                  <span className={cn("text-[9px] font-medium mt-1 w-full", activeDayId === "analysis" ? "text-neutral-600" : "text-neutral-400")}>
                     Coverage
                   </span>
                 </button>
@@ -992,7 +953,7 @@ export function PlannerPage() {
 
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-black/50 block">Display Title</label>
+                            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Display Title</label>
                             <Input
                               value={activeDay.title}
                               onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, title: event.target.value }))}
@@ -1001,7 +962,7 @@ export function PlannerPage() {
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-black/50 block">Day Focus</label>
+                            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Day Focus</label>
                             <Input
                               value={activeDay.focus}
                               onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, focus: event.target.value }))}
@@ -1012,7 +973,7 @@ export function PlannerPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-black/50 block">Target Muscles</label>
+                          <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Target Muscles</label>
                           <div className="flex flex-wrap gap-1.5 mt-1">
                             {AVAILABLE_MUSCLES.map((muscle) => {
                               const isSelected = activeDay.targetMuscles.includes(muscle);
@@ -1057,7 +1018,7 @@ export function PlannerPage() {
                             </div>
                             <div className="grid gap-4 sm:grid-cols-2">
                               <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-black/50 block">Warm-up Protocol</label>
+                                <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Warm-up Protocol</label>
                                 <Textarea
                                   value={activeDay.warmup}
                                   onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, warmup: event.target.value }))}
@@ -1066,7 +1027,7 @@ export function PlannerPage() {
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-black/50 block">Cool-down & Stretches</label>
+                                <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Cool-down & Stretches</label>
                                 <Textarea
                                   value={activeDay.notes}
                                   onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, notes: event.target.value }))}
@@ -1076,7 +1037,7 @@ export function PlannerPage() {
                               </div>
                             </div>
                             <div className="space-y-1.5">
-                              <label className="text-xs font-bold text-black/50 block">Day Goal / Target PRs</label>
+                              <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Day Goal / Target PRs</label>
                               <Textarea
                                 value={activeDay.sessionGoal}
                                 onChange={(event) => updateDay(activeDay.id, (entry) => ({ ...entry, sessionGoal: event.target.value }))}
@@ -1157,28 +1118,21 @@ export function PlannerPage() {
                           </Badge>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="border border-black/[0.04] bg-white rounded-2xl divide-y divide-black/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.015)] overflow-hidden">
                           {visualGroups.map((group, groupIndex) => {
                             if (group.type === "superset") {
                               return (
-                                <div key={group.supersetKey || groupIndex} className="p-6 border border-purple-200/60 bg-purple-500/[0.01] rounded-[28px] space-y-6 shadow-sm">
-                                  <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+                                <div key={group.supersetKey || groupIndex} className="bg-purple-500/[0.02] p-4.5 space-y-4">
+                                  <div className="flex items-center justify-between border-b border-purple-500/10 pb-2">
                                     <div className="flex items-center gap-2">
-                                      <span className="h-6 w-6 rounded-lg bg-purple-500/10 text-purple-700 flex items-center justify-center font-bold text-xs">S</span>
-                                      <div>
-                                        <h5 className="font-extrabold text-xs text-purple-950 uppercase tracking-wider">
-                                          {group.supersetKey || "Superset"}
-                                        </h5>
-                                        <p className="text-[10px] text-purple-600/70 font-semibold mt-0.5">
-                                          Perform these exercises back-to-back without rest.
-                                        </p>
-                                      </div>
+                                      <span className="h-5 w-5 rounded-md bg-purple-500/15 text-purple-700 flex items-center justify-center font-bold text-[10px]">S</span>
+                                      <span className="font-extrabold text-[10px] text-purple-950 uppercase tracking-wider">{group.supersetKey || "Superset"}</span>
                                     </div>
+                                    <span className="text-[9px] font-extrabold text-purple-600/75 uppercase tracking-wider">Perform back-to-back</span>
                                   </div>
-                                  <div className="space-y-6 relative pl-6 ml-3 border-l border-dashed border-purple-300">
+                                  <div className="space-y-4">
                                     {group.items.map(({ item, originalIndex }) => (
                                       <div key={item.id} className="relative">
-                                        <div className="absolute left-[-31px] top-6 w-3 h-3 rounded-full bg-purple-600 border-2 border-white shadow-sm z-10" />
                                         {renderExerciseCard(item, originalIndex, true)}
                                       </div>
                                     ))}
