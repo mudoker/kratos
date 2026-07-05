@@ -25,55 +25,16 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
   const exerciseName = exercise ? exercise.name.toLowerCase() : "";
   const categoryLower = (exerciseCategory || exercise?.category || "").toLowerCase();
 
-  // 1. Prepopulated Compound vs Isolation tags based on exercise name keywords
-  if (
-    exerciseName.includes("press") || 
-    exerciseName.includes("squat") || 
-    exerciseName.includes("deadlift") || 
-    exerciseName.includes("row") || 
-    exerciseName.includes("pull-up") || 
-    exerciseName.includes("chin-up") || 
-    exerciseName.includes("dip") ||
-    exerciseName.includes("pullup") ||
-    lowerId.includes("press") ||
-    lowerId.includes("squat") ||
-    lowerId.includes("deadlift") ||
-    lowerId.includes("row") ||
-    lowerId.includes("pull-up")
-  ) {
-    tags.push({ label: "COMPOUND", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
-  } else if (
-    exerciseName.includes("curl") || 
-    exerciseName.includes("raise") || 
-    exerciseName.includes("extension") || 
-    exerciseName.includes("fly") || 
-    exerciseName.includes("shrug") || 
-    exerciseName.includes("crunch") || 
-    exerciseName.includes("twist") ||
-    lowerId.includes("curl") ||
-    lowerId.includes("raise") ||
-    lowerId.includes("extension") ||
-    lowerId.includes("fly")
-  ) {
-    tags.push({ label: "ISOLATION", type: "prepop", color: "bg-slate-100 text-slate-800 border-slate-300" });
-  }
-
-  if (categoryLower === "mobility") {
-    tags.push({ label: "MOBILITY", type: "prepop", color: "bg-emerald-500/10 text-emerald-700 border-emerald-200" });
-  } else if (categoryLower === "conditioning") {
-    tags.push({ label: "CONDITIONING", type: "prepop", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
-  }
-
   // 2. Standard auto-detected tags from notes
   if (lowerNotes.includes("superset") || lowerId.includes("superset")) {
-    tags.push({ label: "SUPERSET", type: "superset", color: "bg-purple-500/10 text-purple-700 border-purple-200" });
+    tags.push({ label: "SUPERSET", type: "superset", color: "bg-neutral-100 text-neutral-600 border-transparent" });
   }
   if (lowerNotes.includes("dropset") || lowerNotes.includes("drop-set") || lowerNotes.includes("drop set")) {
-    tags.push({ label: "DROPSET", type: "dropset", color: "bg-amber-500/10 text-amber-700 border-amber-200" });
+    tags.push({ label: "DROPSET", type: "dropset", color: "bg-neutral-100 text-neutral-600 border-transparent" });
   }
   if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || categoryLower === "mobility") {
     if (!tags.some(t => t.label === "WARM-UP")) {
-      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-blue-500/10 text-blue-700 border-blue-200" });
+      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-neutral-100 text-neutral-600 border-transparent" });
     }
   }
   
@@ -82,7 +43,7 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
                      lowerNotes.includes("cool-down") || 
                      lowerNotes.includes("flow");
   if (hasStretch) {
-    tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-teal-500/10 text-teal-700 border-teal-200" });
+    tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-neutral-100 text-neutral-600 border-transparent" });
   }
 
   // 3. Parse custom TAGS: line
@@ -292,14 +253,14 @@ export function WorkoutsPage() {
     <div className="space-y-6">
       
       {/* Visual Execution header panel */}
-      <div className="rounded-[36px] bg-gradient-to-r from-emerald-950 via-slate-900 to-black p-6 md:p-10 text-white shadow-2xl relative overflow-hidden">
+      <div className="rounded-[28px] md:rounded-[36px] bg-gradient-to-r from-emerald-950 via-slate-900 to-black p-5 md:p-10 text-white shadow-2xl relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <Badge className="bg-white/10 hover:bg-white/20 border-transparent text-emerald-400 font-bold text-[10px] px-3 py-1">
               Active session telemetry
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
+            <h1 className="text-2xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
               Workout Execution Studio
             </h1>
             <p className="text-white/60 text-sm md:text-base max-w-xl font-medium leading-relaxed">
@@ -338,12 +299,12 @@ export function WorkoutsPage() {
         
         {/* Left Side: Logger Card */}
         <div className="space-y-6">
-          <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
+          <Card className="p-4 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[24px] md:rounded-[32px] space-y-6">
             
             {/* Split loader bar */}
-            <div className="p-5 border border-black/5 bg-white/45 rounded-[24px] grid gap-4 sm:grid-cols-2 md:grid-cols-3 items-end">
+            <div className="p-3.5 sm:p-5 border border-black/5 bg-white/45 rounded-[20px] md:rounded-[24px] grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-black/50 block">Choose Program Split</label>
+                <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Choose Program Split</label>
                 <Select
                   value={planId}
                   onValueChange={(value) => {
@@ -366,7 +327,7 @@ export function WorkoutsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-black/50 block">Choose Training Day</label>
+                <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Choose Training Day</label>
                 <Select value={dayId} onValueChange={setDayId}>
                   <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-bold py-4">
                     <SelectValue placeholder="Choose day" />
@@ -389,7 +350,7 @@ export function WorkoutsPage() {
             {/* Title / effort details */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-black/50 block">Session Title</label>
+                <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Session Title</label>
                 <Input
                   value={draft.title}
                   onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
@@ -399,7 +360,7 @@ export function WorkoutsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-black/50 block">Readiness / RPE Effort (1-10)</label>
+                <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Readiness / RPE Effort (1-10)</label>
                 <Input
                   value={draft.effort}
                   onChange={(event) => setDraft((current) => ({ ...current, effort: event.target.value }))}
@@ -411,7 +372,7 @@ export function WorkoutsPage() {
 
             {/* Global notes */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-black/50 block">Session Notes</label>
+              <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Session Notes</label>
               <Textarea
                 value={draft.notes}
                 onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
@@ -429,7 +390,7 @@ export function WorkoutsPage() {
                 </Badge>
               </div>
 
-              <div className="space-y-4">
+              <div className="border border-black/[0.04] bg-white rounded-2xl divide-y divide-black/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.015)] overflow-hidden">
                 {(draft.items || []).map((item, index) => {
                   const exercise = data.exercises.find((e) => e.id === item.exerciseId);
                   const tags = getItemTags(item.notes, item.exerciseId, exercise?.category, data.exercises);
@@ -442,12 +403,12 @@ export function WorkoutsPage() {
                       : primaryTag.type === "warmup"
                       ? "border-l-4 border-l-blue-500"
                       : "border-l-4 border-l-teal-500"
-                    : "border-l border-l-black/5";
+                    : "";
 
                   return (
                     <div
                       key={`${item.exerciseId}-${index}`}
-                      className={cn("p-5 border border-black/5 bg-white/60 hover:bg-white/80 rounded-[24px] transition duration-300 space-y-4", borderClass)}
+                      className={cn("p-4.5 bg-white hover:bg-neutral-50/30 transition duration-200 space-y-4 relative", borderClass)}
                     >
                       {/* Exercise basic header */}
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 pb-3">
@@ -548,7 +509,7 @@ export function WorkoutsPage() {
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-black/50 block">Execution Lift Notes</label>
+                            <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Execution Lift Notes</label>
                             <Textarea
                               value={(item.notes || "").replace(/TAGS:\s*[^\n\r]+/i, "").trim()}
                               onChange={(event) => {
