@@ -23,7 +23,7 @@ export function BentoGridItem({
   return (
     <div
       className={cn(
-        "rounded-[30px] border border-[color:var(--border)] bg-white/60 p-5 shadow-[0_18px_48px_rgba(26,17,13,0.06)] backdrop-blur",
+        "rounded-2xl border border-black/[0.05] bg-white p-5 shadow-[0_4px_16px_rgba(0,0,0,0.02)]",
         span === "wide" && "xl:col-span-2",
         span === "tall" && "md:row-span-2",
         className
