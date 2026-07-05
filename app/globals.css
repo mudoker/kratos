@@ -24,6 +24,8 @@ html {
   min-height: 100%;
   scroll-behavior: smooth;
   color-scheme: light;
+  background-color: var(--background);
+  overscroll-behavior: none;
 }
 
 body {
@@ -32,6 +34,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-body);
   background-color: var(--background);
+  overscroll-behavior: none;
 }
 
 a {
