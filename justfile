@@ -5,11 +5,9 @@ default:
 
 dev:
   @if systemctl is-active --quiet ngrok 2>/dev/null; then \
-    echo "=================================================="; \
-    echo "  WARNING: System-level ngrok service is active."; \
-    echo "  Please run this in your shell to prevent port conflicts:"; \
-    echo "  sudo systemctl stop ngrok"; \
-    echo "=================================================="; \
+    echo "Stopping conflicting system-level ngrok service (may require sudo password)..."; \
+    sudo systemctl stop ngrok || true; \
+    sudo systemctl disable ngrok || true; \
   fi
   @if ! systemctl --user list-unit-files | grep -q "^ngrok.service"; then \
     echo "Registering user systemd service for ngrok..."; \
