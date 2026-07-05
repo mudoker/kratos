@@ -58,34 +58,34 @@ export function Combobox({
         variant="outline"
         role="combobox"
         aria-expanded={open}
-        className="w-full justify-between rounded-2xl bg-white/80 border-[color:var(--border)] text-[color:var(--foreground)]"
+        className="w-full justify-between h-9 rounded-lg bg-neutral-100/80 border border-black/[0.04] text-neutral-850 text-xs font-semibold px-3 hover:bg-neutral-200/50"
         onClick={() => setOpen(!open)}
         type="button"
       >
         <span className="truncate">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-40" />
       </Button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-3xl border border-[color:var(--border)] bg-white p-2 shadow-2xl animate-in fade-in zoom-in-95">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-xl border border-black/[0.05] bg-white p-1 shadow-[0_8px_24px_rgba(0,0,0,0.06)] animate-in fade-in zoom-in-95">
           <Input
             placeholder="Search..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="mb-2 h-9 border-none bg-black/4 focus-visible:ring-0"
+            className="mb-1 h-8 rounded-md bg-neutral-100 border-none px-2.5 focus-visible:ring-0 focus-visible:bg-neutral-100"
             autoFocus
           />
-          <ScrollArea className="max-h-[280px]">
-            <div className="space-y-1">
+          <ScrollArea className="max-h-[240px]">
+            <div className="space-y-0.5">
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((option) => (
                   <button
                     key={option.value}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm transition hover:bg-black/6",
-                      value === option.value ? "bg-black/4 text-[color:var(--foreground)]" : "text-[color:var(--muted-foreground)]"
+                      "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition hover:bg-neutral-100 select-none",
+                      value === option.value ? "bg-neutral-100 font-semibold text-neutral-900" : "text-neutral-600 font-medium"
                     )}
                     onClick={() => {
                       onValueChange(option.value);
@@ -95,11 +95,11 @@ export function Combobox({
                     type="button"
                   >
                     <span className="truncate">{option.label}</span>
-                    {value === option.value && <Check className="h-4 w-4" />}
+                    {value === option.value && <Check className="h-3.5 w-3.5 text-black" />}
                   </button>
                 ))
               ) : (
-                <div className="px-3 py-4 text-center text-sm text-[color:var(--muted-foreground)]">
+                <div className="px-2.5 py-3 text-center text-xs text-neutral-400">
                   {emptyMessage}
                 </div>
               )}
