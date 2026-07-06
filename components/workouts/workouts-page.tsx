@@ -233,7 +233,7 @@ export function WorkoutsPage() {
     return (
       <Card className="p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] text-center max-w-xl mx-auto mt-12 rounded-[36px]">
         <div className="flex justify-center mb-4">
-          <div className="p-4 bg-emerald-500/10 text-emerald-600 rounded-2xl">
+          <div className="p-4 bg-black/5 text-black rounded-2xl">
             <Dumbbell className="h-8 w-8" />
           </div>
         </div>
@@ -243,7 +243,7 @@ export function WorkoutsPage() {
           description="Build a structured split schedule inside the Weekly Planner first. Once done, this workspace will load plans dynamically."
         />
         <Button asChild className="mt-8 py-5 rounded-2xl bg-black text-white hover:bg-black/90 font-bold uppercase tracking-wider text-xs shadow-lg">
-          <Link href="/planner">Open Weekly Planner</Link>
+          <Link href="/train" style={{ color: "#fff" }}>Open Splits Planner</Link>
         </Button>
       </Card>
     );
@@ -252,23 +252,16 @@ export function WorkoutsPage() {
   return (
     <div className="space-y-6">
       
-      {/* Visual Execution header panel */}
-      <div className="rounded-[28px] md:rounded-[36px] bg-gradient-to-r from-emerald-950 via-slate-900 to-black p-5 md:p-10 text-white shadow-2xl relative overflow-hidden">
+      {/* Compact header */}
+      <div className="rounded-[24px] bg-black p-5 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <Badge className="bg-white/10 hover:bg-white/20 border-transparent text-emerald-400 font-bold text-[10px] px-3 py-1">
-              Active session telemetry
-            </Badge>
-            <h1 className="text-2xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
-              Workout Execution Studio
-            </h1>
-            <p className="text-white/60 text-sm md:text-base max-w-xl font-medium leading-relaxed">
-              Load daily prescriptions, log real training loads side-by-side, note seat height coordinates, and archive consistency history.
-            </p>
+        <div className="relative z-10 flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Active Runner</p>
+            <h1 className="text-base font-black tracking-tight">Workout Studio</h1>
           </div>
 
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex gap-2 items-center">
             {draft.id && (
               <Button
                 variant="ghost"
@@ -276,19 +269,19 @@ export function WorkoutsPage() {
                   setDraft(baseSession());
                   setStatus("");
                 }}
-                className="h-12 rounded-2xl border border-white/10 text-white hover:bg-white/10 px-5 text-xs font-semibold transition"
+                className="h-8 rounded-xl border border-white/10 text-white hover:bg-white/10 px-3 text-xs font-semibold transition"
               >
-                Cancel edit
+                Cancel
               </Button>
             )}
             <Button 
               type="button" 
               onClick={saveSession} 
               disabled={saving || !(draft.items || []).length} 
-              className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold text-xs px-6 py-6 border-none shadow-[0_5px_20px_rgba(16,185,129,0.25)] transition flex items-center gap-2"
+              className="bg-white hover:bg-neutral-100 text-black rounded-xl font-bold text-xs px-4 h-8 border-none shadow-none transition flex items-center gap-1.5"
             >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              <span>{draft.id ? "Update Session Log" : "Archive Session Log"}</span>
+              {saving ? <Loader2 className="h-3 w-3 animate-spin text-black" /> : <Save className="h-3 w-3 text-black" />}
+              <span>{draft.id ? "Update" : "Save"}</span>
             </Button>
           </div>
         </div>
@@ -469,7 +462,7 @@ export function WorkoutsPage() {
                             <p className="text-xs font-bold text-black/50">
                               Logged Outcomes
                             </p>
-                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg flex items-center gap-1" onClick={() => addSet(index)}>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-semibold text-black hover:bg-black/5 rounded-lg flex items-center gap-1" onClick={() => addSet(index)}>
                               <Plus className="h-3.5 w-3.5" />
                               <span>Add Set</span>
                             </Button>
@@ -569,7 +562,7 @@ export function WorkoutsPage() {
                       className="relative group p-4 rounded-2xl border border-black/5 bg-white/45 hover:bg-white/80 hover:shadow-sm transition duration-300"
                     >
                       {/* Timeline bullet */}
-                      <div className="absolute left-[-22px] top-5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
+                      <div className="absolute left-[-22px] top-5 w-3 h-3 rounded-full bg-black border-2 border-white shadow-sm" />
                       
                       <div className="flex justify-between items-start gap-2">
                         <div>
