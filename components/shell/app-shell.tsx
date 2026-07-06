@@ -12,11 +12,8 @@ import {
   LogOut,
   Settings2,
   Sparkles,
-  TableProperties,
   Trophy,
   Menu,
-  X,
-  Compass
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import type { AppUser } from "@/lib/types";
@@ -27,13 +24,13 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const items: Array<{ href: Route; label: string; icon: typeof BarChart3 }> = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
-  { href: "/planner", label: "Weekly Planner", icon: TableProperties },
+  { href: "/train", label: "Train", icon: Dumbbell },
   { href: "/progress", label: "Progress Lab", icon: Trophy },
-  { href: "/workouts", label: "Workout Studio", icon: Dumbbell },
-  { href: "/exercises", label: "Exercise Library", icon: Library },
+  { href: "/exercises", label: "Exercises", icon: Library },
   { href: "/coach", label: "AI Coach", icon: Bot },
   { href: "/settings", label: "Settings", icon: Settings2 },
 ];
+
 
 export function AppShell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -214,13 +211,14 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </main>
 
       {/* Responsive Mobile Bottom Tab Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-t border-black/[0.04] px-2 pt-1 pb-[calc(env(safe-area-inset-bottom)+4px)] shadow-[0_-4px_24px_rgba(0,0,0,0.015)] flex items-center justify-around">
+      <nav className="lg:hidden fixed bottom-5 left-4 right-4 z-40 bg-white/90 backdrop-blur-xl border border-black/[0.06] px-3 py-2 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.05)] flex items-center justify-around">
         {[
-          { href: "/dashboard" as Route, label: "Summary", icon: BarChart3 },
-          { href: "/planner" as Route, label: "Planner", icon: TableProperties },
-          { href: "/workouts" as Route, label: "Workouts", icon: Dumbbell },
+          { href: "/dashboard" as Route, label: "Home", icon: BarChart3 },
+          { href: "/train" as Route, label: "Train", icon: Dumbbell },
+          { href: "/exercises" as Route, label: "Library", icon: Library },
           { href: "/coach" as Route, label: "AI Coach", icon: Bot },
         ].map((item) => {
+
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (

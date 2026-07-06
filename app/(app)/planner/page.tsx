@@ -1,5 +1,5 @@
-import { PlannerPage } from "@/components/planner/planner-page";
+import { redirect } from "next/navigation";
 
-export default async function PlannerRoute() {
-  return <PlannerPage />;
+export default function PlannerRoute() {
+  redirect("/train");
 }

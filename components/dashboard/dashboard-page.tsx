@@ -3,11 +3,10 @@
 import { useMemo, useState } from "react";
 import { 
   Activity, 
-  BrainCircuit, 
   CalendarClock, 
-  Trophy, 
   Flame
 } from "lucide-react";
+
 import { PageHeader } from "@/components/shared/page-header";
 import { MetricTile } from "@/components/shared/metric-tile";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +41,7 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => setTab("overview")}
-              className={`flex-1 rounded-[10px] py-2 text-xs font-bold transition-all ${
+              className={`flex-1 rounded-[10px] py-2 text-[10px] sm:text-[11px] font-bold tracking-tight transition-all ${
                 tab === "overview"
                   ? "bg-white text-black shadow-sm"
                   : "text-neutral-400 hover:text-neutral-700"
@@ -53,7 +52,7 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => setTab("analytics")}
-              className={`flex-1 rounded-[10px] py-2 text-xs font-bold transition-all ${
+              className={`flex-1 rounded-[10px] py-2 text-[10px] sm:text-[11px] font-bold tracking-tight transition-all ${
                 tab === "analytics"
                   ? "bg-white text-black shadow-sm"
                   : "text-neutral-400 hover:text-neutral-700"
@@ -64,7 +63,7 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => setTab("history")}
-              className={`flex-1 rounded-[10px] py-2 text-xs font-bold transition-all ${
+              className={`flex-1 rounded-[10px] py-2 text-[10px] sm:text-[11px] font-bold tracking-tight transition-all ${
                 tab === "history"
                   ? "bg-white text-black shadow-sm"
                   : "text-neutral-400 hover:text-neutral-700"
@@ -77,43 +76,31 @@ export function DashboardPage() {
       </Card>
 
       {tab === "overview" && (
-        <div className="space-y-6">
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-4">
+          <div className="grid gap-3 grid-cols-2">
             <MetricTile
               label="Weekly target"
               value={data.profile.weeklySessions ? `${data.profile.weeklySessions} sessions` : "Not set"}
-              detail={data.profile.goal ? `Goal: ${data.profile.goal}` : "Add your training goal in Settings."}
+              detail={data.profile.goal ? `Goal: ${data.profile.goal}` : "Set in Settings"}
               icon={<CalendarClock className="h-5 w-5 text-neutral-800" />}
             />
             <MetricTile
               label="Saved splits"
               value={`${data.plans.length}`}
-              detail={data.plans[0] ? `Latest update ${formatDate(data.plans[0].updatedAt)}` : "Create your first structure."}
+              detail={data.plans[0] ? `Updated ${formatDate(data.plans[0].updatedAt)}` : "No splits yet"}
               icon={<Activity className="h-5 w-5 text-neutral-800" />}
-            />
-            <MetricTile
-              label="PR board"
-              value={`${data.records.length}`}
-              detail={data.records[0] ? `Latest record ${formatDate(data.records[0].achievedAt)}` : "No records logged."}
-              icon={<Trophy className="h-5 w-5 text-neutral-800" />}
-            />
-            <MetricTile
-              label="Coach memory"
-              value={`${data.coachMessages.length}`}
-              detail={data.coachMessages.length ? "Persisted telemetry" : "Chat to gain insights."}
-              icon={<BrainCircuit className="h-5 w-5 text-neutral-800" />}
             />
           </div>
 
           <Card className="p-4 md:p-6">
             <div className="flex items-center gap-2 text-neutral-900">
               <Flame className="h-4 w-4 text-black" />
-              <CardTitle className="text-base font-semibold">Workout Consistency</CardTitle>
+              <CardTitle className="text-sm font-semibold">Consistency</CardTitle>
             </div>
-            <CardDescription className="mt-1">
-              Tracking set volume and logged training logs over the past 365 days.
+            <CardDescription className="mt-1 text-xs">
+              Logged training sessions over the past 365 days.
             </CardDescription>
-            <div className="mt-6">
+            <div className="mt-4">
               <WorkoutHeatmap sessions={data.sessions} />
             </div>
           </Card>
