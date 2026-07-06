@@ -1,4 +1,4 @@
-const CACHE_NAME = "kratos-v1";
+const CACHE_NAME = "kratos-v4";
 const STATIC_ASSETS = [
   "/",
   "/dashboard",
@@ -6,15 +6,21 @@ const STATIC_ASSETS = [
   "/favicon.svg",
 ];
 
-// Install Event
+// Install Event — do NOT skip waiting automatically; let the user trigger it
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Allow caching to fail gracefully on individual assets
-      return cache.addAll(STATIC_ASSETS).catch(err => console.warn("PWA: Pre-caching static assets failed", err));
+      return cache.addAll(STATIC_ASSETS).catch(err => console.warn("PWA: Pre-caching failed", err));
     })
   );
-  self.skipWaiting();
+  // Do NOT call self.skipWaiting() here — we want the update banner to control this
+});
+
+// Message listener — React app sends SKIP_WAITING when user taps "Update"
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // Activate Event
