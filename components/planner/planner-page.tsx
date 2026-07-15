@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { 
   Plus, Trash2, Loader2, Dumbbell, Sparkles, Clock, Target, 
   CalendarDays, Play, ChevronRight, CheckCircle2, History,
-  TrendingUp, Award, Calendar, AlertCircle, Info, X, Edit3, ClipboardList
+  Award, Calendar, AlertCircle, Info, X, Edit3, ClipboardList,
+  Save, ArrowLeft
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { WeeklyPlan, WeeklyPlanDay, WeeklyPlanItem, WorkoutSession, WorkoutSessionItem, WorkoutSet } from "@/lib/types";
-import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Combobox } from "@/components/ui/combobox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PlanAnalysis } from "./plan-analysis";
 import { useData } from "@/components/shared/data-provider";
@@ -21,6 +24,11 @@ import { cn } from "@/lib/utils";
 const randomId = () => Math.random().toString(36).substring(2, 15);
 const createDraftId = () => `draft_${randomId()}`;
 const isPersistedId = (id: string) => Boolean(id) && !id.startsWith("draft_");
+
+const AVAILABLE_MUSCLES = [
+  "Chest", "Upper Back", "Lats", "Shoulders", "Triceps", "Biceps", 
+  "Forearms", "Quads", "Hamstrings", "Glutes", "Calves", "Abs", "Core", "Cardio", "Active Recovery"
+];
 
 const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
   id: createDraftId(),
@@ -62,7 +70,7 @@ export function PlannerPage() {
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
 
-  // States for active operations (to be fully fleshed out in subsequent commits)
+  // States for active operations
   const [isEditingSplit, setIsEditingSplit] = useState(false);
   const [activeDraftPlan, setActiveDraftPlan] = useState<WeeklyPlan | null>(null);
   const [draftSession, setDraftSession] = useState<Partial<WorkoutSession> | null>(null);
@@ -88,6 +96,14 @@ export function PlannerPage() {
     if (!selectedPlan) return null;
     return selectedPlan.days.find((d) => d.id === activeDayId) || selectedPlan.days[0];
   }, [selectedPlan, activeDayId]);
+
+  // COMBINED EXERCISE LIST FOR COMBOBOX OPTIONS
+  const exerciseOptions = useMemo(() => {
+    return (data.exercises || []).map((e) => ({
+      value: e.id,
+      label: `${e.name} (${e.category})`,
+    }));
+  }, [data.exercises]);
 
   const handleDeletePlan = async (id: string) => {
     if (!isPersistedId(id)) {
@@ -134,7 +150,6 @@ export function PlannerPage() {
       items: [],
     };
     setDraftSession(session);
-    // Temp navigation placeholder for active session logger view
     alert("Starting Quick Workout! Logging features will be enabled in the logger commit.");
   };
 
@@ -163,8 +178,127 @@ export function PlannerPage() {
       })),
     };
     setDraftSession(session);
-    // Temp navigation placeholder for active session logger view
     alert(`Starting ${plan.name} - ${day.title}! Logging features will be enabled in the logger commit.`);
+  };
+
+  // ==========================================
+  // PLAN EDITOR ACTION HANDLERS
+  // ==========================================
+  const updateDraftPlan = (updater: (draft: WeeklyPlan) => WeeklyPlan) => {
+    if (!activeDraftPlan) return;
+    setActiveDraftPlan(updater(activeDraftPlan));
+  };
+
+  const updateDraftDay = (dayId: string, updater: (day: WeeklyPlanDay) => WeeklyPlanDay) => {
+    updateDraftPlan((draft) => ({
+      ...draft,
+      days: draft.days.map((d) => (d.id === dayId ? updater(d) : d)),
+    }));
+  };
+
+  const addWorkoutDay = () => {
+    const newDay: WeeklyPlanDay = {
+      id: `draft-day-${randomId()}`,
+      day: activeDraftPlan?.days.length ?? 0,
+      title: `Day ${(activeDraftPlan?.days.length ?? 0) + 1}`,
+      focus: "Focus Area",
+      warmup: "",
+      sessionGoal: "",
+      targetMuscles: [],
+      notes: "",
+      items: [],
+    };
+    updateDraftPlan((draft) => ({
+      ...draft,
+      days: [...draft.days, newDay],
+    }));
+  };
+
+  const removeWorkoutDay = (dayId: string) => {
+    updateDraftPlan((draft) => ({
+      ...draft,
+      days: draft.days.filter((d) => d.id !== dayId).map((d, index) => ({ ...d, day: index })),
+    }));
+  };
+
+  const addExerciseToDay = (dayId: string, exerciseId: string) => {
+    const exercise = data.exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return;
+
+    const newItem: WeeklyPlanItem = {
+      id: createDraftId(),
+      exerciseId,
+      sets: 3,
+      reps: "8-12",
+      restSeconds: exercise.defaultRestSeconds || 90,
+      targetLoad: "",
+      targetRpe: "",
+      prGoal: "",
+      notes: "",
+      order: 0,
+    };
+
+    updateDraftDay(dayId, (day) => ({
+      ...day,
+      items: [...day.items, newItem].map((item, idx) => ({ ...item, order: idx })),
+    }));
+  };
+
+  const removeExerciseFromDay = (dayId: string, itemId: string) => {
+    updateDraftDay(dayId, (day) => ({
+      ...day,
+      items: day.items.filter((item) => item.id !== itemId).map((item, idx) => ({ ...item, order: idx })),
+    }));
+  };
+
+  const updateExerciseField = (dayId: string, itemId: string, field: keyof WeeklyPlanItem, value: any) => {
+    updateDraftDay(dayId, (day) => ({
+      ...day,
+      items: day.items.map((item) => (item.id === itemId ? { ...item, [field]: value } : item)),
+    }));
+  };
+
+  const toggleMuscleInDay = (dayId: string, muscle: string) => {
+    updateDraftDay(dayId, (day) => {
+      const activeMuscles = day.targetMuscles || [];
+      const exists = activeMuscles.includes(muscle);
+      return {
+        ...day,
+        targetMuscles: exists 
+          ? activeMuscles.filter((m) => m !== muscle)
+          : [...activeMuscles, muscle],
+      };
+    });
+  };
+
+  const handleSavePlan = async () => {
+    if (!activeDraftPlan) return;
+    setSaving(true);
+    try {
+      const isEdit = isPersistedId(activeDraftPlan.id);
+      const response = await fetch("/api/plans", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(activeDraftPlan),
+      });
+
+      if (!response.ok) throw new Error("Could not save the plan");
+      const res = await response.json();
+      
+      setPlans((prev) => {
+        const filtered = prev.filter((p) => p.id !== activeDraftPlan.id);
+        return [res.plan, ...filtered];
+      });
+      setSelectedPlanId(res.plan.id);
+      setIsEditingSplit(false);
+      setActiveDraftPlan(null);
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Error saving split plan");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!isClient) {
@@ -175,6 +309,233 @@ export function PlannerPage() {
     );
   }
 
+  // ==========================================
+  // RENDER INTERFACE 1: SPLIT EDITOR SCREEN
+  // ==========================================
+  if (isEditingSplit && activeDraftPlan) {
+    return (
+      <div className="mx-auto max-w-xl pb-16 space-y-6">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setIsEditingSplit(false);
+              setActiveDraftPlan(null);
+            }}
+            className="rounded-xl px-2 text-neutral-500 hover:text-black"
+          >
+            <ArrowLeft className="h-4.5 w-4.5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Configure split</h1>
+            <p className="text-[10px] text-neutral-400">Assemble routine parameters</p>
+          </div>
+        </div>
+
+        {/* Global info cards */}
+        <Card className="p-4.5 border border-black/5 rounded-2xl bg-white space-y-3.5">
+          <div className="space-y-1">
+            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Split Name</span>
+            <Input
+              value={activeDraftPlan.name}
+              onChange={(e) => updateDraftPlan((draft) => ({ ...draft, name: e.target.value }))}
+              placeholder="e.g. 4-Day Hypertrophy Push/Pull"
+              className="h-9 rounded-xl border border-black/[0.04] bg-neutral-50 px-3 text-xs font-semibold focus-visible:ring-0 focus-visible:bg-neutral-100"
+            />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Description / Goal</span>
+            <Textarea
+              value={activeDraftPlan.notes}
+              onChange={(e) => updateDraftPlan((draft) => ({ ...draft, notes: e.target.value }))}
+              placeholder="Primary stimulus target, cardio schedule, etc."
+              rows={2}
+              className="rounded-xl border border-black/[0.04] bg-neutral-50 p-3 text-xs font-medium focus-visible:ring-0 focus-visible:bg-neutral-100 resize-none"
+            />
+          </div>
+        </Card>
+
+        {/* Days List */}
+        <div className="space-y-5">
+          {activeDraftPlan.days.map((day, dayIndex) => (
+            <Card key={day.id} className="p-4 border border-black/5 rounded-2xl bg-white space-y-4 relative">
+              <div className="flex justify-between items-center pb-2.5 border-b border-neutral-50">
+                <div className="flex items-center gap-2">
+                  <span className="h-5 w-5 bg-black text-white rounded-md flex items-center justify-center text-[10px] font-bold">
+                    {dayIndex + 1}
+                  </span>
+                  <Input
+                    value={day.title}
+                    onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, title: e.target.value }))}
+                    className="h-7 w-32 border-none bg-transparent font-bold text-xs p-0 focus-visible:ring-0"
+                  />
+                </div>
+                
+                <button
+                  onClick={() => removeWorkoutDay(day.id)}
+                  disabled={activeDraftPlan.days.length <= 1}
+                  className="p-1 text-neutral-300 hover:text-red-500 disabled:opacity-30 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Day settings grid */}
+              <div className="grid grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Focus Target</span>
+                  <Input
+                    value={day.focus}
+                    onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, focus: e.target.value }))}
+                    placeholder="e.g. Chest & Shoulders"
+                    className="h-8 rounded-lg border border-black/[0.03] bg-neutral-50/50 px-2.5 text-[11px] font-semibold focus-visible:ring-0"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Warmup Notes</span>
+                  <Input
+                    value={day.warmup}
+                    onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, warmup: e.target.value }))}
+                    placeholder="e.g. 5m incline treadmill, arm circles"
+                    className="h-8 rounded-lg border border-black/[0.03] bg-neutral-50/50 px-2.5 text-[11px] font-medium focus-visible:ring-0"
+                  />
+                </div>
+              </div>
+
+              {/* Target muscles list toggles */}
+              <div className="space-y-1.5">
+                <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Target Muscles</span>
+                <div className="flex flex-wrap gap-1">
+                  {AVAILABLE_MUSCLES.map((muscle) => {
+                    const isSelected = (day.targetMuscles || []).includes(muscle);
+                    return (
+                      <button
+                        type="button"
+                        key={muscle}
+                        onClick={() => toggleMuscleInDay(day.id, muscle)}
+                        className={cn(
+                          "px-2 py-0.5 rounded-full text-[9px] font-bold transition-all border",
+                          isSelected
+                            ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                            : "bg-neutral-50 text-neutral-400 border-neutral-100 hover:text-neutral-700"
+                        )}
+                      >
+                        {muscle}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Exercises within the day */}
+              <div className="space-y-2.5 pt-3.5 border-t border-neutral-50">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Exercises</span>
+                </div>
+
+                {day.items.length > 0 ? (
+                  <div className="space-y-2">
+                    {day.items.map((item) => {
+                      const exerciseName = data.exercises.find((e) => e.id === item.exerciseId)?.name || item.exerciseId;
+                      return (
+                        <div key={item.id} className="p-3 bg-neutral-50/50 border border-neutral-100 rounded-xl space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold text-neutral-800">{exerciseName}</span>
+                            <button
+                              onClick={() => removeExerciseFromDay(day.id, item.id)}
+                              className="text-neutral-300 hover:text-neutral-500"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-1.5">
+                            <div className="space-y-0.5">
+                              <span className="text-[8px] font-bold text-neutral-400 uppercase">Sets</span>
+                              <Input
+                                type="number"
+                                value={item.sets}
+                                onChange={(e) => updateExerciseField(day.id, item.id, "sets", parseInt(e.target.value) || 1)}
+                                className="h-7 text-center rounded bg-white text-[10px] p-0 font-bold"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="text-[8px] font-bold text-neutral-400 uppercase">Reps</span>
+                              <Input
+                                value={item.reps}
+                                onChange={(e) => updateExerciseField(day.id, item.id, "reps", e.target.value)}
+                                className="h-7 text-center rounded bg-white text-[10px] p-0 font-bold"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="text-[8px] font-bold text-neutral-400 uppercase">Rest (s)</span>
+                              <Input
+                                type="number"
+                                value={item.restSeconds}
+                                onChange={(e) => updateExerciseField(day.id, item.id, "restSeconds", parseInt(e.target.value) || 0)}
+                                className="h-7 text-center rounded bg-white text-[10px] p-0 font-bold"
+                              />
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="text-[8px] font-bold text-neutral-400 uppercase">Target Load</span>
+                              <Input
+                                value={item.targetLoad}
+                                onChange={(e) => updateExerciseField(day.id, item.id, "targetLoad", e.target.value)}
+                                placeholder="e.g. 60kg"
+                                className="h-7 text-center rounded bg-white text-[10px] p-0.5 font-bold"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-neutral-400 italic">No exercises added. Add one below.</p>
+                )}
+
+                {/* Combobox picker to add exercises */}
+                <div className="pt-2">
+                  <Combobox
+                    options={exerciseOptions}
+                    value=""
+                    placeholder="Search & Add Exercise..."
+                    onValueChange={(val) => {
+                      if (val) addExerciseToDay(day.id, val);
+                    }}
+                  />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Action row at bottom */}
+        <div className="flex gap-2">
+          <Button
+            onClick={addWorkoutDay}
+            variant="outline"
+            className="flex-1 rounded-2xl h-11 text-xs font-bold border-neutral-200"
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add split day
+          </Button>
+          <Button
+            onClick={handleSavePlan}
+            disabled={saving}
+            className="flex-1 rounded-2xl h-11 bg-black text-white hover:bg-neutral-800 text-xs font-bold"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+            Save split plan
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER INTERFACE 2: MAIN WORKOUT HUB
+  // ==========================================
   return (
     <div className="mx-auto max-w-md md:max-w-4xl px-2 pb-16 space-y-6">
       
