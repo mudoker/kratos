@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { 
   Plus, Trash2, Loader2, Dumbbell, Sparkles, Clock, Target, 
   CalendarDays, Play, ChevronRight, CheckCircle2, History,
@@ -45,6 +45,14 @@ const SUPERSET_COLORS: Record<string, string> = {
   F: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
 };
 
+const EFFORT_OPTIONS = [
+  { emoji: "🌟", value: "Relaxed", desc: "Easy RPE 1-3" },
+  { emoji: "💪", value: "Moderate", desc: "Solid RPE 4-6" },
+  { emoji: "🔥", value: "Challenging", desc: "Hard RPE 7-8" },
+  { emoji: "🥵", value: "Exhausting", desc: "Max RPE 9-10" },
+  { emoji: "💀", value: "Failure", desc: "RPE 10+ / PR push" },
+];
+
 const blankPlan = (userId: string, name = "New Plan"): WeeklyPlan => ({
   id: createDraftId(),
   userId,
@@ -73,12 +81,12 @@ const deserializeExtraFields = (prGoal: string) => {
   try {
     const parsed = JSON.parse(prGoal);
     return {
-      tags: parsed.tags || [],
-      supersetGroup: parsed.supersetGroup || "",
+      tags: (parsed.tags || []) as string[],
+      supersetGroup: (parsed.supersetGroup || "") as string,
     };
   } catch (e) {
     return {
-      tags: [],
+      tags: [] as string[],
       supersetGroup: "",
     };
   }
@@ -100,6 +108,28 @@ const deserializeSetArray = (setsCount: number, repsStr: string, loadStr: string
     });
   }
   return list;
+};
+
+const playBeep = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (e) {
+    console.warn("Web Audio beep failed:", e);
+  }
 };
 
 export function PlannerPage() {
@@ -128,8 +158,25 @@ export function PlannerPage() {
   // States for active operations
   const [isEditingSplit, setIsEditingSplit] = useState(false);
   const [activeDraftPlan, setActiveDraftPlan] = useState<WeeklyPlan | null>(null);
-  const [draftSession, setDraftSession] = useState<Partial<WorkoutSession> | null>(null);
   
+  // Active Workout session logger states
+  const [draftSession, setDraftSession] = useState<Partial<WorkoutSession> | null>(null);
+  const [completedSets, setCompletedSets] = useState<Record<string, boolean>>({});
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isFinishingWorkout, setIsFinishingWorkout] = useState(false);
+  const [feedbackNotes, setFeedbackNotes] = useState("");
+  const [selectedEffort, setSelectedEffort] = useState("Moderate");
+
+  // Rest Timer states
+  const [restSecondsLeft, setRestSecondsLeft] = useState<number | null>(null);
+  const [restTimerDuration, setRestTimerDuration] = useState<number>(90);
+  const [restTimerIsPaused, setRestTimerIsPaused] = useState(false);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isRestTimerExpanded, setIsRestTimerExpanded] = useState(false);
+
+  // Expanded exercises in workout logger
+  const [loggerExpandedExercises, setLoggerExpandedExercises] = useState<Record<string, boolean>>({});
+
   // Expanded state for exercise cards inside the template editor
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
 
@@ -148,120 +195,23 @@ export function PlannerPage() {
   const [saving, setSaving] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-    setPlans(data.plans || []);
-    setSessions(data.sessions || []);
-    setExercises(data.exercises || []);
-
-    // Load favorites from local storage
-    const favs = localStorage.getItem("kratos_favorite_exercises");
-    if (favs) {
-      try {
-        setFavoriteExerciseIds(JSON.parse(favs));
-      } catch (_) {}
-    }
-    
-    // Check if active session exists in localStorage (autosave restore)
-    const saved = localStorage.getItem("kratos_active_session");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setDraftSession(parsed);
-      } catch (e) {
-        console.warn("Could not restore active session", e);
-      }
-    }
-  }, [data.plans, data.sessions, data.exercises]);
-
-  const toggleFavoriteExercise = (id: string) => {
-    const nextFavs = favoriteExerciseIds.includes(id)
-      ? favoriteExerciseIds.filter((fid) => fid !== id)
-      : [...favoriteExerciseIds, id];
-    setFavoriteExerciseIds(nextFavs);
-    localStorage.setItem("kratos_favorite_exercises", JSON.stringify(nextFavs));
-  };
-
-  const handleDeletePlan = async (id: string) => {
-    if (!isPersistedId(id)) {
-      setPlans((prev) => prev.filter((p) => p.id !== id));
-      setDeletingPlanId(null);
-      return;
-    }
-    setSaving(true);
-    try {
-      await fetch(`/api/plans/${id}`, { method: "DELETE" });
-      setPlans((prev) => prev.filter((p) => p.id !== id));
-      router.refresh();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-      setDeletingPlanId(null);
-    }
-  };
-
-  const handleDeleteSession = async (id: string) => {
-    setSaving(true);
-    try {
-      await fetch(`/api/workouts?id=${id}`, { method: "DELETE" });
-      setSessions((prev) => prev.filter((s) => s.id !== id));
-      router.refresh();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-      setDeletingSessionId(null);
-      setViewingSession(null);
-    }
-  };
-
-  const handleDuplicatePlan = (plan: WeeklyPlan) => {
-    const duplicated: WeeklyPlan = {
-      ...plan,
-      id: createDraftId(),
-      name: `${plan.name} (Copy)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      days: plan.days.map((day) => ({
-        ...day,
-        id: `draft-day-${randomId()}`,
-        items: day.items.map((item) => ({
-          ...item,
-          id: createDraftId(),
-        })),
-      })),
-    };
-    setPlans((prev) => [duplicated, ...prev]);
-  };
-
-  // Filtered and Sorted Plans List
-  const filteredPlans = useMemo(() => {
-    const list = plans.filter((p) => {
-      const nameMatch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const notesMatch = p.notes.toLowerCase().includes(searchQuery.toLowerCase());
-      return nameMatch || notesMatch;
-    });
-
-    if (sortBy === "alphabetical") {
-      return [...list].sort((a, b) => a.name.localeCompare(b.name));
-    }
-    if (sortBy === "exercises") {
-      return [...list].sort((a, b) => {
-        const countA = a.days.reduce((acc, d) => acc + d.items.length, 0);
-        const countB = b.days.reduce((acc, d) => acc + d.items.length, 0);
-        return countB - countA;
-      });
-    }
-    return [...list].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  }, [plans, searchQuery, sortBy]);
+  // Focus ref for auto-scrolling
+  const activeLoggerRowRef = useRef<HTMLDivElement | null>(null);
 
   // ==========================================
-  // PLAN EDITOR ACTION HANDLERS
+  // PLAN EDITOR ACTIONS AND HELPERS
   // ==========================================
   const updateDraftPlan = (updater: (draft: WeeklyPlan) => WeeklyPlan) => {
     if (!activeDraftPlan) return;
     setActiveDraftPlan(updater(activeDraftPlan));
+  };
+
+  const updateDraftPlanName = (val: string) => {
+    updateDraftPlan((draft) => ({ ...draft, name: val }));
+  };
+
+  const updateDraftPlanNotes = (val: string) => {
+    updateDraftPlan((draft) => ({ ...draft, notes: val }));
   };
 
   const updateDraftDay = (dayId: string, updater: (day: WeeklyPlanDay) => WeeklyPlanDay) => {
@@ -496,19 +446,435 @@ export function PlannerPage() {
     }
   };
 
-  // Filtered exercises for the Picker list
+  const toggleFavoriteExercise = (id: string) => {
+    const nextFavs = favoriteExerciseIds.includes(id)
+      ? favoriteExerciseIds.filter((fid) => fid !== id)
+      : [...favoriteExerciseIds, id];
+    setFavoriteExerciseIds(nextFavs);
+    localStorage.setItem("kratos_favorite_exercises", JSON.stringify(nextFavs));
+  };
+
+  const handleDuplicatePlan = (plan: WeeklyPlan) => {
+    const duplicated: WeeklyPlan = {
+      ...plan,
+      id: createDraftId(),
+      name: `${plan.name} (Copy)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      days: plan.days.map((day) => ({
+        ...day,
+        id: `draft-day-${randomId()}`,
+        items: day.items.map((item) => ({
+          ...item,
+          id: createDraftId(),
+        })),
+      })),
+    };
+    setPlans((prev) => [duplicated, ...prev]);
+  };
+
+  const handleDeletePlan = async (id: string) => {
+    if (!isPersistedId(id)) {
+      setPlans((prev) => prev.filter((p) => p.id !== id));
+      setDeletingPlanId(null);
+      return;
+    }
+    setSaving(true);
+    try {
+      await fetch(`/api/plans/${id}`, { method: "DELETE" });
+      setPlans((prev) => prev.filter((p) => p.id !== id));
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+      setDeletingPlanId(null);
+    }
+  };
+
+  const handleDeleteSession = async (id: string) => {
+    setSaving(true);
+    try {
+      await fetch(`/api/workouts?id=${id}`, { method: "DELETE" });
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+      setDeletingSessionId(null);
+      setViewingSession(null);
+    }
+  };
+
+  // ==========================================
+  // METRICS AND HISTORY RETRIEVALS
+  // ==========================================
+  const getExercisePR = (exerciseId: string) => {
+    const record = data.records.find((r) => r.exerciseId === exerciseId);
+    if (record) {
+      return {
+        weight: String(record.value),
+        reps: String(record.reps),
+      };
+    }
+    
+    let bestWeight = 0;
+    let bestReps = 0;
+    sessions.forEach((s) => {
+      s.items.forEach((item) => {
+        if (item.exerciseId === exerciseId) {
+          item.sets.forEach((set) => {
+            const w = parseFloat(set.weight) || 0;
+            const r = parseInt(set.reps) || 0;
+            if (w > bestWeight || (w === bestWeight && r > bestReps)) {
+              bestWeight = w;
+              bestReps = r;
+            }
+          });
+        }
+      });
+    });
+
+    if (bestWeight > 0) {
+      return {
+        weight: String(bestWeight),
+        reps: String(bestReps),
+      };
+    }
+    return null;
+  };
+
+  const getPreviousSessionPerformance = (exerciseId: string) => {
+    const latest = [...sessions]
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+      .find((s) => s.items.some((item) => item.exerciseId === exerciseId));
+    
+    if (latest) {
+      const item = latest.items.find((i) => i.exerciseId === exerciseId);
+      return {
+        date: new Date(latest.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        sets: item?.sets || [],
+      };
+    }
+    return null;
+  };
+
+  const checkIsNewPR = (exerciseId: string, weightStr: string, repsStr: string) => {
+    const w = parseFloat(weightStr) || 0;
+    const r = parseInt(repsStr) || 0;
+    if (w <= 0 || r <= 0) return false;
+    
+    const pr = getExercisePR(exerciseId);
+    if (!pr) return true;
+    
+    const prW = parseFloat(pr.weight) || 0;
+    const prR = parseInt(pr.reps) || 0;
+    
+    return w > prW || (w === prW && r > prR);
+  };
+
+  const wasCompletedPreviously = (exerciseId: string, weight: string, reps: string) => {
+    const pr = getExercisePR(exerciseId);
+    if (!pr) return false;
+    return parseFloat(weight) === parseFloat(pr.weight) && parseInt(reps) === parseInt(pr.reps);
+  };
+
+  const formatTime = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return [
+      h > 0 ? String(h).padStart(2, "0") : null,
+      String(m).padStart(2, "0"),
+      String(s).padStart(2, "0"),
+    ].filter(Boolean).join(":");
+  };
+
+  // ==========================================
+  // ACTIVE WORKOUT SESSIONS HANDLERS
+  // ==========================================
+  const startEmptyWorkout = () => {
+    const session: Partial<WorkoutSession> = {
+      id: createDraftId(),
+      startedAt: new Date().toISOString(),
+      endedAt: null,
+      day: 0,
+      title: "Quick Workout",
+      effort: "",
+      notes: "",
+      items: [],
+    };
+    setDraftSession(session);
+    setElapsedTime(0);
+    setRestSecondsLeft(null);
+    setIsFinishingWorkout(false);
+    setFeedbackNotes("");
+    setSelectedEffort("Moderate");
+    setCompletedSets({});
+  };
+
+  const startWorkoutFromDay = (day: WeeklyPlanDay, plan: WeeklyPlan) => {
+    const session: Partial<WorkoutSession> = {
+      id: createDraftId(),
+      planId: plan.id,
+      planDayId: day.id,
+      startedAt: new Date().toISOString(),
+      endedAt: null,
+      day: day.day,
+      title: `${plan.name} • ${day.title}`,
+      effort: "",
+      notes: day.notes || "",
+      items: day.items.map((item, order) => {
+        const setList = deserializeSetArray(item.sets, item.reps, item.targetLoad);
+        return {
+          id: item.id,
+          exerciseId: item.exerciseId,
+          exerciseName: exercises.find((e) => e.id === item.exerciseId)?.name || item.exerciseId,
+          plannedSets: item.sets,
+          reps: item.reps,
+          restSeconds: item.restSeconds,
+          targetLoad: item.targetLoad,
+          targetRpe: item.targetRpe,
+          sets: setList.map((s) => ({
+            weight: s.weight,
+            reps: s.reps,
+          })),
+          notes: item.notes,
+          order,
+        };
+      }),
+    };
+    setDraftSession(session);
+    setElapsedTime(0);
+    setRestSecondsLeft(null);
+    setIsFinishingWorkout(false);
+    setFeedbackNotes(day.notes || "");
+    setSelectedEffort("Moderate");
+    setCompletedSets({});
+
+    if (session.items && session.items.length > 0) {
+      setLoggerExpandedExercises({ [session.items[0].id]: true });
+    }
+  };
+
+  const handleToggleSetComplete = (itemIndex: number, setIndex: number) => {
+    if (!draftSession || !draftSession.items) return;
+
+    const currentItem = draftSession.items[itemIndex];
+    const key = `${currentItem.id}-${setIndex}`;
+    const wasCompleted = Boolean(completedSets[key]);
+
+    setCompletedSets((prev) => {
+      const next = { ...prev, [key]: !wasCompleted };
+      localStorage.setItem("kratos_completed_sets", JSON.stringify(next));
+      return next;
+    });
+
+    if (!wasCompleted) {
+      if (isAudioEnabled) playBeep();
+
+      const restSecs = currentItem.restSeconds || 90;
+      setRestTimerDuration(restSecs);
+      setRestSecondsLeft(restSecs);
+      setRestTimerIsPaused(false);
+
+      const allSetsDone = currentItem.sets.every((_, sIdx) => {
+        const checkKey = `${currentItem.id}-${sIdx}`;
+        return sIdx === setIndex ? true : Boolean(completedSets[checkKey]);
+      });
+
+      if (allSetsDone) {
+        setLoggerExpandedExercises((prev) => ({
+          ...prev,
+          [currentItem.id]: false,
+        }));
+        
+        const nextIncompleteIdx = draftSession.items.findIndex((itm, idx) => {
+          if (idx <= itemIndex) return false;
+          return itm.sets.some((_, sIdx) => !completedSets[`${itm.id}-${sIdx}`]);
+        });
+
+        if (nextIncompleteIdx !== -1) {
+          const nextItem = draftSession.items[nextIncompleteIdx];
+          setLoggerExpandedExercises((prev) => ({
+            ...prev,
+            [nextItem.id]: true,
+          }));
+          
+          setTimeout(() => {
+            if (activeLoggerRowRef.current) {
+              activeLoggerRowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 150);
+        }
+      }
+    }
+  };
+
+  const handleUpdateActiveSetField = (itemIndex: number, setIndex: number, field: "weight" | "reps", value: string) => {
+    if (!draftSession || !draftSession.items) return;
+
+    const newItems = [...draftSession.items];
+    const currentSets = [...newItems[itemIndex].sets];
+    currentSets[setIndex] = {
+      ...currentSets[setIndex],
+      [field]: value,
+    };
+    newItems[itemIndex].sets = currentSets;
+
+    setDraftSession((prev) => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+
+  const handleAddSetActiveSession = (itemIndex: number) => {
+    if (!draftSession || !draftSession.items) return;
+    
+    const newItems = [...draftSession.items];
+    const currentItem = newItems[itemIndex];
+    currentItem.sets = [...currentItem.sets, { weight: "", reps: "" }];
+    
+    setDraftSession((prev) => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+
+  const handleRemoveSetActiveSession = (itemIndex: number, setIndex: number) => {
+    if (!draftSession || !draftSession.items) return;
+    
+    const newItems = [...draftSession.items];
+    const currentItem = newItems[itemIndex];
+    if (currentItem.sets.length <= 1) return;
+    
+    currentItem.sets = currentItem.sets.filter((_, idx) => idx !== setIndex);
+    
+    // Clear completed key for safety
+    const key = `${currentItem.id}-${setIndex}`;
+    setCompletedSets((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      localStorage.setItem("kratos_completed_sets", JSON.stringify(next));
+      return next;
+    });
+
+    setDraftSession((prev) => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+
+  const addExerciseToActiveSession = (exerciseId: string) => {
+    if (!draftSession || !draftSession.items) return;
+    const exercise = exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return;
+
+    const newItem: WorkoutSessionItem = {
+      id: createDraftId(),
+      exerciseId,
+      exerciseName: exercise.name,
+      plannedSets: 3,
+      reps: "8,8,8",
+      restSeconds: exercise.defaultRestSeconds || 90,
+      targetLoad: "0,0,0",
+      targetRpe: "",
+      sets: Array.from({ length: 3 }).map(() => ({ weight: "", reps: "" })),
+      notes: "",
+      order: draftSession.items.length,
+    };
+
+    setDraftSession((prev) => ({
+      ...prev,
+      items: [...(prev?.items || []), newItem],
+    }));
+
+    setLoggerExpandedExercises((prev) => ({
+      ...prev,
+      [newItem.id]: true,
+    }));
+  };
+
+  const handleSaveWorkoutSession = async () => {
+    if (!draftSession) return;
+    setSaving(true);
+    try {
+      const isEdit = Boolean(draftSession.id && isPersistedId(draftSession.id));
+      
+      const cleanedItems = (draftSession.items || []).map((item) => ({
+        ...item,
+        sets: item.sets.map((set: any) => ({
+          weight: set.weight,
+          reps: set.reps,
+        })),
+      }));
+
+      const payloadBody = {
+        ...draftSession,
+        effort: selectedEffort,
+        notes: feedbackNotes,
+        endedAt: new Date().toISOString(),
+        items: cleanedItems,
+      };
+
+      const response = await fetch("/api/workouts", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloadBody),
+      });
+
+      if (!response.ok) throw new Error("Could not save workout session");
+      const res = await response.json();
+      
+      setSessions((current) => [res.session, ...current.filter((s) => s.id !== res.session.id)]);
+      setDraftSession(null);
+      setRestSecondsLeft(null);
+      setIsFinishingWorkout(false);
+      localStorage.removeItem("kratos_active_session");
+      localStorage.removeItem("kratos_completed_sets");
+      router.refresh();
+      setActiveTab("history");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving workout session");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ==========================================
+  // SEARCH FILTER MEMOS
+  // ==========================================
+  const filteredPlans = useMemo(() => {
+    const list = plans.filter((p) => {
+      const nameMatch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const notesMatch = p.notes.toLowerCase().includes(searchQuery.toLowerCase());
+      return nameMatch || notesMatch;
+    });
+
+    if (sortBy === "alphabetical") {
+      return [...list].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    if (sortBy === "exercises") {
+      return [...list].sort((a, b) => {
+        const countA = a.days.reduce((acc, d) => acc + d.items.length, 0);
+        const countB = b.days.reduce((acc, d) => acc + d.items.length, 0);
+        return countB - countA;
+      });
+    }
+    return [...list].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  }, [plans, searchQuery, sortBy]);
+
   const filteredPickerExercises = useMemo(() => {
     let list = exercises;
     
-    // Filter by tab
     if (pickerFilter === "favorites") {
       list = list.filter((e) => favoriteExerciseIds.includes(e.id));
     } else if (pickerFilter === "recent") {
-      // Show first 15 default / recently used
       list = list.slice(0, 15);
     }
 
-    // Search query
     if (pickerSearchQuery.trim()) {
       list = list.filter((e) => 
         e.name.toLowerCase().includes(pickerSearchQuery.toLowerCase()) || 
@@ -519,6 +885,84 @@ export function PlannerPage() {
     return list;
   }, [exercises, favoriteExerciseIds, pickerFilter, pickerSearchQuery]);
 
+  // ==========================================
+  // EFFECTS
+  // ==========================================
+  useEffect(() => {
+    setIsClient(true);
+    setPlans(data.plans || []);
+    setSessions(data.sessions || []);
+    setExercises(data.exercises || []);
+
+    const favs = localStorage.getItem("kratos_favorite_exercises");
+    if (favs) {
+      try {
+        setFavoriteExerciseIds(JSON.parse(favs));
+      } catch (_) {}
+    }
+    
+    const saved = localStorage.getItem("kratos_active_session");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setDraftSession(parsed);
+        setActiveTab("session");
+      } catch (e) {
+        console.warn("Could not restore active session", e);
+      }
+    }
+
+    const savedCompleted = localStorage.getItem("kratos_completed_sets");
+    if (savedCompleted) {
+      try {
+        setCompletedSets(JSON.parse(savedCompleted));
+      } catch (_) {}
+    }
+  }, [data.plans, data.sessions, data.exercises]);
+
+  // Stopwatch ticking logic
+  useEffect(() => {
+    let interval: any;
+    if (draftSession && !draftSession.endedAt) {
+      const start = new Date(draftSession.startedAt!).getTime();
+      interval = setInterval(() => {
+        setElapsedTime(Math.round((Date.now() - start) / 1000));
+      }, 1000);
+    } else {
+      setElapsedTime(0);
+    }
+    return () => clearInterval(interval);
+  }, [draftSession]);
+
+  // Rest timer ticking logic
+  useEffect(() => {
+    let timer: any;
+    if (restSecondsLeft !== null && restSecondsLeft > 0 && !restTimerIsPaused) {
+      timer = setInterval(() => {
+        setRestSecondsLeft((prev) => {
+          if (prev === null) return null;
+          if (prev <= 1) {
+            if (isAudioEnabled) playBeep();
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [restSecondsLeft, restTimerIsPaused, isAudioEnabled]);
+
+  // Autosave active session changes instantly
+  useEffect(() => {
+    if (isClient) {
+      if (draftSession) {
+        localStorage.setItem("kratos_active_session", JSON.stringify(draftSession));
+      } else {
+        localStorage.removeItem("kratos_active_session");
+      }
+    }
+  }, [draftSession, isClient]);
+
   if (!isClient) {
     return (
       <div className="flex h-[50vh] items-center justify-center bg-[#0D0D0D]">
@@ -528,7 +972,471 @@ export function PlannerPage() {
   }
 
   // ==========================================
-  // RENDER INTERFACE 1: SPLIT EDITOR SCREEN
+  // RENDER INTERFACE 1: ACTIVE WORKOUT LOGGER
+  // ==========================================
+  if (draftSession) {
+    const totalCompletedSets = (draftSession.items || []).reduce((acc, item) => {
+      let count = 0;
+      item.sets.forEach((_, setIdx) => {
+        if (completedSets[`${item.id}-${setIdx}`]) {
+          count++;
+        }
+      });
+      return acc + count;
+    }, 0);
+    const totalPlannedSets = (draftSession.items || []).reduce((acc, item) => {
+      return acc + item.sets.length;
+    }, 0);
+
+    return (
+      <div className="mx-auto max-w-xl pb-32 space-y-5 bg-[#0D0D0D] text-white">
+        
+        {/* Sticky top timer bar */}
+        <div className="sticky top-[52px] lg:top-0 z-30 -mx-4 px-4 py-3 bg-[#181818]/90 backdrop-blur-md border-b border-[#2B2B2B] flex items-center justify-between">
+          <div>
+            <h1 className="text-[10px] font-bold uppercase tracking-widest text-[#AAAAAA]">
+              ACTIVE WORKOUT
+            </h1>
+            <p className="text-xs text-white font-bold truncate max-w-[200px] mt-0.5">
+              {draftSession.title}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#1F1F1F] rounded-lg border border-[#2B2B2B]">
+              <Clock className="h-3.5 w-3.5 text-[#AAAAAA]" />
+              <span className="text-xs font-black font-mono tracking-tight text-white">
+                {formatTime(elapsedTime)}
+              </span>
+            </div>
+
+            <Button
+              onClick={() => setIsFinishingWorkout(true)}
+              className="h-8 rounded-lg bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white font-bold text-[10px] px-3.5"
+            >
+              Finish
+            </Button>
+          </div>
+        </div>
+
+        {/* Progress details */}
+        <div className="flex justify-between items-center px-1">
+          <span className="text-[9px] font-black text-[#AAAAAA] uppercase tracking-wider">
+            Done: {totalCompletedSets} / {totalPlannedSets} Sets
+          </span>
+          <button
+            onClick={() => {
+              if (confirm("Discard active workout? This cannot be undone.")) {
+                setDraftSession(null);
+                setRestSecondsLeft(null);
+                setCompletedSets({});
+                localStorage.removeItem("kratos_active_session");
+                localStorage.removeItem("kratos_completed_sets");
+              }
+            }}
+            className="text-[10px] font-bold text-[#FF5A5F] hover:text-[#FF5A5F]/90"
+          >
+            Discard Session
+          </button>
+        </div>
+
+        {/* Exercises list with set tracking */}
+        <div className="space-y-4">
+          {(draftSession.items || []).map((item, itemIdx) => {
+            const isExpanded = loggerExpandedExercises[item.id] ?? false;
+            
+            const pr = getExercisePR(item.exerciseId);
+            const prevPerf = getPreviousSessionPerformance(item.exerciseId);
+            const extras = deserializeExtraFields(item.targetRpe);
+            const isFavorite = favoriteExerciseIds.includes(item.exerciseId);
+
+            return (
+              <Card key={item.id} className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3.5">
+                
+                <div 
+                  onClick={() => setLoggerExpandedExercises((prev) => ({ ...prev, [item.id]: !isExpanded }))}
+                  className="flex justify-between items-start cursor-pointer group"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-xs font-bold text-white group-hover:text-[#4F8CFF] transition-colors">
+                        {item.exerciseName}
+                      </h3>
+                      {isFavorite && <Star className="h-3 w-3 fill-[#FFB547] text-[#FFB547]" />}
+                    </div>
+                    
+                    {!isExpanded && (
+                      <p className="text-[9.5px] text-[#AAAAAA] font-bold">
+                        {item.sets.length} sets • PR: {pr ? `${pr.weight} kg x ${pr.reps}` : "None"}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {extras.supersetGroup && (
+                      <Badge className={cn("text-[7.5px] font-black border uppercase px-1.5 py-0.25", SUPERSET_COLORS[extras.supersetGroup] || "bg-[#2B2B2B]")}>
+                        SS {extras.supersetGroup}
+                      </Badge>
+                    )}
+                    {isExpanded ? (
+                      <ChevronUp className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                    )}
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="space-y-3.5 pt-1.5">
+                    
+                    {/* Previous/Best records panel */}
+                    <div className="grid grid-cols-2 gap-3 text-[10px] bg-[#1F1F1F] p-2.5 rounded-lg border border-[#2B2B2B]">
+                      <div className="space-y-0.5">
+                        <span className="text-[8px] font-bold uppercase text-[#AAAAAA]">Personal Record</span>
+                        <p className="font-bold text-white">
+                          {pr ? `${pr.weight} kg x ${pr.reps}` : "No logged record"}
+                        </p>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="text-[8px] font-bold uppercase text-[#AAAAAA]">
+                          Last Session {prevPerf ? `(${prevPerf.date})` : ""}
+                        </span>
+                        <p className="font-bold text-white truncate">
+                          {prevPerf 
+                            ? prevPerf.sets.map((s) => `${s.weight}x${s.reps}`).join(", ")
+                            : "No logged history"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Sets Logger Table */}
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-[30px_1fr_1fr_42px] gap-2.5 text-[8.5px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center">
+                        <span>Set</span>
+                        <span>Weight kg</span>
+                        <span>Reps</span>
+                        <span>Done</span>
+                      </div>
+
+                      {item.sets.map((set, setIdx) => {
+                        const checkKey = `${item.id}-${setIdx}`;
+                        const isDone = Boolean(completedSets[checkKey]);
+                        const isNewPR = !wasCompletedPreviously(item.exerciseId, set.weight, set.reps) && checkIsNewPR(item.exerciseId, set.weight, set.reps);
+                        const prevSet = prevPerf?.sets[setIdx];
+
+                        return (
+                          <div
+                            key={setIdx}
+                            ref={(!isDone && setIdx === 0) ? activeLoggerRowRef : null}
+                            className={cn(
+                              "grid grid-cols-[30px_1fr_1fr_42px] gap-2.5 items-center text-center p-1 rounded-lg border transition-all",
+                              isDone 
+                                ? "bg-[#34C759]/5 text-[#34C759] border-[#34C759]/20" 
+                                : "bg-[#1F1F1F]/40 border-transparent"
+                            )}
+                          >
+                            <span className="text-[10px] font-black">{setIdx + 1}</span>
+                            
+                            <Input
+                              type="number"
+                              inputMode="decimal"
+                              placeholder={prevSet?.weight || "0"}
+                              value={set.weight}
+                              onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "weight", e.target.value)}
+                              className="h-7.5 text-center text-[10.5px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B]"
+                            />
+                            
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              placeholder={prevSet?.reps || "8"}
+                              value={set.reps}
+                              onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "reps", e.target.value)}
+                              className="h-7.5 text-center text-[10.5px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B]"
+                            />
+
+                            <button
+                              onClick={() => handleToggleSetComplete(itemIdx, setIdx)}
+                              className={cn(
+                                "h-7 w-7 rounded-full flex items-center justify-center border mx-auto transition-all active:scale-90",
+                                isDone
+                                  ? "bg-[#34C759] border-[#34C759] text-white"
+                                  : "border-[#2B2B2B] text-transparent hover:border-[#AAAAAA]"
+                              )}
+                            >
+                              <Check className="h-3.5 w-3.5 stroke-[3.5]" />
+                            </button>
+                            
+                            {isDone && isNewPR && (
+                              <span className="col-span-4 text-[8px] font-extrabold text-[#FFB547] bg-[#FFB547]/10 py-0.5 rounded uppercase tracking-wider block text-left px-2">
+                                ★ NEW PERSONAL RECORD
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveSetActiveSession(itemIdx, item.sets.length - 1)}
+                        disabled={item.sets.length <= 1}
+                        className="h-7 rounded-lg text-[9px] font-bold text-[#AAAAAA] hover:text-white hover:bg-white/5 gap-1"
+                      >
+                        <Minus className="h-3 w-3" /> Remove Set
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAddSetActiveSession(itemIdx)}
+                        className="h-7 rounded-lg text-[9px] font-bold text-[#4F8CFF] hover:bg-[#4F8CFF]/10 gap-1"
+                      >
+                        <Plus className="h-3 w-3" /> Add Set
+                      </Button>
+                    </div>
+
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+
+        <Card className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3">
+          <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider block">
+            Add ad-hoc exercise
+          </span>
+          <Button
+            onClick={() => {
+              setExercisePickerTargetDayId(null);
+              setIsExercisePickerOpen(true);
+              setPickerSearchQuery("");
+            }}
+            className="w-full h-8.5 rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B] text-xs font-semibold gap-1"
+          >
+            <Plus className="h-4 w-4" /> Add Exercise
+          </Button>
+        </Card>
+
+        {/* FLOATING REST TIMER PILL WIDGET */}
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+          {restSecondsLeft !== null ? (
+            <motion.div
+              layoutId="restTimerWidget"
+              className="bg-[#181818] border border-[#2B2B2B] text-white p-3 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center gap-3 select-none"
+            >
+              <div 
+                onClick={() => setIsRestTimerExpanded(!isRestTimerExpanded)}
+                className="flex flex-col items-center cursor-pointer min-w-[40px]"
+              >
+                <span className="text-[7.5px] font-bold uppercase text-[#AAAAAA] tracking-wider">Rest</span>
+                <span className="text-sm font-black font-mono mt-0.5 leading-none">
+                  {restSecondsLeft}s
+                </span>
+              </div>
+              
+              <div className="h-6 w-px bg-[#2B2B2B]" />
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setRestTimerIsPaused(!restTimerIsPaused)}
+                  className="p-1 rounded-lg hover:bg-white/5 text-white transition-colors"
+                >
+                  {restTimerIsPaused ? (
+                    <Play className="h-3.5 w-3.5 fill-current text-[#4F8CFF]" />
+                  ) : (
+                    <Pause className="h-3.5 w-3.5 fill-current text-white" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setRestSecondsLeft(restTimerDuration)}
+                  className="p-1 rounded-lg hover:bg-white/5 text-[#AAAAAA] hover:text-white transition-colors"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setRestSecondsLeft((prev) => (prev ? prev + 15 : 15))}
+                  className="px-1.5 py-0.5 bg-[#2B2B2B] hover:bg-[#2B2B2B]/80 rounded text-[8px] font-bold text-white transition-colors"
+                >
+                  +15s
+                </button>
+                <button
+                  onClick={() => setRestSecondsLeft((prev) => (prev && prev > 15 ? prev - 15 : 1))}
+                  className="px-1.5 py-0.5 bg-[#2B2B2B] hover:bg-[#2B2B2B]/80 rounded text-[8px] font-bold text-white transition-colors"
+                >
+                  -15s
+                </button>
+                <button
+                  onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                  className="p-1 rounded-lg hover:bg-white/5 text-[#AAAAAA] hover:text-white transition-colors"
+                >
+                  {isAudioEnabled ? <Volume2 className="h-3.5 w-3.5 text-[#34C759]" /> : <VolumeX className="h-3.5 w-3.5 text-[#FF5A5F]" />}
+                </button>
+                <button
+                  onClick={() => setRestSecondsLeft(null)}
+                  className="p-1 rounded-lg hover:bg-[#FF5A5F]/10 text-[#FF5A5F] hover:text-[#FF5A5F] transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <button
+              onClick={() => {
+                setRestTimerDuration(90);
+                setRestSecondsLeft(90);
+                setRestTimerIsPaused(false);
+              }}
+              className="h-10 w-10 bg-[#4F8CFF] text-white hover:bg-[#4F8CFF]/90 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+            >
+              <Timer className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* FINISH WORKOUT SUMMARY MODAL */}
+        <Dialog open={isFinishingWorkout} onOpenChange={setIsFinishingWorkout}>
+          <DialogContent className="max-w-md rounded-2xl p-5 border-none bg-[#181818] text-white">
+            <DialogHeader className="pb-3 border-b border-[#2B2B2B] flex flex-row items-start justify-between">
+              <div>
+                <DialogTitle className="text-base font-bold text-white">Finish Workout</DialogTitle>
+                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                  Rate fatigue and save historic session log
+                </DialogDescription>
+              </div>
+              <button 
+                onClick={() => setIsFinishingWorkout(false)}
+                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogHeader>
+
+            <div className="space-y-5 pt-3">
+              <div className="grid grid-cols-2 gap-3 p-3 bg-[#1F1F1F] border border-[#2B2B2B] rounded-xl text-center">
+                <div>
+                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase block">Duration</span>
+                  <span className="text-xs font-black text-white font-mono">{formatTime(elapsedTime)}</span>
+                </div>
+                <div>
+                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase block">Sets Logged</span>
+                  <span className="text-xs font-black text-white font-mono">{totalCompletedSets} Sets</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider px-0.5">
+                  How did this feel?
+                </span>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {EFFORT_OPTIONS.map((opt) => {
+                    const isSelected = selectedEffort === opt.value;
+                    return (
+                      <button
+                        type="button"
+                        key={opt.value}
+                        onClick={() => setSelectedEffort(opt.value)}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-2 border rounded-xl transition-all active:scale-95",
+                          isSelected
+                            ? "bg-[#4F8CFF] border-[#4F8CFF] text-white"
+                            : "bg-[#1F1F1F]/40 border-[#2B2B2B] text-[#AAAAAA] hover:bg-[#2B2B2B]"
+                        )}
+                      >
+                        <span className="text-base">{opt.emoji}</span>
+                        <span className="text-[8px] font-bold mt-1 block truncate w-full text-center">
+                          {opt.value}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider px-0.5">
+                  Session Notes
+                </span>
+                <Textarea
+                  value={feedbackNotes}
+                  onChange={(e) => setFeedbackNotes(e.target.value)}
+                  placeholder="Notes about specific weights, minor fatigue levels..."
+                  rows={2}
+                  className="rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] p-3 text-xs font-medium focus-visible:ring-0 resize-none text-white placeholder-[#AAAAAA]"
+                />
+              </div>
+
+              <Button
+                onClick={handleSaveWorkoutSession}
+                disabled={saving}
+                className="w-full rounded-xl h-11 bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white text-xs font-bold"
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
+                Log workout session
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* EXERCISE PICKER DIALOG */}
+        <Dialog open={isExercisePickerOpen} onOpenChange={setIsExercisePickerOpen}>
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-4 border-none bg-[#181818] text-white">
+            <DialogHeader className="pb-3 border-b border-[#2B2B2B] flex flex-row items-center justify-between">
+              <div>
+                <DialogTitle className="text-base font-bold text-white">Add Exercise</DialogTitle>
+                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                  Search catalog for ad-hoc additions
+                </DialogDescription>
+              </div>
+              <button 
+                onClick={() => setIsExercisePickerOpen(false)}
+                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
+                <Input
+                  value={pickerSearchQuery}
+                  onChange={(e) => setPickerSearchQuery(e.target.value)}
+                  placeholder="Fuzzy search movement..."
+                  className="pl-9 h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-white placeholder-[#AAAAAA] text-xs font-semibold focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {filteredPickerExercises.map((ex) => (
+                  <div
+                    key={ex.id}
+                    onClick={() => {
+                      addExerciseToActiveSession(ex.id);
+                      setIsExercisePickerOpen(false);
+                    }}
+                    className="p-2.5 bg-[#1F1F1F] hover:bg-[#2B2B2B]/40 rounded-lg border border-[#2B2B2B]/60 cursor-pointer transition-colors"
+                  >
+                    <h4 className="text-xs font-bold text-white">{ex.name}</h4>
+                    <span className="text-[9.5px] text-[#AAAAAA] font-semibold mt-0.5 block">
+                      {ex.category} • {ex.equipment}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER INTERFACE 2: SPLIT EDITOR SCREEN
   // ==========================================
   if (isEditingSplit && activeDraftPlan) {
     return (
@@ -558,7 +1466,7 @@ export function PlannerPage() {
             <Input
               value={activeDraftPlan.name}
               maxLength={100}
-              onChange={(e) => updateDraftPlan((draft) => ({ ...draft, name: e.target.value }))}
+              onChange={(e) => updateDraftPlanName(e.target.value)}
               placeholder="e.g. Upper Body Hypertrophy"
               className="h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-white px-3 text-xs font-semibold focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
             />
@@ -568,7 +1476,7 @@ export function PlannerPage() {
             <Textarea
               value={activeDraftPlan.notes}
               maxLength={500}
-              onChange={(e) => updateDraftPlan((draft) => ({ ...draft, notes: e.target.value }))}
+              onChange={(e) => updateDraftPlanNotes(e.target.value)}
               placeholder="Primary hypertrophy targets, tempos..."
               rows={2}
               className="rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-white p-3 text-xs font-medium focus-visible:ring-0 focus-visible:ring-[#4F8CFF] resize-none"
@@ -699,14 +1607,13 @@ export function PlannerPage() {
                           {isExpanded && (
                             <div className="p-3 border-t border-[#2B2B2B] space-y-3.5 bg-[#181818]">
                               
-                              {/* Exercise actions and tag selector */}
+                              {/* Exercise actions */}
                               <div className="flex justify-between items-center pb-2 border-b border-[#2B2B2B]">
                                 <span className="text-[9.5px] font-bold text-[#AAAAAA]">
                                   Muscle: {exercise?.category || "Other"} • {exercise?.equipment || "Barbell"}
                                 </span>
                                 
                                 <div className="flex items-center gap-1.5">
-                                  {/* Order buttons */}
                                   <button
                                     onClick={() => moveExerciseInDay(day.id, item.id, "up")}
                                     className="p-1 text-[#AAAAAA] hover:text-white bg-[#1F1F1F] rounded border border-[#2B2B2B]"
@@ -719,16 +1626,12 @@ export function PlannerPage() {
                                   >
                                     <ChevronDown className="h-3.5 w-3.5" />
                                   </button>
-                                  
-                                  {/* Duplicate */}
                                   <button
                                     onClick={() => duplicateExerciseInDay(day.id, item)}
                                     className="p-1 text-[#AAAAAA] hover:text-[#4F8CFF] bg-[#1F1F1F] rounded border border-[#2B2B2B]"
                                   >
                                     <Copy className="h-3.5 w-3.5" />
                                   </button>
-
-                                  {/* Delete */}
                                   <button
                                     onClick={() => removeExerciseFromDay(day.id, item.id)}
                                     className="p-1 text-[#AAAAAA] hover:text-[#FF5A5F] bg-[#1F1F1F] rounded border border-[#2B2B2B]"
@@ -738,7 +1641,7 @@ export function PlannerPage() {
                                 </div>
                               </div>
 
-                              {/* Target rest and superset configuration */}
+                              {/* Rest & superset options */}
                               <div className="grid grid-cols-2 gap-3.5">
                                 <div className="space-y-1">
                                   <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Rest Time</span>
@@ -772,7 +1675,7 @@ export function PlannerPage() {
                                 </div>
                               </div>
 
-                              {/* Tags multi-select toggles */}
+                              {/* Tags selection */}
                               <div className="space-y-1.5">
                                 <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Exercise Tags</span>
                                 <div className="flex flex-wrap gap-1">
@@ -802,7 +1705,7 @@ export function PlannerPage() {
                                 </div>
                               </div>
 
-                              {/* Exercise notes input */}
+                              {/* Exercise notes */}
                               <div className="space-y-1">
                                 <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Instructions / Notes</span>
                                 <Input
@@ -879,7 +1782,6 @@ export function PlannerPage() {
                   <p className="text-[10px] text-[#AAAAAA] italic">No exercises templates added.</p>
                 )}
 
-                {/* Combobox picker trigger button */}
                 <div className="pt-2">
                   <Button
                     onClick={() => {
@@ -935,7 +1837,6 @@ export function PlannerPage() {
             </DialogHeader>
 
             <div className="space-y-4 pt-3">
-              {/* Search input */}
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
                 <Input
@@ -947,7 +1848,6 @@ export function PlannerPage() {
                 />
               </div>
 
-              {/* Picker Filter tabs */}
               <div className="grid grid-cols-3 gap-1 bg-[#1F1F1F] p-0.5 rounded-lg border border-[#2B2B2B]">
                 {[
                   { id: "all", label: "All Movements" },
@@ -969,7 +1869,6 @@ export function PlannerPage() {
                 ))}
               </div>
 
-              {/* Exercises List */}
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {filteredPickerExercises.length > 0 ? (
                   filteredPickerExercises.map((ex) => {
@@ -1093,7 +1992,7 @@ export function PlannerPage() {
   }
 
   // ==========================================
-  // RENDER INTERFACE 2: MAIN WORKOUT HUB
+  // RENDER INTERFACE 3: MAIN WORKOUT HUB
   // ==========================================
   return (
     <div className="mx-auto max-w-md md:max-w-4xl px-2 pb-16 space-y-6">
@@ -1201,7 +2100,7 @@ export function PlannerPage() {
               <div className="grid gap-3">
                 {filteredPlans.map((plan) => {
                   const daysCount = plan.days.length;
-                  const totalExercises = plan.days.reduce((acc, d) => acc + d.items.length, 0);
+                  const totalExercises = plan.days.reduce((acc: number, d: WeeklyPlanDay) => acc + d.items.length, 0);
                   const isDraft = !isPersistedId(plan.id);
 
                   return (
@@ -1302,9 +2201,8 @@ export function PlannerPage() {
             transition={{ duration: 0.2 }}
             className="space-y-5"
           >
-            {/* Quick start new empty session */}
             <Card 
-              onClick={() => alert("Quick start empty session details will be built in active session logs.")}
+              onClick={startEmptyWorkout}
               className="p-5 border border-[#2B2B2B] bg-[#181818] hover:border-[#4F8CFF]/50 transition-all rounded-xl cursor-pointer group"
             >
               <div className="flex items-center justify-between">
@@ -1325,7 +2223,6 @@ export function PlannerPage() {
               </div>
             </Card>
 
-            {/* Start Session from template selection */}
             <div className="space-y-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
                 Log Template Split
@@ -1339,7 +2236,7 @@ export function PlannerPage() {
                       return (
                         <div
                           key={`${plan.id}-${day.id}`}
-                          onClick={() => alert(`Starting ${plan.name} • ${day.title}`)}
+                          onClick={() => startWorkoutFromDay(day, plan)}
                           className="flex items-center justify-between p-3.5 bg-[#181818] border border-[#2B2B2B] hover:border-[#4F8CFF]/30 rounded-xl transition-all cursor-pointer group"
                         >
                           <div className="flex items-center gap-3">
