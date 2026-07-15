@@ -5,7 +5,8 @@ import {
   Plus, Trash2, Loader2, Dumbbell, Sparkles, Clock, Target, 
   CalendarDays, Play, ChevronRight, CheckCircle2, History,
   Award, Calendar, AlertCircle, Info, X, Edit3, ClipboardList,
-  Save, ArrowLeft
+  Save, ArrowLeft, RotateCcw, Volume2, VolumeX, Timer, Check, Minus, PlusCircle,
+  Pause
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { WeeklyPlan, WeeklyPlanDay, WeeklyPlanItem, WorkoutSession, WorkoutSessionItem, WorkoutSet } from "@/lib/types";
@@ -28,6 +29,14 @@ const isPersistedId = (id: string) => Boolean(id) && !id.startsWith("draft_");
 const AVAILABLE_MUSCLES = [
   "Chest", "Upper Back", "Lats", "Shoulders", "Triceps", "Biceps", 
   "Forearms", "Quads", "Hamstrings", "Glutes", "Calves", "Abs", "Core", "Cardio", "Active Recovery"
+];
+
+const EFFORT_OPTIONS = [
+  { emoji: "🌟", value: "Relaxed", desc: "Easy RPE 1-3" },
+  { emoji: "💪", value: "Moderate", desc: "Solid RPE 4-6" },
+  { emoji: "🔥", value: "Challenging", desc: "Hard RPE 7-8" },
+  { emoji: "🥵", value: "Exhausting", desc: "Max RPE 9-10" },
+  { emoji: "💀", value: "Failure", desc: "RPE 10+ / PR push" },
 ];
 
 const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
@@ -53,6 +62,28 @@ const blankPlan = (userId: string, name = "New weekly split"): WeeklyPlan => ({
   ],
 });
 
+const playBeep = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, ctx.currentTime); // Pitch of beep
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (e) {
+    console.warn("Web Audio beep failed:", e);
+  }
+};
+
 export function PlannerPage() {
   const data = useData();
   const router = useRouter();
@@ -73,7 +104,19 @@ export function PlannerPage() {
   // States for active operations
   const [isEditingSplit, setIsEditingSplit] = useState(false);
   const [activeDraftPlan, setActiveDraftPlan] = useState<WeeklyPlan | null>(null);
+  
+  // Workout Logging States
   const [draftSession, setDraftSession] = useState<Partial<WorkoutSession> | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isFinishingWorkout, setIsFinishingWorkout] = useState(false);
+  const [feedbackNotes, setFeedbackNotes] = useState("");
+  const [selectedEffort, setSelectedEffort] = useState("Moderate");
+
+  // Rest Timer States
+  const [restSecondsLeft, setRestSecondsLeft] = useState<number | null>(null);
+  const [restTimerDuration, setRestTimerDuration] = useState<number>(90);
+  const [restTimerIsPaused, setRestTimerIsPaused] = useState(false);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
 
   const [saving, setSaving] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -104,6 +147,49 @@ export function PlannerPage() {
       label: `${e.name} (${e.category})`,
     }));
   }, [data.exercises]);
+
+  // Stopwatch ticking logic
+  useEffect(() => {
+    let interval: any;
+    if (draftSession && !draftSession.endedAt) {
+      const start = new Date(draftSession.startedAt!).getTime();
+      interval = setInterval(() => {
+        setElapsedTime(Math.round((Date.now() - start) / 1000));
+      }, 1000);
+    } else {
+      setElapsedTime(0);
+    }
+    return () => clearInterval(interval);
+  }, [draftSession]);
+
+  // Rest timer ticking logic
+  useEffect(() => {
+    let timer: any;
+    if (restSecondsLeft !== null && restSecondsLeft > 0 && !restTimerIsPaused) {
+      timer = setInterval(() => {
+        setRestSecondsLeft((prev) => {
+          if (prev === null) return null;
+          if (prev <= 1) {
+            if (isAudioEnabled) playBeep();
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [restSecondsLeft, restTimerIsPaused, isAudioEnabled]);
+
+  const formatTime = (secs: number) => {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return [
+      h > 0 ? String(h).padStart(2, "0") : null,
+      String(m).padStart(2, "0"),
+      String(s).padStart(2, "0"),
+    ].filter(Boolean).join(":");
+  };
 
   const handleDeletePlan = async (id: string) => {
     if (!isPersistedId(id)) {
@@ -150,7 +236,11 @@ export function PlannerPage() {
       items: [],
     };
     setDraftSession(session);
-    alert("Starting Quick Workout! Logging features will be enabled in the logger commit.");
+    setElapsedTime(0);
+    setRestSecondsLeft(null);
+    setIsFinishingWorkout(false);
+    setFeedbackNotes("");
+    setSelectedEffort("Moderate");
   };
 
   const startWorkoutFromDay = (day: WeeklyPlanDay, plan: WeeklyPlan) => {
@@ -178,7 +268,153 @@ export function PlannerPage() {
       })),
     };
     setDraftSession(session);
-    alert(`Starting ${plan.name} - ${day.title}! Logging features will be enabled in the logger commit.`);
+    setElapsedTime(0);
+    setRestSecondsLeft(null);
+    setIsFinishingWorkout(false);
+    setFeedbackNotes(day.notes || "");
+    setSelectedEffort("Moderate");
+  };
+
+  // ==========================================
+  // ACTIVE WORKOUT ACTIONS
+  // ==========================================
+  const handleToggleSetComplete = (itemIndex: number, setIndex: number) => {
+    if (!draftSession || !draftSession.items) return;
+
+    const newItems = [...draftSession.items];
+    const currentItem = newItems[itemIndex];
+    const currentSets = [...currentItem.sets] as any[];
+    const set = currentSets[setIndex];
+    
+    const wasCompleted = Boolean(set.completed);
+    set.completed = !wasCompleted;
+
+    setDraftSession((prev) => ({
+      ...prev,
+      items: newItems,
+    }));
+
+    // Auto-trigger rest timer if completed
+    if (!wasCompleted) {
+      const restSecs = currentItem.restSeconds || 90;
+      setRestTimerDuration(restSecs);
+      setRestSecondsLeft(restSecs);
+      setRestTimerIsPaused(false);
+    }
+  };
+
+  const handleUpdateActiveSetField = (itemIndex: number, setIndex: number, field: "weight" | "reps", value: string) => {
+    if (!draftSession || !draftSession.items) return;
+
+    const newItems = [...draftSession.items];
+    const currentSets = [...newItems[itemIndex].sets];
+    currentSets[setIndex] = {
+      ...currentSets[setIndex],
+      [field]: value,
+    };
+    newItems[itemIndex].sets = currentSets;
+
+    setDraftSession((prev) => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+
+  const handleAddSetActiveSession = (itemIndex: number) => {
+    if (!draftSession || !draftSession.items) return;
+    
+    const newItems = [...draftSession.items];
+    const currentItem = newItems[itemIndex];
+    currentItem.sets = [...currentItem.sets, { weight: "", reps: "" }];
+    
+    setDraftSession((prev) => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+
+  const handleRemoveSetActiveSession = (itemIndex: number) => {
+    if (!draftSession || !draftSession.items) return;
+    
+    const newItems = [...draftSession.items];
+    const currentItem = newItems[itemIndex];
+    if (currentItem.sets.length <= 1) return;
+    currentItem.sets = currentItem.sets.slice(0, -1);
+    
+    setDraftSession((prev) => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+
+  const addExerciseToActiveSession = (exerciseId: string) => {
+    if (!draftSession || !draftSession.items) return;
+    const exercise = data.exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return;
+
+    const newItem: WorkoutSessionItem = {
+      id: createDraftId(),
+      exerciseId,
+      exerciseName: exercise.name,
+      plannedSets: 3,
+      reps: "8-12",
+      restSeconds: exercise.defaultRestSeconds || 90,
+      targetLoad: "",
+      targetRpe: "",
+      sets: Array.from({ length: 3 }).map(() => ({ weight: "", reps: "" })),
+      notes: "",
+      order: draftSession.items.length,
+    };
+
+    setDraftSession((prev) => ({
+      ...prev,
+      items: [...(prev?.items || []), newItem],
+    }));
+  };
+
+  const handleSaveWorkoutSession = async () => {
+    if (!draftSession) return;
+    setSaving(true);
+    try {
+      const isEdit = Boolean(draftSession.id);
+      
+      // Clean temporary properties like `completed` on sets if database complains
+      const cleanedItems = (draftSession.items || []).map((item) => ({
+        ...item,
+        sets: item.sets.map((set: any) => ({
+          weight: set.weight,
+          reps: set.reps,
+        })),
+      }));
+
+      const payloadBody = {
+        ...draftSession,
+        effort: selectedEffort,
+        notes: feedbackNotes,
+        endedAt: new Date().toISOString(),
+        items: cleanedItems,
+      };
+
+      const response = await fetch("/api/workouts", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloadBody),
+      });
+
+      if (!response.ok) throw new Error("Could not save workout session");
+      const res = await response.json();
+      
+      setSessions((current) => [res.session, ...current.filter((s) => s.id !== res.session.id)]);
+      setDraftSession(null);
+      setRestSecondsLeft(null);
+      setIsFinishingWorkout(false);
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Error saving workout session");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // ==========================================
@@ -310,7 +546,342 @@ export function PlannerPage() {
   }
 
   // ==========================================
-  // RENDER INTERFACE 1: SPLIT EDITOR SCREEN
+  // RENDER INTERFACE 1: ACTIVE WORKOUT LOGGER
+  // ==========================================
+  if (draftSession) {
+    const totalCompletedSets = (draftSession.items || []).reduce((acc, item) => {
+      return acc + item.sets.filter((s: any) => Boolean(s.completed)).length;
+    }, 0);
+    const totalPlannedSets = (draftSession.items || []).reduce((acc, item) => {
+      return acc + item.sets.length;
+    }, 0);
+
+    return (
+      <div className="mx-auto max-w-xl pb-32 space-y-6 relative">
+        
+        {/* Sticky top timer bar */}
+        <div className="sticky top-[52px] lg:top-0 z-30 -mx-2 px-4 py-3 bg-white/90 backdrop-blur-md border-b border-black/[0.04] flex items-center justify-between">
+          <div>
+            <h1 className="text-xs font-black uppercase tracking-widest text-neutral-400">
+              Active Session
+            </h1>
+            <p className="text-[10px] text-neutral-500 font-bold truncate max-w-[200px] mt-0.5">
+              {draftSession.title}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {/* Stopwatch */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/5 rounded-xl">
+              <Clock className="h-3.5 w-3.5 text-black/50" />
+              <span className="text-xs font-black font-mono tracking-tight text-neutral-900">
+                {formatTime(elapsedTime)}
+              </span>
+            </div>
+
+            <Button
+              onClick={() => setIsFinishingWorkout(true)}
+              className="h-8 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-3.5"
+            >
+              Finish
+            </Button>
+          </div>
+        </div>
+
+        {/* Discard Session Notice */}
+        <div className="flex justify-between items-center px-1">
+          <span className="text-[9px] font-bold text-neutral-400 uppercase">
+            Completed: {totalCompletedSets} / {totalPlannedSets} Sets
+          </span>
+          <button
+            onClick={() => {
+              if (confirm("Discard active session? Any changes will be lost.")) {
+                setDraftSession(null);
+                setRestSecondsLeft(null);
+              }
+            }}
+            className="text-[10px] font-bold text-red-500 hover:text-red-600"
+          >
+            Discard Workout
+          </button>
+        </div>
+
+        {/* Exercise Session Checklist */}
+        <div className="space-y-5">
+          {(draftSession.items || []).map((item, itemIdx) => (
+            <Card key={item.id} className="p-4 border border-black/5 rounded-2xl bg-white space-y-3.5">
+              
+              {/* Exercise Card Title */}
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xs font-extrabold text-neutral-900">
+                    {item.exerciseName}
+                  </h3>
+                  <p className="text-[9.5px] text-neutral-400 font-medium mt-0.5">
+                    Planned: {item.plannedSets}x{item.reps} {item.targetLoad ? `@ ${item.targetLoad}` : ""} {item.targetRpe ? `(RPE ${item.targetRpe})` : ""}
+                  </p>
+                </div>
+                
+                <span className="text-[9px] font-bold text-neutral-400 bg-neutral-50 px-2 py-0.5 rounded-lg border border-black/[0.02]">
+                  Rest {item.restSeconds}s
+                </span>
+              </div>
+
+              {/* Sets Table */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-[30px_1fr_1fr_42px] gap-2 text-[9px] font-black text-neutral-400 uppercase tracking-wider text-center">
+                  <span>Set</span>
+                  <span>Weight kg</span>
+                  <span>Reps</span>
+                  <span>Done</span>
+                </div>
+
+                {item.sets.map((set, setIdx) => {
+                  const isDone = Boolean((set as any).completed);
+                  return (
+                    <div
+                      key={setIdx}
+                      className={cn(
+                        "grid grid-cols-[30px_1fr_1fr_42px] gap-2 items-center text-center p-1 rounded-xl transition-all",
+                        isDone 
+                          ? "bg-emerald-500/5 text-emerald-800 border border-emerald-500/10" 
+                          : "bg-neutral-50/50 border border-transparent"
+                      )}
+                    >
+                      <span className="text-[10px] font-black">{setIdx + 1}</span>
+                      
+                      <Input
+                        type="number"
+                        placeholder="kg"
+                        value={set.weight}
+                        onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "weight", e.target.value)}
+                        className="h-7.5 text-center text-[10px] font-bold rounded-lg border border-black/[0.04] bg-white px-1 focus-visible:ring-0 focus-visible:bg-neutral-50"
+                      />
+                      
+                      <Input
+                        type="number"
+                        placeholder="reps"
+                        value={set.reps}
+                        onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "reps", e.target.value)}
+                        className="h-7.5 text-center text-[10px] font-bold rounded-lg border border-black/[0.04] bg-white px-1 focus-visible:ring-0 focus-visible:bg-neutral-50"
+                      />
+
+                      {/* Complete Checkbox */}
+                      <button
+                        onClick={() => handleToggleSetComplete(itemIdx, setIdx)}
+                        className={cn(
+                          "h-7 w-7 rounded-full flex items-center justify-center border mx-auto transition-all active:scale-90",
+                          isDone
+                            ? "bg-emerald-500 border-emerald-500 text-white"
+                            : "border-black/[0.1] text-transparent hover:border-black/30"
+                        )}
+                      >
+                        <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Add / Remove Set Row */}
+              <div className="flex gap-2 justify-end pt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveSetActiveSession(itemIdx)}
+                  disabled={item.sets.length <= 1}
+                  className="h-7 rounded-lg text-[9px] font-bold text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 gap-1"
+                >
+                  <Minus className="h-3 w-3" /> Remove Set
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleAddSetActiveSession(itemIdx)}
+                  className="h-7 rounded-lg text-[9px] font-bold text-neutral-600 hover:bg-neutral-100 gap-1"
+                >
+                  <Plus className="h-3 w-3" /> Add Set
+                </Button>
+              </div>
+
+            </Card>
+          ))}
+        </div>
+
+        {/* Add ad-hoc exercise inside the workout */}
+        <Card className="p-4 border border-black/5 rounded-2xl bg-white space-y-3">
+          <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block">
+            Add Ad-hoc Exercise
+          </span>
+          <Combobox
+            options={exerciseOptions}
+            value=""
+            placeholder="Search & Insert Exercise..."
+            onValueChange={(val) => {
+              if (val) addExerciseToActiveSession(val);
+            }}
+          />
+        </Card>
+
+        {/* FLOATING REST TIMER WIDGET (Bottom Right) */}
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+          {restSecondsLeft !== null ? (
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-black text-white p-3 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center gap-3 border border-white/10"
+            >
+              <div className="flex flex-col items-center">
+                <span className="text-[7px] font-black uppercase text-white/40 tracking-wider">Rest</span>
+                <span className="text-sm font-black font-mono tracking-tight leading-none mt-0.5">
+                  {restSecondsLeft}s
+                </span>
+              </div>
+              
+              <div className="h-6 w-px bg-white/10" />
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setRestTimerIsPaused(!restTimerIsPaused)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-white transition-colors"
+                >
+                  <Play className={cn("h-3.5 w-3.5 fill-current", !restTimerIsPaused && "hidden")} />
+                  <Pause className={cn("h-3.5 w-3.5 fill-current", restTimerIsPaused && "hidden")} />
+                </button>
+                <button
+                  onClick={() => setRestSecondsLeft(restTimerDuration)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-white transition-colors"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setRestSecondsLeft((prev) => (prev ? prev + 30 : 30))}
+                  className="px-1.5 py-0.5 bg-white/10 hover:bg-white/20 rounded-md text-[8px] font-bold text-white transition-colors"
+                >
+                  +30s
+                </button>
+                <button
+                  onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                >
+                  {isAudioEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  onClick={() => setRestSecondsLeft(null)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-red-400 hover:text-red-500 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <button
+              onClick={() => {
+                setRestTimerDuration(90);
+                setRestSecondsLeft(90);
+                setRestTimerIsPaused(false);
+              }}
+              className="h-10 w-10 bg-black text-white hover:bg-neutral-800 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+            >
+              <Timer className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* FINISH WORKOUT DIALOG */}
+        <Dialog open={isFinishingWorkout} onOpenChange={setIsFinishingWorkout}>
+          <DialogContent className="max-w-md rounded-3xl p-5 border-none shadow-[0_24px_80px_rgba(0,0,0,0.15)] bg-white">
+            <DialogHeader className="pb-3 border-b border-neutral-100 flex flex-row items-start justify-between">
+              <div>
+                <DialogTitle className="text-base font-bold text-neutral-900">Finish Workout</DialogTitle>
+                <DialogDescription className="text-xs text-neutral-400 mt-1">
+                  Assess and log your physical telemetry
+                </DialogDescription>
+              </div>
+              <button 
+                onClick={() => setIsFinishingWorkout(false)}
+                className="p-1 rounded-full text-neutral-300 hover:text-black hover:bg-neutral-50 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogHeader>
+
+            <div className="space-y-5 pt-3">
+              {/* Duration and Stats */}
+              <div className="grid grid-cols-2 gap-3.5 p-3.5 bg-neutral-50 rounded-2xl text-center">
+                <div>
+                  <span className="text-[8px] font-bold text-neutral-400 uppercase block">Duration</span>
+                  <span className="text-sm font-black text-neutral-900">{formatTime(elapsedTime)}</span>
+                </div>
+                <div>
+                  <span className="text-[8px] font-bold text-neutral-400 uppercase block">Sets Logged</span>
+                  <span className="text-sm font-black text-neutral-900">{totalCompletedSets} Sets</span>
+                </div>
+              </div>
+
+              {/* Effort rating emojis */}
+              <div className="space-y-2">
+                <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider px-0.5">
+                  How did this feel?
+                </span>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {EFFORT_OPTIONS.map((opt) => {
+                    const isSelected = selectedEffort === opt.value;
+                    return (
+                      <button
+                        type="button"
+                        key={opt.value}
+                        onClick={() => setSelectedEffort(opt.value)}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-2 border rounded-xl transition-all active:scale-95",
+                          isSelected
+                            ? "bg-black border-black text-white"
+                            : "bg-neutral-50/50 border-black/[0.04] text-neutral-700 hover:bg-neutral-100"
+                        )}
+                      >
+                        <span className="text-lg">{opt.emoji}</span>
+                        <span className="text-[7.5px] font-bold mt-1 block truncate w-full text-center">
+                          {opt.value}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Workout notes */}
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider px-0.5">
+                  Workout Notes
+                </span>
+                <Textarea
+                  value={feedbackNotes}
+                  onChange={(e) => setFeedbackNotes(e.target.value)}
+                  placeholder="Fatigue levels, specific PR targets achieved, minor discomfort, etc."
+                  rows={3}
+                  className="rounded-2xl border border-black/[0.04] bg-neutral-50 p-3.5 text-xs font-medium focus-visible:ring-0 resize-none"
+                />
+              </div>
+
+              {/* Save Button */}
+              <Button
+                onClick={handleSaveWorkoutSession}
+                disabled={saving}
+                className="w-full rounded-2xl h-11 bg-black text-white hover:bg-neutral-800 text-xs font-bold mt-2"
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
+                Log Workout Session
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER INTERFACE 2: SPLIT EDITOR SCREEN
   // ==========================================
   if (isEditingSplit && activeDraftPlan) {
     return (
@@ -534,7 +1105,7 @@ export function PlannerPage() {
   }
 
   // ==========================================
-  // RENDER INTERFACE 2: MAIN WORKOUT HUB
+  // RENDER INTERFACE 3: MAIN WORKOUT HUB
   // ==========================================
   return (
     <div className="mx-auto max-w-md md:max-w-4xl px-2 pb-16 space-y-6">

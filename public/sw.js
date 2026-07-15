@@ -1,4 +1,4 @@
-const CACHE_NAME = "kratos-v5.0.2";
+const CACHE_NAME = "kratos-v5.0.3";
 const STATIC_ASSETS = [
   "/",
   "/dashboard",
