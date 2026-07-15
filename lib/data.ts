@@ -428,3 +428,33 @@ export const appendCoachExchange = async (
     }
   });
 };
+
+export const saveExercise = async (exercise: Omit<Exercise, "createdAt" | "updatedAt">) => {
+  await ensureDataReady();
+  await pool.query(
+    `INSERT INTO exercises (id, name, category, primary_muscles, secondary_muscles, body_region_slugs, equipment, instructions, default_rest_seconds)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     ON CONFLICT (id) DO UPDATE SET
+       name = EXCLUDED.name,
+       category = EXCLUDED.category,
+       primary_muscles = EXCLUDED.primary_muscles,
+       secondary_muscles = EXCLUDED.secondary_muscles,
+       body_region_slugs = EXCLUDED.body_region_slugs,
+       equipment = EXCLUDED.equipment,
+       instructions = EXCLUDED.instructions,
+       default_rest_seconds = EXCLUDED.default_rest_seconds`,
+    [
+      exercise.id,
+      exercise.name.trim(),
+      exercise.category,
+      JSON.stringify(exercise.primaryMuscles || []),
+      JSON.stringify(exercise.secondaryMuscles || []),
+      JSON.stringify(exercise.bodyRegionSlugs || []),
+      exercise.equipment,
+      JSON.stringify(exercise.instructions || []),
+      exercise.defaultRestSeconds || 90,
+    ]
+  );
+  return exercise;
+};
+

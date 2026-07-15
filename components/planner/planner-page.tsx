@@ -6,14 +6,15 @@ import {
   CalendarDays, Play, ChevronRight, CheckCircle2, History,
   Award, Calendar, AlertCircle, Info, X, Edit3, ClipboardList,
   Save, ArrowLeft, RotateCcw, Volume2, VolumeX, Timer, Check, Minus, PlusCircle,
-  Pause, Search, Copy
+  Pause, Search, Copy, Star, ChevronDown, ChevronUp
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { WeeklyPlan, WeeklyPlanDay, WeeklyPlanItem, WorkoutSession, WorkoutSessionItem, WorkoutSet } from "@/lib/types";
+import type { Exercise, WeeklyPlan, WeeklyPlanDay, WeeklyPlanItem, WorkoutSession, WorkoutSessionItem, WorkoutSet } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { PlanAnalysis } from "./plan-analysis";
 import { useData } from "@/components/shared/data-provider";
@@ -23,6 +24,26 @@ import { cn } from "@/lib/utils";
 const randomId = () => Math.random().toString(36).substring(2, 15);
 const createDraftId = () => `draft_${randomId()}`;
 const isPersistedId = (id: string) => Boolean(id) && !id.startsWith("draft_");
+
+const AVAILABLE_MUSCLES = [
+  "Chest", "Upper Back", "Lats", "Shoulders", "Triceps", "Biceps", 
+  "Forearms", "Quads", "Hamstrings", "Glutes", "Calves", "Abs", "Core", "Cardio", "Active Recovery"
+];
+
+const TEMPLATE_TAGS = [
+  "Warmup", "Dropset", "Failure", "Tempo", "Paused", "AMRAP", "Unilateral"
+];
+
+const SUPERSET_GROUPS = ["None", "A", "B", "C", "D", "E", "F"];
+
+const SUPERSET_COLORS: Record<string, string> = {
+  A: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  B: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  C: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  D: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+  E: "bg-teal-500/20 text-teal-400 border-teal-500/30",
+  F: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+};
 
 const blankPlan = (userId: string, name = "New Plan"): WeeklyPlan => ({
   id: createDraftId(),
@@ -47,6 +68,40 @@ const blankPlan = (userId: string, name = "New Plan"): WeeklyPlan => ({
   ],
 });
 
+// Extra fields deserializer/serializer helpers
+const deserializeExtraFields = (prGoal: string) => {
+  try {
+    const parsed = JSON.parse(prGoal);
+    return {
+      tags: parsed.tags || [],
+      supersetGroup: parsed.supersetGroup || "",
+    };
+  } catch (e) {
+    return {
+      tags: [],
+      supersetGroup: "",
+    };
+  }
+};
+
+const serializeExtraFields = (tags: string[], supersetGroup: string) => {
+  return JSON.stringify({ tags, supersetGroup });
+};
+
+// Deserialize set arrays from database format
+const deserializeSetArray = (setsCount: number, repsStr: string, loadStr: string) => {
+  const repsArr = repsStr ? repsStr.split(",") : [];
+  const loadArr = loadStr ? loadStr.split(",") : [];
+  const list = [];
+  for (let i = 0; i < setsCount; i++) {
+    list.push({
+      reps: repsArr[i] || repsStr || "8-12",
+      weight: loadArr[i] || loadStr || "",
+    });
+  }
+  return list;
+};
+
 export function PlannerPage() {
   const data = useData();
   const router = useRouter();
@@ -56,6 +111,10 @@ export function PlannerPage() {
   const [plans, setPlans] = useState<WeeklyPlan[]>([]);
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   
+  // Exercise catalog
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [favoriteExerciseIds, setFavoriteExerciseIds] = useState<string[]>([]);
+
   // Search and Sort states for Plans
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"alphabetical" | "edited" | "exercises">("edited");
@@ -66,10 +125,25 @@ export function PlannerPage() {
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
 
-  // States for active operations (to be fleshed out in subsequent commits)
+  // States for active operations
   const [isEditingSplit, setIsEditingSplit] = useState(false);
   const [activeDraftPlan, setActiveDraftPlan] = useState<WeeklyPlan | null>(null);
   const [draftSession, setDraftSession] = useState<Partial<WorkoutSession> | null>(null);
+  
+  // Expanded state for exercise cards inside the template editor
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+
+  // Exercise Picker states
+  const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false);
+  const [exercisePickerTargetDayId, setExercisePickerTargetDayId] = useState<string | null>(null);
+  const [pickerSearchQuery, setPickerSearchQuery] = useState("");
+  const [pickerFilter, setPickerFilter] = useState<"all" | "favorites" | "recent">("all");
+
+  // Exercise Creation Modal states
+  const [isCreateExerciseOpen, setIsCreateExerciseOpen] = useState(false);
+  const [newExerciseName, setNewExerciseName] = useState("");
+  const [newExerciseMuscle, setNewExerciseMuscle] = useState("Chest");
+  const [newExerciseEquipment, setNewExerciseEquipment] = useState("Dumbbell");
 
   const [saving, setSaving] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -78,6 +152,15 @@ export function PlannerPage() {
     setIsClient(true);
     setPlans(data.plans || []);
     setSessions(data.sessions || []);
+    setExercises(data.exercises || []);
+
+    // Load favorites from local storage
+    const favs = localStorage.getItem("kratos_favorite_exercises");
+    if (favs) {
+      try {
+        setFavoriteExerciseIds(JSON.parse(favs));
+      } catch (_) {}
+    }
     
     // Check if active session exists in localStorage (autosave restore)
     const saved = localStorage.getItem("kratos_active_session");
@@ -89,7 +172,15 @@ export function PlannerPage() {
         console.warn("Could not restore active session", e);
       }
     }
-  }, [data.plans, data.sessions]);
+  }, [data.plans, data.sessions, data.exercises]);
+
+  const toggleFavoriteExercise = (id: string) => {
+    const nextFavs = favoriteExerciseIds.includes(id)
+      ? favoriteExerciseIds.filter((fid) => fid !== id)
+      : [...favoriteExerciseIds, id];
+    setFavoriteExerciseIds(nextFavs);
+    localStorage.setItem("kratos_favorite_exercises", JSON.stringify(nextFavs));
+  };
 
   const handleDeletePlan = async (id: string) => {
     if (!isPersistedId(id)) {
@@ -162,9 +253,271 @@ export function PlannerPage() {
         return countB - countA;
       });
     }
-    // Recently edited (default)
     return [...list].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }, [plans, searchQuery, sortBy]);
+
+  // ==========================================
+  // PLAN EDITOR ACTION HANDLERS
+  // ==========================================
+  const updateDraftPlan = (updater: (draft: WeeklyPlan) => WeeklyPlan) => {
+    if (!activeDraftPlan) return;
+    setActiveDraftPlan(updater(activeDraftPlan));
+  };
+
+  const updateDraftDay = (dayId: string, updater: (day: WeeklyPlanDay) => WeeklyPlanDay) => {
+    updateDraftPlan((draft) => ({
+      ...draft,
+      days: draft.days.map((d) => (d.id === dayId ? updater(d) : d)),
+    }));
+  };
+
+  const addWorkoutDay = () => {
+    const newDay: WeeklyPlanDay = {
+      id: `draft-day-${randomId()}`,
+      day: activeDraftPlan?.days.length ?? 0,
+      title: `Day ${(activeDraftPlan?.days.length ?? 0) + 1}`,
+      focus: "Focus Area",
+      warmup: "",
+      sessionGoal: "",
+      targetMuscles: [],
+      notes: "",
+      items: [],
+    };
+    updateDraftPlan((draft) => ({
+      ...draft,
+      days: [...draft.days, newDay],
+    }));
+  };
+
+  const removeWorkoutDay = (dayId: string) => {
+    updateDraftPlan((draft) => ({
+      ...draft,
+      days: draft.days.filter((d) => d.id !== dayId).map((d, index) => ({ ...d, day: index })),
+    }));
+  };
+
+  const addExerciseToDay = (dayId: string, exerciseId: string) => {
+    const exercise = exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return;
+
+    const newItem: WeeklyPlanItem = {
+      id: createDraftId(),
+      exerciseId,
+      sets: 3,
+      reps: "8,8,8",
+      restSeconds: exercise.defaultRestSeconds || 90,
+      targetLoad: "0,0,0",
+      targetRpe: "",
+      prGoal: serializeExtraFields([], ""),
+      notes: "",
+      order: 0,
+    };
+
+    updateDraftDay(dayId, (day) => ({
+      ...day,
+      items: [...day.items, newItem].map((item, idx) => ({ ...item, order: idx })),
+    }));
+  };
+
+  const removeExerciseFromDay = (dayId: string, itemId: string) => {
+    updateDraftDay(dayId, (day) => ({
+      ...day,
+      items: day.items.filter((item) => item.id !== itemId).map((item, idx) => ({ ...item, order: idx })),
+    }));
+  };
+
+  const duplicateExerciseInDay = (dayId: string, item: WeeklyPlanItem) => {
+    const duplicated: WeeklyPlanItem = {
+      ...item,
+      id: createDraftId(),
+    };
+    updateDraftDay(dayId, (day) => {
+      const idx = day.items.findIndex((itm) => itm.id === item.id);
+      const nextList = [...day.items];
+      nextList.splice(idx + 1, 0, duplicated);
+      return {
+        ...day,
+        items: nextList.map((itm, index) => ({ ...itm, order: index })),
+      };
+    });
+  };
+
+  const moveExerciseInDay = (dayId: string, itemId: string, direction: "up" | "down") => {
+    updateDraftDay(dayId, (day) => {
+      const index = day.items.findIndex((itm) => itm.id === itemId);
+      if (index === -1) return day;
+      if (direction === "up" && index === 0) return day;
+      if (direction === "down" && index === day.items.length - 1) return day;
+
+      const nextList = [...day.items];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      const temp = nextList[index];
+      nextList[index] = nextList[targetIndex];
+      nextList[targetIndex] = temp;
+
+      return {
+        ...day,
+        items: nextList.map((itm, idx) => ({ ...itm, order: idx })),
+      };
+    });
+  };
+
+  const updateExerciseField = (dayId: string, itemId: string, field: keyof WeeklyPlanItem, value: any) => {
+    updateDraftDay(dayId, (day) => ({
+      ...day,
+      items: day.items.map((item) => (item.id === itemId ? { ...item, [field]: value } : item)),
+    }));
+  };
+
+  const toggleMuscleInDay = (dayId: string, muscle: string) => {
+    updateDraftDay(dayId, (day) => {
+      const activeMuscles = day.targetMuscles || [];
+      const exists = activeMuscles.includes(muscle);
+      return {
+        ...day,
+        targetMuscles: exists 
+          ? activeMuscles.filter((m) => m !== muscle)
+          : [...activeMuscles, muscle],
+      };
+    });
+  };
+
+  const handleSavePlan = async () => {
+    if (!activeDraftPlan) return;
+    if (activeDraftPlan.name.trim().length === 0) {
+      alert("Plan name is required.");
+      return;
+    }
+    const hasExercises = activeDraftPlan.days.some((day) => day.items.length > 0);
+    if (!hasExercises) {
+      alert("Please add at least 1 exercise template to your split.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const isEdit = isPersistedId(activeDraftPlan.id);
+      const response = await fetch("/api/plans", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(activeDraftPlan),
+      });
+
+      if (!response.ok) throw new Error("Could not save plan");
+      const res = await response.json();
+      
+      setPlans((prev) => {
+        const filtered = prev.filter((p) => p.id !== activeDraftPlan.id);
+        return [res.plan, ...filtered];
+      });
+      setIsEditingSplit(false);
+      setActiveDraftPlan(null);
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Error saving split plan");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Set Table manipulation in editor
+  const handleUpdateTemplateSet = (dayId: string, itemId: string, setIndex: number, field: "weight" | "reps", value: string, item: WeeklyPlanItem) => {
+    const list = deserializeSetArray(item.sets, item.reps, item.targetLoad);
+    list[setIndex] = {
+      ...list[setIndex],
+      [field]: value,
+    };
+    
+    updateExerciseField(dayId, itemId, "sets", list.length);
+    updateExerciseField(dayId, itemId, "reps", list.map((s) => s.reps).join(","));
+    updateExerciseField(dayId, itemId, "targetLoad", list.map((s) => s.weight).join(","));
+  };
+
+  const handleAddTemplateSet = (dayId: string, itemId: string, item: WeeklyPlanItem) => {
+    const list = deserializeSetArray(item.sets, item.reps, item.targetLoad);
+    const last = list[list.length - 1] || { reps: "8", weight: "" };
+    list.push({ ...last });
+
+    updateExerciseField(dayId, itemId, "sets", list.length);
+    updateExerciseField(dayId, itemId, "reps", list.map((s) => s.reps).join(","));
+    updateExerciseField(dayId, itemId, "targetLoad", list.map((s) => s.weight).join(","));
+  };
+
+  const handleRemoveTemplateSet = (dayId: string, itemId: string, setIndex: number, item: WeeklyPlanItem) => {
+    const list = deserializeSetArray(item.sets, item.reps, item.targetLoad);
+    if (list.length <= 1) return;
+    list.splice(setIndex, 1);
+
+    updateExerciseField(dayId, itemId, "sets", list.length);
+    updateExerciseField(dayId, itemId, "reps", list.map((s) => s.reps).join(","));
+    updateExerciseField(dayId, itemId, "targetLoad", list.map((s) => s.weight).join(","));
+  };
+
+  const handleDuplicateTemplateSet = (dayId: string, itemId: string, setIndex: number, item: WeeklyPlanItem) => {
+    const list = deserializeSetArray(item.sets, item.reps, item.targetLoad);
+    const target = list[setIndex];
+    list.splice(setIndex + 1, 0, { ...target });
+
+    updateExerciseField(dayId, itemId, "sets", list.length);
+    updateExerciseField(dayId, itemId, "reps", list.map((s) => s.reps).join(","));
+    updateExerciseField(dayId, itemId, "targetLoad", list.map((s) => s.weight).join(","));
+  };
+
+  // Custom Exercise Creation Action
+  const handleCreateCustomExercise = async () => {
+    if (!newExerciseName.trim()) return;
+    
+    try {
+      const response = await fetch("/api/exercises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newExerciseName.trim(),
+          category: newExerciseMuscle as any,
+          primaryMuscles: [newExerciseMuscle],
+          equipment: newExerciseEquipment,
+          defaultRestSeconds: 90,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to create custom exercise");
+      const res = await response.json();
+      
+      setExercises((prev) => [...prev, res.exercise]);
+      if (exercisePickerTargetDayId) {
+        addExerciseToDay(exercisePickerTargetDayId, res.exercise.id);
+      }
+      setIsCreateExerciseOpen(false);
+      setNewExerciseName("");
+    } catch (e) {
+      console.error(e);
+      alert("Could not register custom exercise.");
+    }
+  };
+
+  // Filtered exercises for the Picker list
+  const filteredPickerExercises = useMemo(() => {
+    let list = exercises;
+    
+    // Filter by tab
+    if (pickerFilter === "favorites") {
+      list = list.filter((e) => favoriteExerciseIds.includes(e.id));
+    } else if (pickerFilter === "recent") {
+      // Show first 15 default / recently used
+      list = list.slice(0, 15);
+    }
+
+    // Search query
+    if (pickerSearchQuery.trim()) {
+      list = list.filter((e) => 
+        e.name.toLowerCase().includes(pickerSearchQuery.toLowerCase()) || 
+        e.category.toLowerCase().includes(pickerSearchQuery.toLowerCase())
+      );
+    }
+    
+    return list;
+  }, [exercises, favoriteExerciseIds, pickerFilter, pickerSearchQuery]);
 
   if (!isClient) {
     return (
@@ -174,8 +527,576 @@ export function PlannerPage() {
     );
   }
 
+  // ==========================================
+  // RENDER INTERFACE 1: SPLIT EDITOR SCREEN
+  // ==========================================
+  if (isEditingSplit && activeDraftPlan) {
+    return (
+      <div className="mx-auto max-w-xl pb-16 space-y-5 bg-[#0D0D0D] text-white">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setIsEditingSplit(false);
+              setActiveDraftPlan(null);
+            }}
+            className="rounded-lg px-2 text-[#AAAAAA] hover:text-white"
+          >
+            <ArrowLeft className="h-4.5 w-4.5" />
+          </Button>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-white">Edit Plan Template</h1>
+            <p className="text-[10px] text-[#AAAAAA]">Configure targets and set schema</p>
+          </div>
+        </div>
+
+        {/* Global info cards */}
+        <Card className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3.5">
+          <div className="space-y-1">
+            <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Plan Name</span>
+            <Input
+              value={activeDraftPlan.name}
+              maxLength={100}
+              onChange={(e) => updateDraftPlan((draft) => ({ ...draft, name: e.target.value }))}
+              placeholder="e.g. Upper Body Hypertrophy"
+              className="h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-white px-3 text-xs font-semibold focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
+            />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Description</span>
+            <Textarea
+              value={activeDraftPlan.notes}
+              maxLength={500}
+              onChange={(e) => updateDraftPlan((draft) => ({ ...draft, notes: e.target.value }))}
+              placeholder="Primary hypertrophy targets, tempos..."
+              rows={2}
+              className="rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-white p-3 text-xs font-medium focus-visible:ring-0 focus-visible:ring-[#4F8CFF] resize-none"
+            />
+          </div>
+        </Card>
+
+        {/* Days List */}
+        <div className="space-y-4">
+          {activeDraftPlan.days.map((day, dayIndex) => (
+            <Card key={day.id} className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-4">
+              <div className="flex justify-between items-center pb-2.5 border-b border-[#2B2B2B]">
+                <div className="flex items-center gap-2">
+                  <span className="h-5 w-5 bg-[#1F1F1F] border border-[#2B2B2B] text-white rounded flex items-center justify-center text-[10px] font-black">
+                    {dayIndex + 1}
+                  </span>
+                  <Input
+                    value={day.title}
+                    onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, title: e.target.value }))}
+                    className="h-7 w-32 border-none bg-transparent font-bold text-xs p-0 focus-visible:ring-0 focus-visible:ring-[#4F8CFF]"
+                  />
+                </div>
+                
+                <button
+                  onClick={() => removeWorkoutDay(day.id)}
+                  disabled={activeDraftPlan.days.length <= 1}
+                  className="p-1 text-[#AAAAAA] hover:text-[#FF5A5F] disabled:opacity-30 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Day settings grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Focus Area</span>
+                  <Input
+                    value={day.focus}
+                    onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, focus: e.target.value }))}
+                    placeholder="e.g. Chest & Shoulders"
+                    className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2.5 text-[11px] font-semibold focus-visible:ring-0"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Warmup description</span>
+                  <Input
+                    value={day.warmup}
+                    onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, warmup: e.target.value }))}
+                    placeholder="Incline walks, bands..."
+                    className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2.5 text-[11px] font-medium focus-visible:ring-0"
+                  />
+                </div>
+              </div>
+
+              {/* Target muscles list toggles */}
+              <div className="space-y-1.5">
+                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Target Muscles</span>
+                <div className="flex flex-wrap gap-1">
+                  {AVAILABLE_MUSCLES.map((muscle) => {
+                    const isSelected = (day.targetMuscles || []).includes(muscle);
+                    return (
+                      <button
+                        type="button"
+                        key={muscle}
+                        onClick={() => toggleMuscleInDay(day.id, muscle)}
+                        className={cn(
+                          "px-2 py-0.5 rounded-full text-[9px] font-bold transition-all border",
+                          isSelected
+                            ? "bg-[#4F8CFF]/15 text-[#4F8CFF] border-[#4F8CFF]/20"
+                            : "bg-[#1F1F1F] text-[#AAAAAA] border-[#2B2B2B] hover:text-white"
+                        )}
+                      >
+                        {muscle}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Exercises within the day */}
+              <div className="space-y-3 pt-3 border-t border-[#2B2B2B]">
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Exercise templates</span>
+                </div>
+
+                {day.items.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {day.items.map((item) => {
+                      const exercise = exercises.find((e) => e.id === item.exerciseId);
+                      const exerciseName = exercise?.name || item.exerciseId;
+                      const isExpanded = expandedExerciseId === item.id;
+                      
+                      const extras = deserializeExtraFields(item.prGoal);
+                      const isFavorite = favoriteExerciseIds.includes(item.exerciseId);
+                      const setList = deserializeSetArray(item.sets, item.reps, item.targetLoad);
+
+                      return (
+                        <div key={item.id} className="border border-[#2B2B2B] bg-[#1F1F1F] rounded-xl overflow-hidden">
+                          
+                          {/* COLLAPSED HEADER */}
+                          <div 
+                            onClick={() => setExpandedExerciseId(isExpanded ? null : item.id)}
+                            className="p-3 flex items-center justify-between cursor-pointer hover:bg-[#2B2B2B]/20 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              {extras.supersetGroup && (
+                                <Badge className={cn("text-[8px] font-extrabold px-1 border", SUPERSET_COLORS[extras.supersetGroup] || "bg-[#2B2B2B]")}>
+                                  SS {extras.supersetGroup}
+                                </Badge>
+                              )}
+                              <span className="text-xs font-bold text-white leading-none">{exerciseName}</span>
+                              {isFavorite && <Star className="h-3 w-3 fill-[#FFB547] text-[#FFB547] shrink-0" />}
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-bold text-[#AAAAAA]">
+                                {item.sets} {item.sets === 1 ? "set" : "sets"} • {item.restSeconds}s rest
+                              </span>
+                              {isExpanded ? (
+                                <ChevronUp className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                              ) : (
+                                <ChevronDown className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* EXPANDED DETAILS */}
+                          {isExpanded && (
+                            <div className="p-3 border-t border-[#2B2B2B] space-y-3.5 bg-[#181818]">
+                              
+                              {/* Exercise actions and tag selector */}
+                              <div className="flex justify-between items-center pb-2 border-b border-[#2B2B2B]">
+                                <span className="text-[9.5px] font-bold text-[#AAAAAA]">
+                                  Muscle: {exercise?.category || "Other"} • {exercise?.equipment || "Barbell"}
+                                </span>
+                                
+                                <div className="flex items-center gap-1.5">
+                                  {/* Order buttons */}
+                                  <button
+                                    onClick={() => moveExerciseInDay(day.id, item.id, "up")}
+                                    className="p-1 text-[#AAAAAA] hover:text-white bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                  >
+                                    <ChevronUp className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => moveExerciseInDay(day.id, item.id, "down")}
+                                    className="p-1 text-[#AAAAAA] hover:text-white bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                  >
+                                    <ChevronDown className="h-3.5 w-3.5" />
+                                  </button>
+                                  
+                                  {/* Duplicate */}
+                                  <button
+                                    onClick={() => duplicateExerciseInDay(day.id, item)}
+                                    className="p-1 text-[#AAAAAA] hover:text-[#4F8CFF] bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </button>
+
+                                  {/* Delete */}
+                                  <button
+                                    onClick={() => removeExerciseFromDay(day.id, item.id)}
+                                    className="p-1 text-[#AAAAAA] hover:text-[#FF5A5F] bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Target rest and superset configuration */}
+                              <div className="grid grid-cols-2 gap-3.5">
+                                <div className="space-y-1">
+                                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Rest Time</span>
+                                  <select
+                                    value={item.restSeconds}
+                                    onChange={(e) => updateExerciseField(day.id, item.id, "restSeconds", parseInt(e.target.value))}
+                                    className="w-full h-7 text-[10px] rounded bg-[#1F1F1F] border border-[#2B2B2B] text-white px-1 outline-none"
+                                  >
+                                    <option value={30}>30s</option>
+                                    <option value={45}>45s</option>
+                                    <option value={60}>60s</option>
+                                    <option value={90}>90s</option>
+                                    <option value={120}>120s</option>
+                                    <option value={180}>180s</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Superset Link</span>
+                                  <select
+                                    value={extras.supersetGroup || "None"}
+                                    onChange={(e) => {
+                                      const groupVal = e.target.value === "None" ? "" : e.target.value;
+                                      updateExerciseField(day.id, item.id, "prGoal", serializeExtraFields(extras.tags, groupVal));
+                                    }}
+                                    className="w-full h-7 text-[10px] rounded bg-[#1F1F1F] border border-[#2B2B2B] text-white px-1 outline-none"
+                                  >
+                                    {SUPERSET_GROUPS.map((grp) => (
+                                      <option key={grp} value={grp}>{grp === "None" ? "No group" : `Group ${grp}`}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+
+                              {/* Tags multi-select toggles */}
+                              <div className="space-y-1.5">
+                                <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Exercise Tags</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {TEMPLATE_TAGS.map((tag) => {
+                                    const isTagged = extras.tags.includes(tag);
+                                    return (
+                                      <button
+                                        type="button"
+                                        key={tag}
+                                        onClick={() => {
+                                          const nextTags = isTagged 
+                                            ? extras.tags.filter((t: string) => t !== tag)
+                                            : [...extras.tags, tag];
+                                          updateExerciseField(day.id, item.id, "prGoal", serializeExtraFields(nextTags, extras.supersetGroup));
+                                        }}
+                                        className={cn(
+                                          "px-2 py-0.5 rounded text-[8px] font-bold transition-all border",
+                                          isTagged
+                                            ? "bg-[#4F8CFF]/15 text-[#4F8CFF] border-[#4F8CFF]/20"
+                                            : "bg-[#1F1F1F] text-[#AAAAAA] border-[#2B2B2B]"
+                                        )}
+                                      >
+                                        {tag}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Exercise notes input */}
+                              <div className="space-y-1">
+                                <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Instructions / Notes</span>
+                                <Input
+                                  value={item.notes}
+                                  onChange={(e) => updateExerciseField(day.id, item.id, "notes", e.target.value)}
+                                  placeholder="e.g. Focus on deep stretch at bottom of range"
+                                  className="h-7 text-[10.5px] rounded bg-[#1F1F1F] border-[#2B2B2B] text-white px-2 focus-visible:ring-0"
+                                />
+                              </div>
+
+                              {/* Sets Table */}
+                              <div className="space-y-1.5 pt-2">
+                                <span className="text-[8.5px] font-bold text-[#AAAAAA] uppercase">Set Schema</span>
+                                <div className="space-y-1.5">
+                                  <div className="grid grid-cols-[30px_1fr_1fr_45px] gap-2 text-[8px] font-black text-[#AAAAAA] uppercase text-center">
+                                    <span>Set</span>
+                                    <span>Weight (kg)</span>
+                                    <span>Reps Target</span>
+                                    <span>Actions</span>
+                                  </div>
+                                  
+                                  {setList.map((set, setIdx) => (
+                                    <div key={setIdx} className="grid grid-cols-[30px_1fr_1fr_45px] gap-2 items-center text-center">
+                                      <span className="text-[10px] font-bold text-[#AAAAAA]">{setIdx + 1}</span>
+                                      <Input
+                                        type="number"
+                                        placeholder="Load"
+                                        value={set.weight}
+                                        onChange={(e) => handleUpdateTemplateSet(day.id, item.id, setIdx, "weight", e.target.value, item)}
+                                        className="h-7 text-center rounded bg-[#1F1F1F] border-[#2B2B2B] text-[10px] font-bold"
+                                      />
+                                      <Input
+                                        placeholder="Target reps"
+                                        value={set.reps}
+                                        onChange={(e) => handleUpdateTemplateSet(day.id, item.id, setIdx, "reps", e.target.value, item)}
+                                        className="h-7 text-center rounded bg-[#1F1F1F] border-[#2B2B2B] text-[10px] font-bold"
+                                      />
+                                      <div className="flex items-center gap-1">
+                                        <button
+                                          onClick={() => handleDuplicateTemplateSet(day.id, item.id, setIdx, item)}
+                                          className="p-1 hover:text-white text-[#AAAAAA] bg-[#1F1F1F] border border-[#2B2B2B] rounded"
+                                        >
+                                          <Copy className="h-3 w-3" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleRemoveTemplateSet(day.id, item.id, setIdx, item)}
+                                          disabled={setList.length <= 1}
+                                          className="p-1 hover:text-[#FF5A5F] text-[#AAAAAA] disabled:opacity-20 bg-[#1F1F1F] border border-[#2B2B2B] rounded"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleAddTemplateSet(day.id, item.id, item)}
+                                  className="h-7 w-full text-[9px] font-bold text-[#4F8CFF] hover:bg-[#4F8CFF]/10 rounded mt-1.5 gap-1"
+                                >
+                                  <Plus className="h-3 w-3" /> Add Set Schema
+                                </Button>
+                              </div>
+
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-[#AAAAAA] italic">No exercises templates added.</p>
+                )}
+
+                {/* Combobox picker trigger button */}
+                <div className="pt-2">
+                  <Button
+                    onClick={() => {
+                      setExercisePickerTargetDayId(day.id);
+                      setIsExercisePickerOpen(true);
+                      setPickerSearchQuery("");
+                    }}
+                    className="w-full h-8.5 rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B] text-xs font-semibold gap-1.5"
+                  >
+                    <Plus className="h-4 w-4" /> Add Exercise Template
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Action row at bottom */}
+        <div className="flex gap-2 sticky bottom-0 bg-[#0D0D0D] py-2 z-10 border-t border-[#2B2B2B]">
+          <Button
+            onClick={addWorkoutDay}
+            variant="outline"
+            className="flex-1 rounded-lg h-10.5 text-xs font-bold border-[#2B2B2B] bg-[#181818]"
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add split day
+          </Button>
+          <Button
+            onClick={handleSavePlan}
+            disabled={saving}
+            className="flex-1 rounded-lg h-10.5 bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white text-xs font-bold"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+            Save plan template
+          </Button>
+        </div>
+
+        {/* EXERCISE PICKER DIALOG */}
+        <Dialog open={isExercisePickerOpen} onOpenChange={setIsExercisePickerOpen}>
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-4 border-none bg-[#181818] text-white">
+            <DialogHeader className="pb-3 border-b border-[#2B2B2B] flex flex-row items-center justify-between">
+              <div>
+                <DialogTitle className="text-base font-bold text-white">Pick Exercise</DialogTitle>
+                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                  Choose exercise templates to add to split
+                </DialogDescription>
+              </div>
+              <button 
+                onClick={() => setIsExercisePickerOpen(false)}
+                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-3">
+              {/* Search input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
+                <Input
+                  value={pickerSearchQuery}
+                  onChange={(e) => setPickerSearchQuery(e.target.value)}
+                  placeholder="Fuzzy search movement..."
+                  className="pl-9 h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-white placeholder-[#AAAAAA] text-xs font-semibold focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
+                  autoFocus
+                />
+              </div>
+
+              {/* Picker Filter tabs */}
+              <div className="grid grid-cols-3 gap-1 bg-[#1F1F1F] p-0.5 rounded-lg border border-[#2B2B2B]">
+                {[
+                  { id: "all", label: "All Movements" },
+                  { id: "favorites", label: "Favorites" },
+                  { id: "recent", label: "Recent" },
+                ].map((flt) => (
+                  <button
+                    key={flt.id}
+                    onClick={() => setPickerFilter(flt.id as any)}
+                    className={cn(
+                      "py-1 text-[10px] font-bold rounded transition-all",
+                      pickerFilter === flt.id
+                        ? "bg-[#2B2B2B] text-white"
+                        : "text-[#AAAAAA] hover:text-white"
+                    )}
+                  >
+                    {flt.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Exercises List */}
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {filteredPickerExercises.length > 0 ? (
+                  filteredPickerExercises.map((ex) => {
+                    const isFavorite = favoriteExerciseIds.includes(ex.id);
+                    return (
+                      <div
+                        key={ex.id}
+                        className="flex items-center justify-between p-2.5 bg-[#1F1F1F] hover:bg-[#2B2B2B]/40 rounded-lg border border-[#2B2B2B]/60 transition-colors"
+                      >
+                        <div 
+                          onClick={() => {
+                            if (exercisePickerTargetDayId) {
+                              addExerciseToDay(exercisePickerTargetDayId, ex.id);
+                              setIsExercisePickerOpen(false);
+                            }
+                          }}
+                          className="flex-1 cursor-pointer"
+                        >
+                          <h4 className="text-xs font-bold text-white">{ex.name}</h4>
+                          <span className="text-[9.5px] text-[#AAAAAA] font-semibold mt-0.5 block">
+                            {ex.category} • {ex.equipment}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => toggleFavoriteExercise(ex.id)}
+                          className="p-1 hover:bg-white/5 rounded-lg text-[#AAAAAA] transition-colors"
+                        >
+                          <Star className={cn("h-4 w-4", isFavorite ? "fill-[#FFB547] text-[#FFB547]" : "text-[#AAAAAA]")} />
+                        </button>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-6 space-y-3">
+                    <p className="text-[11px] text-[#AAAAAA] italic">No matching movement found.</p>
+                    <Button
+                      onClick={() => {
+                        setNewExerciseName(pickerSearchQuery);
+                        setIsCreateExerciseOpen(true);
+                      }}
+                      className="h-8.5 rounded-lg bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white text-[10px] font-bold"
+                    >
+                      Create Custom Exercise
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* CUSTOM EXERCISE CREATION MODAL */}
+        <Dialog open={isCreateExerciseOpen} onOpenChange={setIsCreateExerciseOpen}>
+          <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-[#181818] text-white">
+            <DialogHeader className="pb-2 border-b border-[#2B2B2B]">
+              <DialogTitle className="text-sm font-bold text-white">Create Custom Exercise</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-3.5">
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Exercise Name</span>
+                <Input
+                  value={newExerciseName}
+                  onChange={(e) => setNewExerciseName(e.target.value)}
+                  placeholder="e.g. Incline DB Press"
+                  className="h-8.5 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-white px-2.5 text-xs focus-visible:ring-1"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Primary Muscle</span>
+                <select
+                  value={newExerciseMuscle}
+                  onChange={(e) => setNewExerciseMuscle(e.target.value)}
+                  className="w-full h-8.5 text-xs rounded-lg bg-[#1F1F1F] border border-[#2B2B2B] text-white px-2 outline-none"
+                >
+                  {AVAILABLE_MUSCLES.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Equipment</span>
+                <select
+                  value={newExerciseEquipment}
+                  onChange={(e) => setNewExerciseEquipment(e.target.value)}
+                  className="w-full h-8.5 text-xs rounded-lg bg-[#1F1F1F] border border-[#2B2B2B] text-white px-2 outline-none"
+                >
+                  {["Barbell", "Dumbbell", "Machine", "Cable", "Smith", "EZ Bar", "Trap Bar", "Bodyweight", "Other"].map((eq) => (
+                    <option key={eq} value={eq}>{eq}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCreateExerciseOpen(false)}
+                  className="flex-1 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleCreateCustomExercise}
+                  disabled={!newExerciseName.trim()}
+                  className="flex-1 rounded-lg bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white text-[10px] font-bold"
+                >
+                  Create
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+      </div>
+    );
+  }
+
+  // ==========================================
+  // RENDER INTERFACE 2: MAIN WORKOUT HUB
+  // ==========================================
   return (
-    <div className="min-h-screen bg-[#0D0D0D] text-white -mx-3 -mb-24 p-4 lg:-mx-4 lg:-mb-8 space-y-6">
+    <div className="mx-auto max-w-md md:max-w-4xl px-2 pb-16 space-y-6">
       
       {/* Top Bar with Brand and Tabs */}
       <div className="flex flex-col gap-3">
