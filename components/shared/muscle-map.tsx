@@ -6,7 +6,6 @@ import { RotateCcw } from "lucide-react";
 import type { BodyHighlightSlug, UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 const bodySlugs = new Set<BodyHighlightSlug>([
   "trapezius", "triceps", "forearm", "adductors", "calves", "neck", "deltoids", "hands", "feet", "head", "ankles", "tibialis", "obliques", "chest", "biceps", "abs", "quadriceps", "knees", "upper-back", "lower-back", "hamstring", "gluteal",
@@ -62,16 +61,14 @@ export function MuscleMap({
     return [...new Set(slugs || [])];
   }, [slugs, intensities]);
 
-  const activeSlug = hoveredSlug;
-
   return (
-    <div className="rounded-[28px] border border-[color:var(--border)] bg-white/60 p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
+    <div className="rounded-2xl border border-[color:var(--border)] bg-white/60 p-3.5 sm:rounded-[28px] sm:p-5">
+      <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted-foreground)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)] sm:text-xs sm:tracking-[0.18em]">
             {title || "Target muscles"}
           </p>
-          <p className="mt-1 text-sm text-[color:var(--muted-foreground)]">
+          <p className="mt-0.5 hidden text-sm text-[color:var(--muted-foreground)] sm:block">
             Hover a region to inspect stimulus.
           </p>
         </div>
@@ -87,7 +84,7 @@ export function MuscleMap({
       </div>
 
       <div
-        className="rounded-[24px] bg-[radial-gradient(circle_at_top,#ffffff_0%,#e4e4e4_100%)] p-4"
+        className="rounded-2xl bg-[radial-gradient(circle_at_top,#ffffff_0%,#e4e4e4_100%)] p-2 sm:rounded-[24px] sm:p-4"
         onMouseMove={(event) => {
           const target = event.target;
           if (!(target instanceof Element)) return;
@@ -97,13 +94,13 @@ export function MuscleMap({
         }}
         onMouseLeave={() => setHoveredSlug(null)}
       >
-        <div className="flex min-h-[480px] items-center justify-center">
+        <div className="flex min-h-[320px] items-center justify-center sm:min-h-[480px]">
           <Body
             data={data}
             gender={profile.bodyGender}
             side={side}
             border="none"
-            scale={1.35}
+            scale={1.08}
             // 1-4: Base, 5-8: Brighter, 9: Neutral Highlight
             colors={[
               "#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e", // 1-4
@@ -114,7 +111,7 @@ export function MuscleMap({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-3 flex max-h-16 flex-wrap gap-1.5 overflow-hidden sm:mt-4 sm:max-h-none sm:gap-2">
         {uniqueSlugs.map((slug) => (
           <button key={slug} type="button" onMouseEnter={() => setHoveredSlug(slug)} onMouseLeave={() => setHoveredSlug(null)}>
             <Badge className={hoveredSlug === slug ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white!" : undefined}>

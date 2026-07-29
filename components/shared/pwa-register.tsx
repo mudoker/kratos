@@ -49,14 +49,18 @@ export function PwaRegister() {
       try {
         await reg.update();
         if (reg.waiting) showBanner(reg.waiting);
-      } catch (_) {}
+      } catch {
+        // Offline launches can fail update checks.
+      }
 
       // Case 4: Poll every 30s and on app foreground
       const poll = async () => {
         try {
           await reg.update();
           if (reg.waiting) showBanner(reg.waiting);
-        } catch (_) {}
+        } catch {
+          // Offline launches can fail update checks.
+        }
       };
 
       const interval = setInterval(poll, 30_000);
@@ -87,16 +91,16 @@ export function PwaRegister() {
       zIndex: 9999,
       display: "flex",
       alignItems: "center",
-      gap: "10px",
+      gap: "8px",
       background: "#1d1d1f",
       color: "#fff",
-      padding: "10px 16px 10px 14px",
-      borderRadius: "16px",
+      padding: "8px 10px",
+      borderRadius: "14px",
       boxShadow: "0 8px 40px rgba(0,0,0,0.35)",
       fontSize: "12px",
       fontWeight: 600,
       whiteSpace: "nowrap",
-      maxWidth: "calc(100vw - 40px)",
+      maxWidth: "calc(100vw - 24px)",
       animation: "swBannerIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",
     }}>
       <style>{`
@@ -109,14 +113,14 @@ export function PwaRegister() {
       <RefreshCw size={13} style={{ flexShrink: 0, opacity: 0.65, animation: "spin 2s linear infinite" }} />
       <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
 
-      <span style={{ opacity: 0.75, fontSize: "11px" }}>New version available</span>
+      <span style={{ opacity: 0.75, fontSize: "11px" }}>Update ready</span>
 
       <button
         onClick={applyUpdate}
         style={{
           background: "#fff", color: "#1d1d1f",
           border: "none", borderRadius: "10px",
-          padding: "5px 14px", fontSize: "11px",
+          padding: "5px 10px", fontSize: "11px",
           fontWeight: 700, cursor: "pointer", flexShrink: 0,
         }}
       >

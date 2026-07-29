@@ -18,7 +18,6 @@ import {
 import { authClient } from "@/lib/auth-client";
 import type { AppUser } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
@@ -31,29 +30,28 @@ const items: Array<{ href: Route; label: string; icon: typeof BarChart3 }> = [
   { href: "/settings", label: "Settings", icon: Settings2 },
 ];
 
-
-export function AppShell({ user, children }: { user: AppUser; children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const logout = async () => {
-    await authClient.signOut();
-    router.push("/login");
-    router.refresh();
-  };
-
-  const activeTitle = items.find((item) => item.href === pathname)?.label || "Kratos";
-
-  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+function SidebarContent({
+  isMobile = false,
+  pathname,
+  user,
+  onNavigate,
+  onLogout,
+}: {
+  isMobile?: boolean;
+  pathname: string;
+  user: AppUser;
+  onNavigate: () => void;
+  onLogout: () => void;
+}) {
+  return (
     <div className="flex flex-col h-full justify-between items-center lg:group-hover:items-stretch">
-      <div className="space-y-5 w-full flex flex-col items-center lg:group-hover:items-stretch">
+      <div className={cn("w-full flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "space-y-3" : "space-y-5")}>
         
         {/* Core Brand Card */}
         <div className={cn(
           "bg-black text-white shadow-sm relative overflow-hidden transition-all duration-200",
           isMobile 
-            ? "p-4.5 rounded-2xl w-full" 
+            ? "p-3 rounded-xl w-full" 
             : "p-0 rounded-lg w-9 h-9 flex items-center justify-center lg:group-hover:p-4.5 lg:group-hover:rounded-2xl lg:group-hover:w-full lg:group-hover:h-auto"
         )}>
           <div className="absolute top-[-20%] right-[-20%] w-20 h-20 rounded-full bg-emerald-500/10 blur-lg pointer-events-none" />
@@ -71,12 +69,12 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
                 Kratos System
               </span>
             </div>
-            <div className={cn("transition-all duration-200", isMobile ? "mt-2.5 space-y-1" : "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 lg:group-hover:mt-2.5 space-y-1")}>
+            <div className={cn("transition-all duration-200", isMobile ? "hidden" : "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 lg:group-hover:mt-2.5 space-y-1")}>
               <h1 className="font-bold text-xs leading-snug tracking-tight text-white">
-                Structured Gym telemetry
+                Strength training
               </h1>
               <p className="text-[9px] leading-relaxed text-white/50">
-                Synchronize workouts, biology mappings, and coaching parameters.
+                Plans, workouts, and progress.
               </p>
             </div>
           </div>
@@ -112,7 +110,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={onNavigate}
                 className={cn(
                   "flex items-center transition-all duration-200 rounded-lg h-9 relative",
                   "w-9 justify-center p-0",
@@ -140,12 +138,12 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
         </nav>
       </div>
 
-      {/* Logout button & intelligence badge */}
-      <div className="space-y-3 pt-4 border-t border-black/[0.04] mt-4 w-full flex flex-col items-center lg:group-hover:items-stretch">
+      {/* Logout button & status */}
+      <div className={cn("space-y-3 border-t border-black/[0.04] w-full flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "pt-3 mt-3" : "pt-4 mt-4")}>
         <div className={cn(
           "border border-indigo-100 bg-indigo-50/10 text-indigo-700 transition-all duration-200",
           isMobile 
-            ? "p-3 rounded-lg w-full" 
+            ? "hidden" 
             : "p-0 rounded-lg w-9 h-9 flex items-center justify-center lg:group-hover:p-3 lg:group-hover:w-full"
         )}>
           <div className="flex items-center gap-2">
@@ -162,7 +160,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
         </div>
         <Button 
           variant="ghost" 
-          onClick={logout} 
+          onClick={onLogout} 
           className={cn(
             "justify-start rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition shrink-0",
             isMobile 
@@ -183,6 +181,20 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </div>
     </div>
   );
+}
+
+export function AppShell({ user, children }: { user: AppUser; children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const logout = async () => {
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
+  const activeTitle = items.find((item) => item.href === pathname)?.label || "Kratos";
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col px-3 pt-3 pb-24 lg:grid lg:grid-cols-[80px_1fr] lg:gap-6 lg:px-4 lg:pb-8 lg:pt-4">
@@ -190,7 +202,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       {/* Desktop Left Sticky Sidebar */}
       <aside className="hidden lg:block relative w-20 shrink-0 h-[calc(100vh-2rem)] sticky top-4 z-40">
         <div className="absolute left-0 top-0 h-full w-20 hover:w-[280px] transition-all duration-300 ease-in-out border border-black/5 bg-white/90 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.04)] backdrop-blur rounded-[36px] overflow-y-auto overflow-x-hidden flex flex-col group">
-          <SidebarContent isMobile={false} />
+          <SidebarContent isMobile={false} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
         </div>
       </aside>
 
@@ -206,17 +218,15 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </header>
 
       {/* Main Work Area Content */}
-      <main className="space-y-6 flex-1 min-w-0 mt-2 lg:mt-0">
+      <main className="space-y-4 flex-1 min-w-0 mt-1 lg:mt-0 lg:space-y-6">
         {children}
       </main>
 
       {/* Responsive Mobile Bottom Tab Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-5 left-4 right-4 z-40 bg-white/90 backdrop-blur-xl border border-black/[0.06] px-3 py-2 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.05)] flex items-center justify-around">
+      <nav className="lg:hidden fixed bottom-3 left-1/2 z-40 w-[min(320px,calc(100vw-24px))] -translate-x-1/2 bg-white/95 backdrop-blur-xl border border-black/[0.06] px-2 py-1.5 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.05)] flex items-center justify-around">
         {[
           { href: "/dashboard" as Route, label: "Home", icon: BarChart3 },
           { href: "/train" as Route, label: "Train", icon: Dumbbell },
-          { href: "/exercises" as Route, label: "Library", icon: Library },
-          { href: "/coach" as Route, label: "AI Coach", icon: Bot },
         ].map((item) => {
 
           const Icon = item.icon;
@@ -226,12 +236,12 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center pt-1.5 pb-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
+                "flex flex-col items-center justify-center py-1 flex-1 transition-colors duration-150 active:scale-98 select-none",
                 isActive ? "text-black" : "text-[#8e8e93]"
               )}
             >
               <Icon className="h-5.5 w-5.5" strokeWidth={isActive ? 2.25 : 1.8} />
-              <span className="text-[10px] font-semibold tracking-tight mt-0.5">{item.label}</span>
+              <span className="text-[9px] font-semibold tracking-tight mt-0.5">{item.label}</span>
             </Link>
           );
         })}
@@ -241,14 +251,17 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
           <DialogTrigger asChild>
             <button
               type="button"
-              className="flex flex-col items-center justify-center pt-1.5 pb-0.5 flex-1 transition-colors duration-150 active:scale-98 text-[#8e8e93] select-none"
+              className={cn(
+                "flex flex-col items-center justify-center py-1 flex-1 transition-colors duration-150 active:scale-98 select-none",
+                ["/progress", "/exercises", "/coach", "/settings"].includes(pathname) ? "text-black" : "text-[#8e8e93]"
+              )}
             >
               <Menu className="h-5.5 w-5.5" strokeWidth={1.8} />
-              <span className="text-[10px] font-semibold tracking-tight mt-0.5">More</span>
+              <span className="text-[9px] font-semibold tracking-tight mt-0.5">More</span>
             </button>
           </DialogTrigger>
-          <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[280px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-white p-5 border-r border-black/10 overflow-y-auto max-w-full z-50">
-            <SidebarContent isMobile={true} />
+          <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[240px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-white p-4 border-r border-black/10 overflow-y-auto max-w-full z-50">
+            <SidebarContent isMobile={true} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
           </DialogContent>
         </Dialog>
       </nav>
