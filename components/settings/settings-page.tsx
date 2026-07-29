@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Save, UserCircle, Activity, HeartPulse, ClipboardList, Key, Settings, Sparkles, Trophy, CalendarCheck, HelpCircle, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { Save, UserCircle, Activity, HeartPulse, Key, Settings, Sparkles, Trophy, CalendarCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useData } from "@/components/shared/data-provider";
 
@@ -21,15 +20,12 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false);
 
   // Client storage credentials
-  const [apiKey, setApiKey] = useState("");
-  const [aiModel, setAiModel] = useState("gemini-2.5-flash");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setApiKey(localStorage.getItem("kratos_gemini_api_key") || "");
-      setAiModel(localStorage.getItem("kratos_gemini_model") || "gemini-2.5-flash");
-    }
-  }, []);
+  const [apiKey, setApiKey] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("kratos_gemini_api_key") || "" : ""
+  );
+  const [aiModel, setAiModel] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("kratos_gemini_model") || "gemini-2.5-flash" : "gemini-2.5-flash"
+  );
 
   const save = async () => {
     setSaving(true);
@@ -55,63 +51,63 @@ export function SettingsPage() {
       localStorage.setItem("kratos_gemini_model", aiModel);
     }
 
-    setStatus("All settings & credentials compiled successfully.");
+    setStatus("Settings saved.");
     setSaving(false);
     router.refresh();
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] items-start">
+    <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr] xl:gap-6 items-start">
       
       {/* LEFT COLUMN: Tabbed Config panels */}
-      <div className="space-y-6">
-        <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
-          <div className="flex items-center gap-2 mb-3">
+      <div className="space-y-4 xl:space-y-6">
+        <Card className="p-4 md:p-8 border-transparent bg-white/80 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-2xl md:rounded-[32px]">
+          <div className="hidden items-center gap-2 mb-3 sm:flex">
             <span className="p-2 bg-black/5 text-black rounded-xl">
               <Settings className="h-4 w-4" />
             </span>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-black/40">Athlete Workspace Config</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/40">Settings</span>
           </div>
 
           <PageHeader
             eyebrow="Settings"
-            title="Athlete Profile & Context"
-            description="Fine-tune your personal, biological, and credentials workspace config to tailor contextual AI advice."
+            title="Profile & Coach"
+            description="Keep the essentials current."
             actions={
-              <Button type="button" onClick={save} disabled={saving} className="h-12 px-5 bg-black hover:bg-black/90 text-white font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200">
+              <Button type="button" onClick={save} disabled={saving} className="h-10 w-full px-4 bg-black hover:bg-black/90 text-white font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200 sm:h-12 sm:w-auto sm:px-5">
                 <Save className="h-4 w-4" />
-                <span>{saving ? "Saving changes..." : "Save changes"}</span>
+                <span>{saving ? "Saving..." : "Save"}</span>
               </Button>
             }
           />
 
           {/* Settings Tabs Navigator */}
-          <Tabs defaultValue="identity" className="mt-8 flex flex-col space-y-6">
-            <TabsList className="shrink-0 flex flex-wrap gap-2 items-center bg-black/5 p-1.5 rounded-2xl w-fit">
-              <TabsTrigger value="identity" className="px-4 py-2.5 text-xs font-bold rounded-xl gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black">
+          <Tabs defaultValue="identity" className="mt-5 flex flex-col space-y-4 md:mt-8 md:space-y-6">
+            <TabsList className="grid w-full shrink-0 grid-cols-4 gap-1 bg-black/5 p-1 rounded-xl md:inline-flex md:w-fit md:flex-wrap md:gap-2 md:p-1.5 md:rounded-2xl">
+              <TabsTrigger value="identity" className="px-2 py-2 text-[0] font-bold rounded-lg gap-0 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black sm:text-xs sm:gap-1.5 md:px-4 md:py-2.5 md:rounded-xl">
                 <UserCircle className="h-3.5 w-3.5" />
                 <span>Profile</span>
               </TabsTrigger>
-              <TabsTrigger value="biological" className="px-4 py-2.5 text-xs font-bold rounded-xl gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black">
+              <TabsTrigger value="biological" className="px-2 py-2 text-[0] font-bold rounded-lg gap-0 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black sm:text-xs sm:gap-1.5 md:px-4 md:py-2.5 md:rounded-xl">
                 <HeartPulse className="h-3.5 w-3.5" />
-                <span>Biologicals</span>
+                <span>Body</span>
               </TabsTrigger>
-              <TabsTrigger value="training" className="px-4 py-2.5 text-xs font-bold rounded-xl gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black">
+              <TabsTrigger value="training" className="px-2 py-2 text-[0] font-bold rounded-lg gap-0 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black sm:text-xs sm:gap-1.5 md:px-4 md:py-2.5 md:rounded-xl">
                 <Activity className="h-3.5 w-3.5" />
-                <span>Gym Targets</span>
+                <span>Training</span>
               </TabsTrigger>
-              <TabsTrigger value="credentials" className="px-4 py-2.5 text-xs font-bold rounded-xl gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black">
+              <TabsTrigger value="credentials" className="px-2 py-2 text-[0] font-bold rounded-lg gap-0 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black sm:text-xs sm:gap-1.5 md:px-4 md:py-2.5 md:rounded-xl">
                 <Key className="h-3.5 w-3.5" />
-                <span>API Keys</span>
+                <span>API</span>
               </TabsTrigger>
             </TabsList>
 
             {/* PROFILE TAB */}
-            <TabsContent value="identity" className="mt-0 outline-none space-y-6">
+            <TabsContent value="identity" className="mt-0 outline-none space-y-4 md:space-y-6">
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Preferred Athlete Nickname</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Nickname</label>
                     <Input 
                       value={profile.nickname || ""} 
                       onChange={(e) => setProfile(p => ({ ...p, nickname: e.target.value }))} 
@@ -131,7 +127,7 @@ export function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Medical Conditions</label>
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Medical notes</label>
                   <Textarea 
                     value={profile.medicalConditions || ""} 
                     onChange={(e) => setProfile(p => ({ ...p, medicalConditions: e.target.value }))} 
@@ -141,7 +137,7 @@ export function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Active Injuries / Restrictions</label>
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Injuries</label>
                   <Textarea 
                     value={profile.injuries || ""} 
                     onChange={(e) => setProfile(p => ({ ...p, injuries: e.target.value }))} 
@@ -153,7 +149,7 @@ export function SettingsPage() {
             </TabsContent>
 
             {/* BIOLOGICAL TAB */}
-            <TabsContent value="biological" className="mt-0 outline-none space-y-6">
+            <TabsContent value="biological" className="mt-0 outline-none space-y-4 md:space-y-6">
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-1.5">
@@ -190,7 +186,7 @@ export function SettingsPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Daily Average Sleep (Hours)</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Sleep</label>
                     <Input 
                       type="number"
                       step="0.5"
@@ -201,7 +197,7 @@ export function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Non-Gym Activity Level</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Activity</label>
                     <Select value={profile.activityLevel} onValueChange={(val) => setProfile(p => ({ ...p, activityLevel: val }))}>
                       <SelectTrigger className="bg-white border-black/5 rounded-xl text-xs font-bold py-4">
                         <SelectValue placeholder="Select activity level" />
@@ -219,15 +215,15 @@ export function SettingsPage() {
             </TabsContent>
 
             {/* GYM TARGETS TAB */}
-            <TabsContent value="training" className="mt-0 outline-none space-y-6">
+            <TabsContent value="training" className="mt-0 outline-none space-y-4 md:space-y-6">
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Primary Training Goal</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Goal</label>
                     <Input value={profile.goal} onChange={(e) => setProfile(p => ({ ...p, goal: e.target.value }))} placeholder="Strength, Powerlifting, Muscle Build..." className="bg-white border-black/5 focus:border-black rounded-xl py-3.5 text-xs" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Experience Bracket</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Experience</label>
                     <Select value={profile.experienceLevel} onValueChange={(val) => setProfile(p => ({ ...p, experienceLevel: val }))}>
                       <SelectTrigger className="bg-white border-black/5 rounded-xl text-xs font-bold py-4">
                         <SelectValue placeholder="Experience level" />
@@ -243,7 +239,7 @@ export function SettingsPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Body Map Model</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Body map</label>
                     <Select value={profile.bodyGender} onValueChange={(val) => setProfile(p => ({ ...p, bodyGender: val as "male" | "female" }))}>
                       <SelectTrigger className="bg-white border-black/5 rounded-xl text-xs font-bold py-4">
                         <SelectValue placeholder="Gender model" />
@@ -255,7 +251,7 @@ export function SettingsPage() {
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Weekly Session Target</label>
+                    <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Sessions/week</label>
                     <Input 
                       type="number" 
                       min="1" 
@@ -268,7 +264,7 @@ export function SettingsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Additional Athletic Context</label>
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Notes</label>
                   <Textarea 
                     value={profile.notes || ""} 
                     onChange={(e) => setProfile(p => ({ ...p, notes: e.target.value }))} 
@@ -280,13 +276,13 @@ export function SettingsPage() {
             </TabsContent>
 
             {/* CREDENTIALS TAB */}
-            <TabsContent value="credentials" className="mt-0 outline-none space-y-6">
-              <div className="p-5 border border-black/5 bg-neutral-50/50 rounded-2xl space-y-4">
+            <TabsContent value="credentials" className="mt-0 outline-none space-y-4 md:space-y-6">
+              <div className="p-4 border border-black/5 bg-neutral-50/50 rounded-2xl space-y-4 md:p-5">
                 <div className="flex items-center gap-2 text-neutral-800">
                   <Key className="h-4.5 w-4.5" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider">Client-Side Gemini API Key</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider">Gemini API Key</h3>
                 </div>
-                <p className="text-[11px] text-black/60 leading-relaxed">
+                <p className="hidden text-[11px] text-black/60 leading-relaxed sm:block">
                   Provide your personal Google Gemini API key. This key resides strictly in your browser's local sandbox storage and is forwarded directly to the chat API requests.
                 </p>
 
@@ -329,10 +325,10 @@ export function SettingsPage() {
       </div>
 
       {/* RIGHT COLUMN: Athlete Context Dashboard */}
-      <div className="space-y-6">
+      <div className="hidden space-y-6 xl:block">
         <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px] sticky top-6">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-black/40 block">
-            Athlete telemetry
+            Athlete summary
           </span>
           <CardTitle className="mt-2 text-2xl font-bold text-black">{data.user.name}</CardTitle>
           <CardDescription className="text-xs text-black/50 mt-1">{data.user.email}</CardDescription>
@@ -362,10 +358,10 @@ export function SettingsPage() {
             <div className="absolute top-0 right-0 p-3 opacity-15">
               <Sparkles className="h-10 w-10 text-white" />
             </div>
-            <p className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400">Coach Vector Alignment</p>
+            <p className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400">Coach alignment</p>
             <p className="mt-3 text-xs leading-relaxed text-white/80">
               {profile.nickname ? `Stay sharp, ${profile.nickname}. ` : "Stay sharp. "}
-              Biological inputs programmed here calibrate the chat advisor's telemetry safety margins.
+              Your saved context helps the coach tailor advice.
             </p>
           </div>
         </Card>

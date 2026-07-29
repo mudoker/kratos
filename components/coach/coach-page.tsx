@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from "react";
-import { SendHorizonal, Bot, Settings, ShieldAlert, Sparkles, BrainCircuit, Key, Check, Info, Loader2 } from "lucide-react";
+import { SendHorizonal, Bot, Settings, ShieldAlert, Sparkles, Key, Check, Info, Loader2 } from "lucide-react";
 import type { CoachMessage } from "@/lib/types";
-import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { useData } from "@/components/shared/data-provider";
@@ -105,8 +104,8 @@ export function CoachPage() {
       }
 
       setMessages(payload.messages);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to get a response from the coach.");
       // Remove optimistic message or keep it and restore input
       setInput(message);
       setMessages((prev) => prev.slice(0, -1)); // revert last optimism
@@ -116,19 +115,16 @@ export function CoachPage() {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] items-start">
+    <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr] xl:gap-6 items-start">
       
       {/* LEFT COLUMN: Chat Interface */}
-      <Card className="flex h-[calc(100vh-140px)] min-h-[500px] lg:h-[780px] flex-col p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-5">
+      <Card className="flex h-[calc(100dvh-156px)] min-h-[460px] lg:h-[780px] flex-col p-3.5 sm:p-5 md:p-8 border-transparent bg-white/80 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-2xl md:rounded-[32px]">
+        <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-3 sm:pb-5">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="p-2 bg-black/5 text-black/60 rounded-xl">
-                <BrainCircuit className="h-4 w-4" />
-              </span>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-black/50">Cognitive Neural Core</span>
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/45">Coach</span>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-black mt-2">Kratos Coach intelligence</h2>
+            <h2 className="text-base font-bold tracking-tight text-black sm:mt-2 sm:text-2xl">Kratos Coach</h2>
           </div>
 
           {/* Model selection & settings button */}
@@ -140,7 +136,7 @@ export function CoachPage() {
             <Button
               type="button"
               onClick={() => setShowConfigModal(true)}
-              className="h-11 w-11 p-0 bg-black/5 hover:bg-black/10 border-none rounded-xl text-black/60 transition shadow-sm flex items-center justify-center"
+              className="h-10 w-10 p-0 bg-black/5 hover:bg-black/10 border-none rounded-xl text-black/60 transition shadow-sm flex items-center justify-center sm:h-11 sm:w-11"
               title="Configure Coach API"
             >
               <Settings className="h-4 w-4" />
@@ -150,23 +146,23 @@ export function CoachPage() {
 
         {/* Messages view thread */}
         <div className="flex-1 min-h-0 relative">
-          <ScrollArea ref={scrollContainerRef} className="h-full w-full pr-2 mt-4">
-            <div className="space-y-5 pb-8">
+          <ScrollArea ref={scrollContainerRef} className="h-full w-full pr-1 mt-3 sm:pr-2 sm:mt-4">
+            <div className="space-y-3.5 pb-6 sm:space-y-5 sm:pb-8">
               {messages.length ? (
                 messages.map((msg, index) => {
                   const isUser = msg.role === "user";
                   return (
                     <div
                       key={index}
-                      className={`flex gap-3.5 ${isUser ? "justify-end" : "justify-start"}`}
+                      className={`flex gap-2.5 sm:gap-3.5 ${isUser ? "justify-end" : "justify-start"}`}
                     >
                       {!isUser && (
-                        <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-black text-white shadow-sm mt-1">
-                          <Bot className="h-4.5 w-4.5" />
+                        <div className="h-7 w-7 shrink-0 flex items-center justify-center rounded-lg bg-black text-white shadow-sm mt-1 sm:h-9 sm:w-9 sm:rounded-xl">
+                          <Bot className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
                         </div>
                       )}
                       <div
-                        className={`max-w-[80%] rounded-[24px] px-5 py-4 text-xs leading-relaxed shadow-sm whitespace-pre-wrap ${
+                        className={`max-w-[86%] rounded-2xl px-3.5 py-3 text-xs leading-relaxed shadow-sm whitespace-pre-wrap sm:max-w-[80%] sm:rounded-[24px] sm:px-5 sm:py-4 ${
                           isUser
                             ? "bg-black text-white rounded-tr-none font-medium"
                             : "border border-black/5 bg-white/60 text-black rounded-tl-none"
@@ -178,13 +174,13 @@ export function CoachPage() {
                   );
                 })
               ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-center max-w-sm mx-auto">
-                  <div className="p-4 bg-black/5 text-black rounded-2xl mb-4">
-                    <Bot className="h-8 w-8" />
+                <div className="flex flex-col items-center justify-center py-14 text-center max-w-xs mx-auto sm:max-w-sm sm:py-20">
+                  <div className="p-3 bg-black/5 text-black rounded-2xl mb-3 sm:p-4 sm:mb-4">
+                    <Bot className="h-6 w-6 sm:h-8 sm:w-8" />
                   </div>
                   <h4 className="font-bold text-sm text-black">Start your coaching thread</h4>
-                  <p className="text-xs text-black/50 mt-2 leading-relaxed">
-                    Ask Kratos Coach to analyze your weekly split balance, calculate muscle target intensities, suggest RPE loads, or review logged lifting technique.
+                  <p className="text-[11px] text-black/50 mt-2 leading-relaxed sm:text-xs">
+                    Ask about your plan, load choices, or recent session.
                   </p>
                   {!hasApiKey && (
                     <Button onClick={() => setShowConfigModal(true)} className="mt-5 text-xs font-semibold h-11 px-5 bg-black hover:bg-black/90 text-white rounded-xl shadow-md border-none">
@@ -210,7 +206,7 @@ export function CoachPage() {
         </div>
 
         {/* Input Text Box area */}
-        <div className="border-t border-black/5 pt-4 mt-2">
+        <div className="border-t border-black/5 pt-3 mt-2 sm:pt-4">
           <div className="relative flex items-end bg-black/5 rounded-2xl p-2 border border-black/5 focus-within:border-black/20 focus-within:bg-white transition duration-300">
             <Textarea
               value={input}
@@ -221,8 +217,8 @@ export function CoachPage() {
                   send();
                 }
               }}
-              placeholder={hasApiKey ? "Ask the coach to audit your split, suggest load changes, or review a session..." : "Configure your API key using the settings gear above to begin..."}
-              className="bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[50px] max-h-[140px] resize-none pr-12 text-xs py-2 text-black placeholder-black/30"
+              placeholder={hasApiKey ? "Ask the coach..." : "Configure API key first..."}
+              className="bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[46px] max-h-[110px] resize-none pr-12 text-[16px] sm:text-xs py-2 text-black placeholder-black/30"
               disabled={!hasApiKey || pending}
             />
             <Button 
@@ -244,7 +240,7 @@ export function CoachPage() {
       </Card>
 
       {/* RIGHT COLUMN: Sidebar Stats & Context */}
-      <div className="space-y-6">
+      <div className="hidden space-y-6 xl:block">
         
         {/* API Credentials Warning banner (if missing) */}
         {!hasApiKey && (
@@ -253,9 +249,9 @@ export function CoachPage() {
               <Key className="h-5 w-5" />
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-xs uppercase tracking-wide">API Credentials Required</h4>
+              <h4 className="font-bold text-xs uppercase tracking-wide">API key required</h4>
               <p className="text-xs text-neutral-500 leading-relaxed">
-                To activate AI capabilities, Kratos requires a Gemini API key. Setting up a local key enables secure, serverless processing.
+                Add a Gemini key to chat with the coach.
               </p>
               <Button onClick={() => setShowConfigModal(true)} className="h-10 px-4 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-900 text-white transition border-none shadow-sm mt-1">
                 Configure Credentials
@@ -268,10 +264,10 @@ export function CoachPage() {
         <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
           <CardTitle className="text-lg font-bold text-black flex items-center gap-2">
             <Info className="h-4.5 w-4.5 text-neutral-600" />
-            <span>Active context telemetry</span>
+            <span>Recent context</span>
           </CardTitle>
           <p className="mt-2 text-xs leading-relaxed text-black/50">
-            The coach analyzes your profile biological metrics, plans, and historical logs automatically.
+            The coach uses your profile, plans, and workout logs.
           </p>
 
           <div className="mt-5 space-y-3">
