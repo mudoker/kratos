@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Target, Trophy, Trash2, Edit2, X, BarChart3, Plus, Sparkles, CalendarDays, Check, Flame, Award } from "lucide-react";
+import { ArrowUpRight, Target, Trophy, Trash2, Edit2, BarChart3, Plus, CalendarDays, Check, Award } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { PersonalRecord } from "@/lib/types";
-import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,7 +56,7 @@ export function ProgressPage() {
 
     setRecords((current) => [payload.record!, ...current.filter((record) => record.id !== payload.record!.id)]);
     setForm(blankRecord());
-    setStatus(isEdit ? "PR updated successfully." : "PR saved successfully.");
+    setStatus(isEdit ? "PR updated." : "PR saved.");
     setIsModalOpen(false);
     router.refresh();
   };
@@ -95,29 +94,29 @@ export function ProgressPage() {
   }, [records, data.exercises]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       
       {/* Visual Header Panel */}
-      <div className="rounded-[36px] bg-gradient-to-r from-violet-950 via-slate-900 to-black p-6 md:p-10 text-white shadow-2xl relative overflow-hidden">
+      <div className="rounded-2xl bg-black p-4 text-white shadow-lg relative overflow-hidden md:rounded-[36px] md:p-10 md:shadow-2xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <Badge className="bg-white/10 hover:bg-white/20 border-transparent text-violet-400 font-bold uppercase tracking-widest text-[9px] px-3 py-1">
-              Active Progression Lab
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+          <div className="space-y-1.5 md:space-y-2">
+            <Badge className="hidden bg-white/10 hover:bg-white/20 border-transparent text-white/60 font-bold uppercase tracking-widest text-[9px] px-3 py-1 sm:inline-flex">
+              Progress
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/60">
-              PR & Momentum Vault
+            <h1 className="text-xl md:text-5xl font-black tracking-tight leading-tight text-white">
+              Personal records
             </h1>
-            <p className="text-white/60 text-sm md:text-base max-w-xl font-medium leading-relaxed">
-              Trace compound lift progression curves, evaluate muscle volume indices, and list historical athletic breakthroughs.
+            <p className="text-white/55 text-[11px] md:text-base max-w-xl font-medium leading-snug md:leading-relaxed">
+              Track PRs and strength trends.
             </p>
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button className="h-12 px-5 bg-white hover:bg-white/90 text-neutral-900 font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200" onClick={() => setForm(blankRecord())}>
+              <Button className="h-10 w-full px-4 bg-white hover:bg-white/90 text-neutral-900 font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200 md:h-12 md:w-auto md:px-5" onClick={() => setForm(blankRecord())}>
                 <Plus className="h-4 w-4" />
-                <span>Log Manual PR</span>
+                <span>Log PR</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-[32px] p-6 max-w-md bg-white border border-black/10">
@@ -127,7 +126,7 @@ export function ProgressPage() {
                   <span>{form.id ? "Edit Personal Record" : "Log Personal Record"}</span>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-black/50 mt-1 leading-relaxed">
-                  Log a compound lift breakthrough or performance marker to update your athletic records database.
+                  Save a lift, rep max, or performance marker.
                 </DialogDescription>
               </DialogHeader>
 
@@ -190,20 +189,23 @@ export function ProgressPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Notes & Strategy Cues</label>
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Notes</label>
                   <Textarea
                     value={form.notes || ""}
                     onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-                    placeholder="Execution details, machine seating configuration, path angle..."
+                    placeholder="Optional setup or effort notes..."
                     className="bg-black/5 border-black/5 rounded-xl text-xs min-h-[60px]"
                   />
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-black/5">
                   <Button type="button" className="h-11 rounded-xl bg-black hover:bg-black/90 text-white font-semibold text-xs shadow-md w-full border-none" onClick={saveRecord} disabled={!form.exerciseId}>
-                    <span>{form.id ? "Update Breakthrough" : "Log Breakthrough"}</span>
+                    <span>{form.id ? "Update PR" : "Save PR"}</span>
                   </Button>
                 </div>
+                {status ? (
+                  <p className="text-center text-[11px] font-semibold text-black/50">{status}</p>
+                ) : null}
               </div>
             </DialogContent>
           </Dialog>
@@ -211,27 +213,27 @@ export function ProgressPage() {
       </div>
 
       {/* Main Tabs Workspace layout */}
-      <Tabs defaultValue="analytics" className="space-y-6 flex flex-col flex-1">
-        <TabsList className="shrink-0 flex flex-wrap gap-2 items-center bg-black/5 p-1.5 rounded-2xl w-fit">
-          <TabsTrigger value="analytics" className="px-4 py-2.5 text-xs font-bold rounded-xl gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black">
+      <Tabs defaultValue="analytics" className="space-y-4 md:space-y-6 flex flex-col flex-1">
+        <TabsList className="grid w-full shrink-0 grid-cols-2 items-center gap-1 bg-black/5 p-1 rounded-xl md:inline-flex md:w-fit md:flex-wrap md:gap-2 md:p-1.5 md:rounded-2xl">
+          <TabsTrigger value="analytics" className="px-3 py-2 text-xs font-bold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
             <BarChart3 className="h-3.5 w-3.5" />
-            <span>Progression Analytics</span>
+            <span>Charts</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="px-4 py-2.5 text-xs font-bold rounded-xl gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black">
-            <Trophy className="h-3.5 w-3.5 animate-pulse" />
-            <span>Breakthrough History</span>
+          <TabsTrigger value="history" className="px-3 py-2 text-xs font-bold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
+            <Trophy className="h-3.5 w-3.5" />
+            <span>History</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analytics" className="mt-0 outline-none space-y-6">
+        <TabsContent value="analytics" className="mt-0 outline-none space-y-4 md:space-y-6">
           <ProgressCharts data={data} />
           
           {/* Key Metrics cards */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="hidden gap-4 md:grid md:grid-cols-3">
             {[
-              { label: "Active Milestones", value: records.length, desc: "Historical breakthroughs logged", color: "text-amber-500 bg-amber-50", icon: Award },
-              { label: "Targeted Regions", value: Object.keys(prGroups).length, desc: "Stimulated muscle categories", color: "text-indigo-500 bg-indigo-50", icon: Target },
-              { label: "Completed Sessions", value: data.sessions.length, desc: "Consistency telemetry checked", color: "text-emerald-500 bg-emerald-50", icon: Check },
+              { label: "PRs", value: records.length, desc: "Records logged", color: "text-amber-500 bg-amber-50", icon: Award },
+              { label: "Categories", value: Object.keys(prGroups).length, desc: "Movement groups", color: "text-indigo-500 bg-indigo-50", icon: Target },
+              { label: "Sessions", value: data.sessions.length, desc: "Workouts logged", color: "text-emerald-500 bg-emerald-50", icon: Check },
             ].map((item) => (
               <Card key={item.label} className="p-5 border-transparent bg-white/70 backdrop-blur shadow-[0_10px_35px_rgba(0,0,0,0.03)] rounded-2xl flex items-center gap-4 hover:border-black/5 hover:bg-white/80 transition duration-300">
                 <div className={cn("p-3 rounded-xl", item.color)}>
@@ -250,12 +252,12 @@ export function ProgressPage() {
         </TabsContent>
 
         <TabsContent value="history" className="mt-0 outline-none">
-          <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] items-start">
+          <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr] xl:gap-6 items-start">
             
             {/* PR list by categories */}
-            <div className="space-y-8">
+            <div className="space-y-5 md:space-y-8">
               {Object.entries(prGroups).map(([category, catRecords]) => (
-                <div key={category} className="space-y-4">
+                <div key={category} className="space-y-3 md:space-y-4">
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/45">
                       {category} Category
@@ -263,17 +265,17 @@ export function ProgressPage() {
                     <div className="h-px flex-1 bg-black/5" />
                   </div>
                   
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                     {catRecords.map((record) => {
                       const exercise = data.exercises.find((entry) => entry.id === record.exerciseId);
                       return (
                         <div
                           key={record.id}
-                          className="group relative rounded-2xl border border-black/5 bg-white/45 p-4 hover:bg-white/80 hover:shadow-sm transition duration-300"
+                          className="group relative rounded-2xl border border-black/5 bg-white/60 p-3.5 hover:bg-white/80 hover:shadow-sm transition duration-300 sm:p-4"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="font-bold text-sm text-black leading-tight">{exercise?.name || record.exerciseId}</p>
+                              <p className="font-bold text-xs text-black leading-tight sm:text-sm">{exercise?.name || record.exerciseId}</p>
                               <p className="text-[10px] text-black/40 mt-1 font-semibold flex items-center gap-1">
                                 <CalendarDays className="h-3 w-3" />
                                 <span>{new Date(record.achievedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
@@ -307,15 +309,15 @@ export function ProgressPage() {
             </div>
 
             {/* Consistency cues sidebar */}
-            <div className="space-y-6">
+            <div className="hidden space-y-6 xl:block">
               <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="p-2 bg-indigo-500/10 text-indigo-600 rounded-xl">
                     <ArrowUpRight className="h-4 w-4" />
                   </span>
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600">Breakthrough Telemetry</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600">PR notes</span>
                 </div>
-                <CardTitle className="text-lg font-bold text-black">Consistency Cues</CardTitle>
+                <CardTitle className="text-lg font-bold text-black">Helpful cues</CardTitle>
                 <div className="mt-5 space-y-4">
                   {[
                     "New PRs are automatically extracted from your live workout execution logs.",

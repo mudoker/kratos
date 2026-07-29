@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { 
   Activity, 
   CalendarClock, 
@@ -25,14 +25,14 @@ export function DashboardPage() {
   const recentSession = data.sessions[0];
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden p-5 md:p-8">
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-4 lg:space-y-6">
+      <Card className="overflow-hidden p-4 md:p-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex-1">
             <PageHeader
               eyebrow="Summary"
               title={<TextGenerate text={`Welcome back, ${data.user.name.split(" ")[0]}.`} />}
-              description="Track your consistency, active training splits, personal records, and telemetry."
+              description="Your training snapshot for today."
             />
           </div>
           
@@ -58,7 +58,7 @@ export function DashboardPage() {
                   : "text-neutral-400 hover:text-neutral-700"
               }`}
             >
-              Analytics
+              Charts
             </button>
             <button
               type="button"
@@ -97,7 +97,7 @@ export function DashboardPage() {
               <Flame className="h-4 w-4 text-black" />
               <CardTitle className="text-sm font-semibold">Consistency</CardTitle>
             </div>
-            <CardDescription className="mt-1 text-xs">
+            <CardDescription className="mt-1 hidden text-xs sm:block">
               Logged training sessions over the past 365 days.
             </CardDescription>
             <div className="mt-4">
@@ -114,16 +114,16 @@ export function DashboardPage() {
       )}
 
       {tab === "history" && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-4 animate-in fade-in duration-300 md:space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <Card className="p-4 md:p-6">
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 sm:tracking-widest">
                 Recent sessions
               </p>
               <div className="mt-4 space-y-3">
                 {data.sessions.length ? (
                   data.sessions.slice(0, 5).map((session) => (
-                    <div key={session.id} className="rounded-xl border border-black/[0.04] bg-neutral-50 p-4 transition hover:bg-neutral-100/50">
+                      <div key={session.id} className="rounded-xl border border-black/[0.04] bg-neutral-50 p-3.5 transition hover:bg-neutral-100/50 sm:p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <p className="font-bold text-sm text-neutral-900 truncate">{session.title}</p>
@@ -134,7 +134,7 @@ export function DashboardPage() {
                         <Badge className="shrink-0 text-[10px] bg-neutral-200/50 text-neutral-700 font-bold border-transparent">{session.items.length} Lifts</Badge>
                       </div>
                       {session.effort || session.notes ? (
-                        <p className="mt-2 text-xs leading-normal text-neutral-600 line-clamp-2">
+                          <p className="mt-2 hidden text-xs leading-normal text-neutral-600 line-clamp-2 sm:block">
                           {session.effort || session.notes}
                         </p>
                       ) : null}
@@ -149,7 +149,7 @@ export function DashboardPage() {
             </Card>
 
             <Card className="p-4 md:p-6">
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 sm:tracking-widest">
                 Personal Records (PRs)
               </p>
               <div className="mt-4 space-y-3">
@@ -157,7 +157,7 @@ export function DashboardPage() {
                   data.records.slice(0, 5).map((record) => {
                     const exercise = data.exercises.find((item) => item.id === record.exerciseId);
                     return (
-                      <div key={record.id} className="rounded-xl border border-black/[0.04] bg-neutral-50 p-4 transition hover:bg-neutral-100/50">
+                      <div key={record.id} className="rounded-xl border border-black/[0.04] bg-neutral-50 p-3.5 transition hover:bg-neutral-100/50 sm:p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
                             <p className="font-bold text-sm text-neutral-900 truncate">{exercise?.name || record.exerciseId}</p>
@@ -184,8 +184,8 @@ export function DashboardPage() {
 
           {recentSession && (
             <Card className="p-4 md:p-6">
-              <p className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400">
-                Latest Execution Telemetry
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 sm:tracking-widest">
+                Latest workout
               </p>
               <div className="mt-4 rounded-xl border border-black/[0.04] bg-neutral-50 p-4">
                 <p className="font-bold text-sm text-neutral-950 truncate">{recentSession.title}</p>

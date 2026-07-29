@@ -36,7 +36,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
     });
 
     return Object.entries(last4Weeks)
-      .map(([week, volume], idx) => ({ name: `Week ${4-idx}`, volume }))
+      .map(([, volume], idx) => ({ name: `Week ${4-idx}`, volume }))
       .reverse();
   }, [data.sessions]);
 
@@ -65,13 +65,13 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
   }, [data.sessions, data.exercises]);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card className="p-6">
+    <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+      <Card className="p-3.5 sm:p-6">
         <CardTitle className="text-base">Weekly Volume</CardTitle>
-        <CardDescription className="mt-1">Total sets performed per week.</CardDescription>
-        <div className="h-[240px] w-full mt-6">
+        <CardDescription className="mt-1 hidden sm:block">Total sets performed per week.</CardDescription>
+        <div className="h-[190px] w-full mt-4 sm:h-[240px] sm:mt-6">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weeklyVolume} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <BarChart data={weeklyVolume} margin={{ top: 10, right: 4, left: -28, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
               <XAxis 
                 dataKey="name" 
@@ -106,7 +106,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="hidden p-3.5 sm:block sm:p-6">
         <CardTitle className="text-base">Muscle Stimulus</CardTitle>
         <CardDescription className="mt-1">Primary muscle focus (Last 30 days).</CardDescription>
         <div className="h-[240px] w-full mt-6 relative">
