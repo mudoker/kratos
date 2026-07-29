@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import { 
-  Plus, Trash2, Loader2, Dumbbell, Sparkles, Clock, Target, 
+  Plus, Trash2, Loader2, Dumbbell, Clock, 
   CalendarDays, Play, ChevronRight, CheckCircle2, History,
-  Award, Calendar, AlertCircle, Info, X, Edit3, ClipboardList,
-  Save, ArrowLeft, RotateCcw, Volume2, VolumeX, Timer, Check, Minus, PlusCircle,
+  Award, Calendar, AlertCircle, X, Edit3, ClipboardList,
+  Save, ArrowLeft, RotateCcw, Volume2, VolumeX, Timer, Check, Minus,
   Pause, Search, Copy, Star, ChevronDown, ChevronUp
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { Exercise, WeeklyPlan, WeeklyPlanDay, WeeklyPlanItem, WorkoutSession, WorkoutSessionItem, WorkoutSet } from "@/lib/types";
+import type { Exercise, ExerciseCategory, WeeklyPlan, WeeklyPlanDay, WeeklyPlanItem, WorkoutSession, WorkoutSessionItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +84,7 @@ const deserializeExtraFields = (prGoal: string) => {
       tags: (parsed.tags || []) as string[],
       supersetGroup: (parsed.supersetGroup || "") as string,
     };
-  } catch (e) {
+  } catch {
     return {
       tags: [] as string[],
       supersetGroup: "",
@@ -113,7 +113,9 @@ const deserializeSetArray = (setsCount: number, repsStr: string, loadStr: string
 const playBeep = () => {
   if (typeof window === "undefined") return;
   try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) return;
+    const ctx = new AudioContextCtor();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
@@ -312,7 +314,7 @@ export function PlannerPage() {
     });
   };
 
-  const updateExerciseField = (dayId: string, itemId: string, field: keyof WeeklyPlanItem, value: any) => {
+  const updateExerciseField = <K extends keyof WeeklyPlanItem>(dayId: string, itemId: string, field: K, value: WeeklyPlanItem[K]) => {
     updateDraftDay(dayId, (day) => ({
       ...day,
       items: day.items.map((item) => (item.id === itemId ? { ...item, [field]: value } : item)),
@@ -424,7 +426,7 @@ export function PlannerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newExerciseName.trim(),
-          category: newExerciseMuscle as any,
+          category: newExerciseMuscle as ExerciseCategory,
           primaryMuscles: [newExerciseMuscle],
           equipment: newExerciseEquipment,
           defaultRestSeconds: 90,
@@ -804,7 +806,7 @@ export function PlannerPage() {
       
       const cleanedItems = (draftSession.items || []).map((item) => ({
         ...item,
-        sets: item.sets.map((set: any) => ({
+        sets: item.sets.map((set) => ({
           weight: set.weight,
           reps: set.reps,
         })),
@@ -898,7 +900,9 @@ export function PlannerPage() {
     if (favs) {
       try {
         setFavoriteExerciseIds(JSON.parse(favs));
-      } catch (_) {}
+      } catch {
+        // Ignore malformed local preference data.
+      }
     }
     
     const saved = localStorage.getItem("kratos_active_session");
@@ -916,13 +920,15 @@ export function PlannerPage() {
     if (savedCompleted) {
       try {
         setCompletedSets(JSON.parse(savedCompleted));
-      } catch (_) {}
+      } catch {
+        // Ignore malformed local session state.
+      }
     }
   }, [data.plans, data.sessions, data.exercises]);
 
   // Stopwatch ticking logic
   useEffect(() => {
-    let interval: any;
+    let interval: ReturnType<typeof setInterval> | undefined;
     if (draftSession && !draftSession.endedAt) {
       const start = new Date(draftSession.startedAt!).getTime();
       interval = setInterval(() => {
@@ -936,7 +942,7 @@ export function PlannerPage() {
 
   // Rest timer ticking logic
   useEffect(() => {
-    let timer: any;
+    let timer: ReturnType<typeof setInterval> | undefined;
     if (restSecondsLeft !== null && restSecondsLeft > 0 && !restTimerIsPaused) {
       timer = setInterval(() => {
         setRestSecondsLeft((prev) => {
@@ -989,13 +995,13 @@ export function PlannerPage() {
     }, 0);
 
     return (
-      <div className="mx-auto max-w-xl pb-32 space-y-5 bg-[#0D0D0D] text-white">
+      <div className="mx-auto max-w-xl pb-32 space-y-4 bg-[#0D0D0D] text-white sm:space-y-5">
         
         {/* Sticky top timer bar */}
-        <div className="sticky top-[52px] lg:top-0 z-30 -mx-4 px-4 py-3 bg-[#181818]/90 backdrop-blur-md border-b border-[#2B2B2B] flex items-center justify-between">
+        <div className="sticky top-[47px] lg:top-0 z-30 -mx-3 px-3 py-2.5 bg-[#181818]/92 backdrop-blur-md border-b border-[#2B2B2B] flex items-center justify-between sm:-mx-4 sm:px-4 sm:py-3">
           <div>
-            <h1 className="text-[10px] font-bold uppercase tracking-widest text-[#AAAAAA]">
-              ACTIVE WORKOUT
+            <h1 className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[10px] sm:tracking-widest">
+              Workout
             </h1>
             <p className="text-xs text-white font-bold truncate max-w-[200px] mt-0.5">
               {draftSession.title}
@@ -1022,7 +1028,7 @@ export function PlannerPage() {
         {/* Progress details */}
         <div className="flex justify-between items-center px-1">
           <span className="text-[9px] font-black text-[#AAAAAA] uppercase tracking-wider">
-            Done: {totalCompletedSets} / {totalPlannedSets} Sets
+            {totalCompletedSets} / {totalPlannedSets} sets
           </span>
           <button
             onClick={() => {
@@ -1036,7 +1042,7 @@ export function PlannerPage() {
             }}
             className="text-[10px] font-bold text-[#FF5A5F] hover:text-[#FF5A5F]/90"
           >
-            Discard Session
+            Discard
           </button>
         </div>
 
@@ -1051,7 +1057,7 @@ export function PlannerPage() {
             const isFavorite = favoriteExerciseIds.includes(item.exerciseId);
 
             return (
-              <Card key={item.id} className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3.5">
+              <Card key={item.id} className="p-3.5 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3 sm:p-4 sm:space-y-3.5">
                 
                 <div 
                   onClick={() => setLoggerExpandedExercises((prev) => ({ ...prev, [item.id]: !isExpanded }))}
@@ -1090,7 +1096,7 @@ export function PlannerPage() {
                   <div className="space-y-3.5 pt-1.5">
                     
                     {/* Previous/Best records panel */}
-                    <div className="grid grid-cols-2 gap-3 text-[10px] bg-[#1F1F1F] p-2.5 rounded-lg border border-[#2B2B2B]">
+                    <div className="hidden grid-cols-2 gap-3 text-[10px] bg-[#1F1F1F] p-2.5 rounded-lg border border-[#2B2B2B] sm:grid">
                       <div className="space-y-0.5">
                         <span className="text-[8px] font-bold uppercase text-[#AAAAAA]">Personal Record</span>
                         <p className="font-bold text-white">
@@ -1111,9 +1117,9 @@ export function PlannerPage() {
 
                     {/* Sets Logger Table */}
                     <div className="space-y-2">
-                      <div className="grid grid-cols-[30px_1fr_1fr_42px] gap-2.5 text-[8.5px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center">
+                      <div className="grid grid-cols-[26px_1fr_1fr_38px] gap-2 text-[8px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center sm:grid-cols-[30px_1fr_1fr_42px] sm:gap-2.5 sm:text-[8.5px]">
                         <span>Set</span>
-                        <span>Weight kg</span>
+                        <span>Kg</span>
                         <span>Reps</span>
                         <span>Done</span>
                       </div>
@@ -1129,7 +1135,7 @@ export function PlannerPage() {
                             key={setIdx}
                             ref={(!isDone && setIdx === 0) ? activeLoggerRowRef : null}
                             className={cn(
-                              "grid grid-cols-[30px_1fr_1fr_42px] gap-2.5 items-center text-center p-1 rounded-lg border transition-all",
+                              "grid grid-cols-[26px_1fr_1fr_38px] gap-2 items-center text-center p-1 rounded-lg border transition-all sm:grid-cols-[30px_1fr_1fr_42px] sm:gap-2.5",
                               isDone 
                                 ? "bg-[#34C759]/5 text-[#34C759] border-[#34C759]/20" 
                                 : "bg-[#1F1F1F]/40 border-transparent"
@@ -1143,7 +1149,7 @@ export function PlannerPage() {
                               placeholder={prevSet?.weight || "0"}
                               value={set.weight}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "weight", e.target.value)}
-                              className="h-7.5 text-center text-[10.5px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B]"
+                              className="h-9 text-center text-[16px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-7.5 sm:text-[10.5px]"
                             />
                             
                             <Input
@@ -1152,13 +1158,13 @@ export function PlannerPage() {
                               placeholder={prevSet?.reps || "8"}
                               value={set.reps}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "reps", e.target.value)}
-                              className="h-7.5 text-center text-[10.5px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B]"
+                              className="h-9 text-center text-[16px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-7.5 sm:text-[10.5px]"
                             />
 
                             <button
                               onClick={() => handleToggleSetComplete(itemIdx, setIdx)}
                               className={cn(
-                                "h-7 w-7 rounded-full flex items-center justify-center border mx-auto transition-all active:scale-90",
+                                "h-8 w-8 rounded-full flex items-center justify-center border mx-auto transition-all active:scale-90 sm:h-7 sm:w-7",
                                 isDone
                                   ? "bg-[#34C759] border-[#34C759] text-white"
                                   : "border-[#2B2B2B] text-transparent hover:border-[#AAAAAA]"
@@ -1169,7 +1175,7 @@ export function PlannerPage() {
                             
                             {isDone && isNewPR && (
                               <span className="col-span-4 text-[8px] font-extrabold text-[#FFB547] bg-[#FFB547]/10 py-0.5 rounded uppercase tracking-wider block text-left px-2">
-                                ★ NEW PERSONAL RECORD
+                                NEW PR
                               </span>
                             )}
                           </div>
@@ -1185,7 +1191,7 @@ export function PlannerPage() {
                         disabled={item.sets.length <= 1}
                         className="h-7 rounded-lg text-[9px] font-bold text-[#AAAAAA] hover:text-white hover:bg-white/5 gap-1"
                       >
-                        <Minus className="h-3 w-3" /> Remove Set
+                        <Minus className="h-3 w-3" /> Remove
                       </Button>
                       <Button
                         variant="ghost"
@@ -1193,7 +1199,7 @@ export function PlannerPage() {
                         onClick={() => handleAddSetActiveSession(itemIdx)}
                         className="h-7 rounded-lg text-[9px] font-bold text-[#4F8CFF] hover:bg-[#4F8CFF]/10 gap-1"
                       >
-                        <Plus className="h-3 w-3" /> Add Set
+                        <Plus className="h-3 w-3" /> Add
                       </Button>
                     </div>
 
@@ -1204,9 +1210,9 @@ export function PlannerPage() {
           })}
         </div>
 
-        <Card className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3">
-          <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider block">
-            Add ad-hoc exercise
+        <Card className="p-3.5 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3 sm:p-4">
+          <span className="hidden text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider sm:block">
+            Add exercise
           </span>
           <Button
             onClick={() => {
@@ -1221,11 +1227,11 @@ export function PlannerPage() {
         </Card>
 
         {/* FLOATING REST TIMER PILL WIDGET */}
-        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+        <div className="fixed bottom-24 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
           {restSecondsLeft !== null ? (
             <motion.div
               layoutId="restTimerWidget"
-              className="bg-[#181818] border border-[#2B2B2B] text-white p-3 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center gap-3 select-none"
+              className="bg-[#181818] border border-[#2B2B2B] text-white p-2.5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center gap-2 select-none sm:p-3 sm:gap-3"
             >
               <div 
                 onClick={() => setIsRestTimerExpanded(!isRestTimerExpanded)}
@@ -1239,7 +1245,7 @@ export function PlannerPage() {
               
               <div className="h-6 w-px bg-[#2B2B2B]" />
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setRestTimerIsPaused(!restTimerIsPaused)}
                   className="p-1 rounded-lg hover:bg-white/5 text-white transition-colors"
@@ -1264,7 +1270,7 @@ export function PlannerPage() {
                 </button>
                 <button
                   onClick={() => setRestSecondsLeft((prev) => (prev && prev > 15 ? prev - 15 : 1))}
-                  className="px-1.5 py-0.5 bg-[#2B2B2B] hover:bg-[#2B2B2B]/80 rounded text-[8px] font-bold text-white transition-colors"
+                  className="hidden px-1.5 py-0.5 bg-[#2B2B2B] hover:bg-[#2B2B2B]/80 rounded text-[8px] font-bold text-white transition-colors sm:block"
                 >
                   -15s
                 </button>
@@ -1849,14 +1855,14 @@ export function PlannerPage() {
               </div>
 
               <div className="grid grid-cols-3 gap-1 bg-[#1F1F1F] p-0.5 rounded-lg border border-[#2B2B2B]">
-                {[
+                {([
                   { id: "all", label: "All Movements" },
                   { id: "favorites", label: "Favorites" },
                   { id: "recent", label: "Recent" },
-                ].map((flt) => (
+                ] as const).map((flt) => (
                   <button
                     key={flt.id}
-                    onClick={() => setPickerFilter(flt.id as any)}
+                    onClick={() => setPickerFilter(flt.id)}
                     className={cn(
                       "py-1 text-[10px] font-bold rounded transition-all",
                       pickerFilter === flt.id
@@ -1995,11 +2001,11 @@ export function PlannerPage() {
   // RENDER INTERFACE 3: MAIN WORKOUT HUB
   // ==========================================
   return (
-    <div className="mx-auto max-w-md md:max-w-4xl px-2 pb-16 space-y-6">
+      <div className="mx-auto max-w-md md:max-w-4xl px-0 pb-16 space-y-4 sm:px-2 sm:space-y-6">
       
       {/* Top Bar with Brand and Tabs */}
       <div className="flex flex-col gap-3">
-        <div className="flex justify-between items-center px-1">
+        <div className="hidden justify-between items-center px-1 sm:flex">
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-lg bg-[#4F8CFF]/15 text-[#4F8CFF] flex items-center justify-center shrink-0">
               <Dumbbell className="h-3.5 w-3.5" />
@@ -2017,17 +2023,17 @@ export function PlannerPage() {
 
         {/* Tab switcher: Plans, Session, History */}
         <div className="grid grid-cols-3 gap-1 bg-[#181818] p-1 rounded-xl border border-[#2B2B2B]">
-          {[
+          {([
             { id: "plans", label: "Plans", icon: ClipboardList },
             { id: "session", label: "Session", icon: Play },
             { id: "history", label: "History", icon: History },
-          ].map((tab) => {
+          ] as const).map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all select-none",
                   isActive 
@@ -2062,25 +2068,25 @@ export function PlannerPage() {
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search plan name..."
+                placeholder="Search plans..."
                   className="pl-9 h-9 rounded-xl border-[#2B2B2B] bg-[#181818] text-white placeholder-[#AAAAAA] text-xs font-semibold focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
                 />
               </div>
               <select
                 value={sortBy}
-                onChange={(e: any) => setSortBy(e.target.value)}
+                onChange={(e) => setSortBy(e.target.value as "alphabetical" | "edited" | "exercises")}
                 className="h-9 rounded-xl border border-[#2B2B2B] bg-[#181818] text-white text-xs font-semibold px-2.5 outline-none focus:ring-1 focus:ring-[#4F8CFF]"
               >
-                <option value="edited">Recently Edited</option>
+                <option value="edited">Recent</option>
                 <option value="alphabetical">Alphabetical</option>
-                <option value="exercises">Exercises Count</option>
+                <option value="exercises">Exercises</option>
               </select>
             </div>
 
             {/* Create new plan button */}
             <div className="flex justify-between items-center px-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA]">
-                Workout templates ({filteredPlans.length})
+                Plans ({filteredPlans.length})
               </span>
               <Button 
                 onClick={() => {
@@ -2092,7 +2098,7 @@ export function PlannerPage() {
                 size="sm" 
                 className="h-8 rounded-xl bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white text-[10px] font-bold gap-1 px-3"
               >
-                <Plus className="h-3.5 w-3.5" /> Create Plan
+                <Plus className="h-3.5 w-3.5" /> Create
               </Button>
             </div>
 
@@ -2119,9 +2125,9 @@ export function PlannerPage() {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-[11px] text-[#AAAAAA] mt-1 line-clamp-1">
-                              {plan.notes || "No description."}
-                            </p>
+                              <p className="hidden text-[11px] text-[#AAAAAA] mt-1 line-clamp-1 sm:block">
+                                {plan.notes || "No description."}
+                              </p>
                           </div>
                           
                           <div className="flex items-center gap-0.5">
@@ -2161,7 +2167,7 @@ export function PlannerPage() {
                           onClick={() => setViewingPlan(plan)}
                           className="h-8.5 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B]"
                         >
-                          Stimulus Audit
+                          Review
                         </Button>
                         <Button
                           variant="outline"
@@ -2172,7 +2178,7 @@ export function PlannerPage() {
                           }}
                           className="h-8.5 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B]"
                         >
-                          <Edit3 className="h-3 w-3 mr-1" /> Edit Template
+                          <Edit3 className="h-3 w-3 mr-1" /> Edit
                         </Button>
                       </div>
                     </Card>
@@ -2212,11 +2218,11 @@ export function PlannerPage() {
                   </div>
                   <div>
                     <CardTitle className="text-sm font-bold tracking-tight text-white">
-                      Start Empty Workout
+                      Start Workout
                     </CardTitle>
-                    <CardDescription className="text-xs text-[#AAAAAA] mt-0.5">
-                      Log a fast session without template constraints.
-                    </CardDescription>
+                      <CardDescription className="hidden text-xs text-[#AAAAAA] mt-0.5 sm:block">
+                        Log a fast session without template constraints.
+                      </CardDescription>
                   </div>
                 </div>
                 <ChevronRight className="h-4.5 w-4.5 text-[#AAAAAA] group-hover:translate-x-0.5 transition-transform" />
@@ -2225,7 +2231,7 @@ export function PlannerPage() {
 
             <div className="space-y-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
-                Log Template Split
+                Templates
               </span>
 
               {plans.length > 0 ? (
@@ -2248,7 +2254,7 @@ export function PlannerPage() {
                                 {plan.name} • {day.title}
                               </h3>
                               <p className="text-[9.5px] text-[#AAAAAA] mt-0.5 font-semibold">
-                                Focus: {day.focus || "Routine"} • {exerciseCount} exercises
+                                {day.focus || "Routine"} • {exerciseCount} exercises
                               </p>
                             </div>
                           </div>
@@ -2282,7 +2288,7 @@ export function PlannerPage() {
             className="space-y-4"
           >
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
-              Completed workouts history
+              Workout history
             </span>
 
             {sessions.length > 0 ? (
@@ -2317,7 +2323,7 @@ export function PlannerPage() {
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-3.5 text-[9px] text-[#AAAAAA] font-bold">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-[#AAAAAA] font-bold sm:gap-3.5">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-[#AAAAAA]/60" />
                             {dateFormatted}
@@ -2328,7 +2334,7 @@ export function PlannerPage() {
                           </span>
                           <span className="flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3 text-[#AAAAAA]/60" />
-                            {session.items.length} exercises logged
+                            {session.items.length} exercises
                           </span>
                         </div>
                       </div>
