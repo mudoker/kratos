@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Target, Trophy, Trash2, Edit2, BarChart3, Plus, CalendarDays, Check, Award } from "lucide-react";
+import { ArrowUpRight, Trophy, Trash2, Edit2, BarChart3, Plus, CalendarDays, Check, Award } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { PersonalRecord } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { ProgressCharts } from "./progress-charts";
 import { useData } from "@/components/shared/data-provider";
-import { cn } from "@/lib/utils";
 
 const blankRecord = (): Omit<PersonalRecord, "id" | "userId"> & { id?: string } => ({
   id: undefined,
@@ -92,6 +91,15 @@ export function ProgressPage() {
       return acc;
     }, {} as Record<string, PersonalRecord[]>);
   }, [records, data.exercises]);
+  const recentSessions = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    return data.sessions.filter((session) => new Date(session.startedAt) >= cutoff);
+  }, [data.sessions]);
+  const latestRecord = records[0];
+  const latestExercise = latestRecord
+    ? data.exercises.find((exercise) => exercise.id === latestRecord.exerciseId)
+    : null;
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -212,6 +220,42 @@ export function ProgressPage() {
         </div>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[
+          {
+            label: "Last 30 days",
+            value: `${recentSessions.length}`,
+            detail: "workouts logged",
+            icon: Check,
+          },
+          {
+            label: "Tracked PRs",
+            value: `${records.length}`,
+            detail: "records saved",
+            icon: Award,
+          },
+          {
+            label: "Latest PR",
+            value: latestRecord ? `${latestRecord.value}${latestRecord.unit}` : "None",
+            detail: latestExercise?.name || "Log a record",
+            icon: Trophy,
+          },
+        ].map((item) => (
+          <Card key={item.label} className="border-transparent bg-white/80 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">{item.label}</p>
+                <p className="mt-1 text-xl font-black leading-none text-black">{item.value}</p>
+                <p className="mt-1 truncate text-[10px] font-semibold text-black/40">{item.detail}</p>
+              </div>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black text-white">
+                <item.icon className="h-4 w-4" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
       {/* Main Tabs Workspace layout */}
       <Tabs defaultValue="analytics" className="space-y-4 md:space-y-6 flex flex-col flex-1">
         <TabsList className="grid w-full shrink-0 grid-cols-2 items-center gap-1 bg-black/5 p-1 rounded-xl md:inline-flex md:w-fit md:flex-wrap md:gap-2 md:p-1.5 md:rounded-2xl">
@@ -227,28 +271,6 @@ export function ProgressPage() {
 
         <TabsContent value="analytics" className="mt-0 outline-none space-y-4 md:space-y-6">
           <ProgressCharts data={data} />
-          
-          {/* Key Metrics cards */}
-          <div className="hidden gap-4 md:grid md:grid-cols-3">
-            {[
-              { label: "PRs", value: records.length, desc: "Records logged", color: "text-amber-500 bg-amber-50", icon: Award },
-              { label: "Categories", value: Object.keys(prGroups).length, desc: "Movement groups", color: "text-indigo-500 bg-indigo-50", icon: Target },
-              { label: "Sessions", value: data.sessions.length, desc: "Workouts logged", color: "text-emerald-500 bg-emerald-50", icon: Check },
-            ].map((item) => (
-              <Card key={item.label} className="p-5 border-transparent bg-white/70 backdrop-blur shadow-[0_10px_35px_rgba(0,0,0,0.03)] rounded-2xl flex items-center gap-4 hover:border-black/5 hover:bg-white/80 transition duration-300">
-                <div className={cn("p-3 rounded-xl", item.color)}>
-                  <item.icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-black/40">{item.label}</p>
-                  <p className="mt-0.5 text-2xl font-bold text-black leading-none">
-                    {item.value}
-                  </p>
-                  <p className="text-[10px] text-black/35 mt-1 leading-none">{item.desc}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
         </TabsContent>
 
         <TabsContent value="history" className="mt-0 outline-none">

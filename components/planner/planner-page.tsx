@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlanAnalysis } from "./plan-analysis";
 import { useData } from "@/components/shared/data-provider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -993,44 +994,101 @@ export function PlannerPage() {
     const totalPlannedSets = (draftSession.items || []).reduce((acc, item) => {
       return acc + item.sets.length;
     }, 0);
+    const completionPercent = totalPlannedSets > 0 ? Math.round((totalCompletedSets / totalPlannedSets) * 100) : 0;
+    const currentItemIndex = (draftSession.items || []).findIndex((item) =>
+      item.sets.some((_, setIdx) => !completedSets[`${item.id}-${setIdx}`])
+    );
+    const currentItem = currentItemIndex >= 0 ? draftSession.items?.[currentItemIndex] : null;
+    const currentSetIndex = currentItem
+      ? currentItem.sets.findIndex((_, setIdx) => !completedSets[`${currentItem.id}-${setIdx}`])
+      : -1;
+    const currentPreviousSet = currentItem
+      ? getPreviousSessionPerformance(currentItem.exerciseId)?.sets[currentSetIndex]
+      : undefined;
 
     return (
-      <div className="mx-auto max-w-xl pb-32 space-y-4 bg-[#0D0D0D] text-white sm:space-y-5">
+      <div className="mx-auto max-w-2xl pb-32 space-y-5 bg-[#0D0D0D] text-white">
         
         {/* Sticky top timer bar */}
-        <div className="sticky top-[47px] lg:top-0 z-30 -mx-3 px-3 py-2.5 bg-[#181818]/92 backdrop-blur-md border-b border-[#2B2B2B] flex items-center justify-between sm:-mx-4 sm:px-4 sm:py-3">
-          <div>
-            <h1 className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[10px] sm:tracking-widest">
-              Workout
-            </h1>
-            <p className="text-xs text-white font-bold truncate max-w-[200px] mt-0.5">
-              {draftSession.title}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#1F1F1F] rounded-lg border border-[#2B2B2B]">
-              <Clock className="h-3.5 w-3.5 text-[#AAAAAA]" />
-              <span className="text-xs font-black font-mono tracking-tight text-white">
-                {formatTime(elapsedTime)}
-              </span>
+        <div className="sticky top-[47px] lg:top-0 z-30 -mx-3 bg-[#0D0D0D]/95 px-3 py-3 backdrop-blur-md border-b border-[#2B2B2B] sm:-mx-4 sm:px-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[10px]">
+                Active workout
+              </h1>
+              <p className="mt-0.5 truncate text-sm font-bold text-white">
+                {draftSession.title}
+              </p>
             </div>
 
-            <Button
-              onClick={() => setIsFinishingWorkout(true)}
-              className="h-8 rounded-lg bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white font-bold text-[10px] px-3.5"
-            >
-              Finish
-            </Button>
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#1F1F1F] rounded-lg border border-[#2B2B2B]">
+                <Clock className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                <span className="text-xs font-black font-mono tracking-tight text-white">
+                  {formatTime(elapsedTime)}
+                </span>
+              </div>
+
+              <Button
+                onClick={() => setIsFinishingWorkout(true)}
+                className="h-9 rounded-lg bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white font-bold text-[10px] px-4"
+              >
+                Finish
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center gap-3">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1F1F1F]">
+              <div className="h-full rounded-full bg-[#4F8CFF] transition-all" style={{ width: `${completionPercent}%` }} />
+            </div>
+            <span className="text-[10px] font-black text-[#AAAAAA]">{completionPercent}%</span>
           </div>
         </div>
 
-        {/* Progress details */}
-        <div className="flex justify-between items-center px-1">
-          <span className="text-[9px] font-black text-[#AAAAAA] uppercase tracking-wider">
-            {totalCompletedSets} / {totalPlannedSets} sets
-          </span>
-          <button
+        <Card className="border border-[#2B2B2B] bg-[#181818] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.2)]">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-wider text-[#4F8CFF]">Current set</p>
+              <h2 className="mt-1 truncate text-lg font-bold text-white">
+                {currentItem ? currentItem.exerciseName : "Workout complete"}
+              </h2>
+              <p className="mt-1 text-xs font-semibold text-[#AAAAAA]">
+                {currentItem && currentSetIndex >= 0
+                  ? `Set ${currentSetIndex + 1} of ${currentItem.sets.length}`
+                  : "Review and finish your session."}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-[#2B2B2B] bg-[#1F1F1F] px-3 py-2 text-right">
+              <p className="text-[9px] font-bold uppercase text-[#AAAAAA]">Done</p>
+              <p className="text-sm font-black text-white">{totalCompletedSets}/{totalPlannedSets}</p>
+            </div>
+          </div>
+          {currentItem && currentSetIndex >= 0 ? (
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-[#1F1F1F] p-3">
+                <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Target</p>
+                <p className="mt-1 text-xs font-bold text-white">{currentItem.reps || "8-12"} reps</p>
+              </div>
+              <div className="rounded-xl bg-[#1F1F1F] p-3">
+                <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Previous</p>
+                <p className="mt-1 truncate text-xs font-bold text-white">
+                  {currentPreviousSet ? `${currentPreviousSet.weight || 0} x ${currentPreviousSet.reps}` : "None"}
+                </p>
+              </div>
+              <div className="rounded-xl bg-[#1F1F1F] p-3">
+                <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Rest</p>
+                <p className="mt-1 text-xs font-bold text-white">{currentItem.restSeconds || 90}s</p>
+              </div>
+            </div>
+          ) : null}
+        </Card>
+
+        <div className="flex justify-end px-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => {
               if (confirm("Discard active workout? This cannot be undone.")) {
                 setDraftSession(null);
@@ -1040,10 +1098,10 @@ export function PlannerPage() {
                 localStorage.removeItem("kratos_completed_sets");
               }
             }}
-            className="text-[10px] font-bold text-[#FF5A5F] hover:text-[#FF5A5F]/90"
+            className="h-8 rounded-xl px-3 text-[10px] font-bold text-[#FF5A5F] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
           >
             Discard
-          </button>
+          </Button>
         </div>
 
         {/* Exercises list with set tracking */}
@@ -1055,24 +1113,31 @@ export function PlannerPage() {
             const prevPerf = getPreviousSessionPerformance(item.exerciseId);
             const extras = deserializeExtraFields(item.targetRpe);
             const isFavorite = favoriteExerciseIds.includes(item.exerciseId);
+            const isCurrentExercise = currentItem?.id === item.id;
 
             return (
-              <Card key={item.id} className="p-3.5 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3 sm:p-4 sm:space-y-3.5">
+              <Card
+                key={item.id}
+                className={cn(
+                  "p-4 border bg-[#181818] rounded-2xl space-y-4 transition sm:p-5",
+                  isCurrentExercise ? "border-[#4F8CFF]/50 shadow-[0_18px_70px_rgba(79,140,255,0.12)]" : "border-[#2B2B2B]"
+                )}
+              >
                 
                 <div 
                   onClick={() => setLoggerExpandedExercises((prev) => ({ ...prev, [item.id]: !isExpanded }))}
                   className="flex justify-between items-start cursor-pointer group"
                 >
-                  <div className="space-y-1">
+                  <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <h3 className="text-xs font-bold text-white group-hover:text-[#4F8CFF] transition-colors">
+                      <h3 className="truncate text-sm font-bold text-white group-hover:text-[#4F8CFF] transition-colors">
                         {item.exerciseName}
                       </h3>
                       {isFavorite && <Star className="h-3 w-3 fill-[#FFB547] text-[#FFB547]" />}
                     </div>
                     
                     {!isExpanded && (
-                      <p className="text-[9.5px] text-[#AAAAAA] font-bold">
+                      <p className="text-[10px] text-[#AAAAAA] font-bold">
                         {item.sets.length} sets • PR: {pr ? `${pr.weight} kg x ${pr.reps}` : "None"}
                       </p>
                     )}
@@ -1117,7 +1182,7 @@ export function PlannerPage() {
 
                     {/* Sets Logger Table */}
                     <div className="space-y-2">
-                      <div className="grid grid-cols-[26px_1fr_1fr_38px] gap-2 text-[8px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center sm:grid-cols-[30px_1fr_1fr_42px] sm:gap-2.5 sm:text-[8.5px]">
+                      <div className="grid grid-cols-[30px_1fr_1fr_44px] gap-2.5 text-[8px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center sm:grid-cols-[34px_1fr_1fr_48px]">
                         <span>Set</span>
                         <span>Kg</span>
                         <span>Reps</span>
@@ -1135,7 +1200,7 @@ export function PlannerPage() {
                             key={setIdx}
                             ref={(!isDone && setIdx === 0) ? activeLoggerRowRef : null}
                             className={cn(
-                              "grid grid-cols-[26px_1fr_1fr_38px] gap-2 items-center text-center p-1 rounded-lg border transition-all sm:grid-cols-[30px_1fr_1fr_42px] sm:gap-2.5",
+                              "grid grid-cols-[30px_1fr_1fr_44px] gap-2.5 items-center text-center p-1.5 rounded-xl border transition-all sm:grid-cols-[34px_1fr_1fr_48px]",
                               isDone 
                                 ? "bg-[#34C759]/5 text-[#34C759] border-[#34C759]/20" 
                                 : "bg-[#1F1F1F]/40 border-transparent"
@@ -1149,7 +1214,7 @@ export function PlannerPage() {
                               placeholder={prevSet?.weight || "0"}
                               value={set.weight}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "weight", e.target.value)}
-                              className="h-9 text-center text-[16px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-7.5 sm:text-[10.5px]"
+                              className="h-11 text-center text-[16px] font-bold rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-10 sm:text-sm"
                             />
                             
                             <Input
@@ -1158,20 +1223,22 @@ export function PlannerPage() {
                               placeholder={prevSet?.reps || "8"}
                               value={set.reps}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "reps", e.target.value)}
-                              className="h-9 text-center text-[16px] font-bold rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-7.5 sm:text-[10.5px]"
+                              className="h-11 text-center text-[16px] font-bold rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-10 sm:text-sm"
                             />
 
-                            <button
+                            <Button
+                              type="button"
+                              variant="ghost"
                               onClick={() => handleToggleSetComplete(itemIdx, setIdx)}
                               className={cn(
-                                "h-8 w-8 rounded-full flex items-center justify-center border mx-auto transition-all active:scale-90 sm:h-7 sm:w-7",
+                                "h-9 w-9 rounded-full flex items-center justify-center border mx-auto p-0 transition-all active:scale-90 sm:h-10 sm:w-10",
                                 isDone
                                   ? "bg-[#34C759] border-[#34C759] text-white"
                                   : "border-[#2B2B2B] text-transparent hover:border-[#AAAAAA]"
                               )}
                             >
                               <Check className="h-3.5 w-3.5 stroke-[3.5]" />
-                            </button>
+                            </Button>
                             
                             {isDone && isNewPR && (
                               <span className="col-span-4 text-[8px] font-extrabold text-[#FFB547] bg-[#FFB547]/10 py-0.5 rounded uppercase tracking-wider block text-left px-2">
@@ -1246,59 +1313,79 @@ export function PlannerPage() {
               <div className="h-6 w-px bg-[#2B2B2B]" />
 
               <div className="flex items-center gap-1">
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setRestTimerIsPaused(!restTimerIsPaused)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-white transition-colors"
+                  className="h-7 w-7 rounded-lg p-0 text-white hover:bg-white/5"
                 >
                   {restTimerIsPaused ? (
                     <Play className="h-3.5 w-3.5 fill-current text-[#4F8CFF]" />
                   ) : (
                     <Pause className="h-3.5 w-3.5 fill-current text-white" />
                   )}
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setRestSecondsLeft(restTimerDuration)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-[#AAAAAA] hover:text-white transition-colors"
+                  className="h-7 w-7 rounded-lg p-0 text-[#AAAAAA] hover:bg-white/5 hover:text-white"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setRestSecondsLeft((prev) => (prev ? prev + 15 : 15))}
-                  className="px-1.5 py-0.5 bg-[#2B2B2B] hover:bg-[#2B2B2B]/80 rounded text-[8px] font-bold text-white transition-colors"
+                  className="h-7 rounded-lg bg-[#2B2B2B] px-2 py-0 text-[8px] font-bold text-white hover:bg-[#2B2B2B]/80"
                 >
                   +15s
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setRestSecondsLeft((prev) => (prev && prev > 15 ? prev - 15 : 1))}
-                  className="hidden px-1.5 py-0.5 bg-[#2B2B2B] hover:bg-[#2B2B2B]/80 rounded text-[8px] font-bold text-white transition-colors sm:block"
+                  className="hidden h-7 rounded-lg bg-[#2B2B2B] px-2 py-0 text-[8px] font-bold text-white hover:bg-[#2B2B2B]/80 sm:inline-flex"
                 >
                   -15s
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setIsAudioEnabled(!isAudioEnabled)}
-                  className="p-1 rounded-lg hover:bg-white/5 text-[#AAAAAA] hover:text-white transition-colors"
+                  className="h-7 w-7 rounded-lg p-0 text-[#AAAAAA] hover:bg-white/5 hover:text-white"
                 >
                   {isAudioEnabled ? <Volume2 className="h-3.5 w-3.5 text-[#34C759]" /> : <VolumeX className="h-3.5 w-3.5 text-[#FF5A5F]" />}
-                </button>
-                <button
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setRestSecondsLeft(null)}
-                  className="p-1 rounded-lg hover:bg-[#FF5A5F]/10 text-[#FF5A5F] hover:text-[#FF5A5F] transition-colors"
+                  className="h-7 w-7 rounded-lg p-0 text-[#FF5A5F] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
                 >
                   <X className="h-3.5 w-3.5" />
-                </button>
+                </Button>
               </div>
             </motion.div>
           ) : (
-            <button
+            <Button
+              type="button"
+              size="icon"
               onClick={() => {
                 setRestTimerDuration(90);
                 setRestSecondsLeft(90);
                 setRestTimerIsPaused(false);
               }}
-              className="h-10 w-10 bg-[#4F8CFF] text-white hover:bg-[#4F8CFF]/90 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all"
+              className="h-10 w-10 rounded-full bg-[#4F8CFF] text-white hover:bg-[#4F8CFF]/90 shadow-lg"
             >
               <Timer className="h-5 w-5" />
-            </button>
+            </Button>
           )}
         </div>
 
@@ -1312,12 +1399,15 @@ export function PlannerPage() {
                   Rate fatigue and save historic session log
                 </DialogDescription>
               </div>
-              <button 
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsFinishingWorkout(false)}
-                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+                className="h-8 w-8 rounded-full p-0 text-[#AAAAAA] hover:bg-white/5 hover:text-white"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </DialogHeader>
 
             <div className="space-y-5 pt-3">
@@ -1340,12 +1430,13 @@ export function PlannerPage() {
                   {EFFORT_OPTIONS.map((opt) => {
                     const isSelected = selectedEffort === opt.value;
                     return (
-                      <button
+                      <Button
                         type="button"
                         key={opt.value}
+                        variant="ghost"
                         onClick={() => setSelectedEffort(opt.value)}
                         className={cn(
-                          "flex flex-col items-center justify-center p-2 border rounded-xl transition-all active:scale-95",
+                          "h-auto min-w-0 flex-col items-center justify-center rounded-xl border p-2 transition-all active:scale-95 hover:bg-[#2B2B2B]",
                           isSelected
                             ? "bg-[#4F8CFF] border-[#4F8CFF] text-white"
                             : "bg-[#1F1F1F]/40 border-[#2B2B2B] text-[#AAAAAA] hover:bg-[#2B2B2B]"
@@ -1355,7 +1446,7 @@ export function PlannerPage() {
                         <span className="text-[8px] font-bold mt-1 block truncate w-full text-center">
                           {opt.value}
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -1396,12 +1487,15 @@ export function PlannerPage() {
                   Search catalog for ad-hoc additions
                 </DialogDescription>
               </div>
-              <button 
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsExercisePickerOpen(false)}
-                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+                className="h-8 w-8 rounded-full p-0 text-[#AAAAAA] hover:bg-white/5 hover:text-white"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </DialogHeader>
 
             <div className="space-y-4 pt-3">
@@ -1506,13 +1600,16 @@ export function PlannerPage() {
                   />
                 </div>
                 
-                <button
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => removeWorkoutDay(day.id)}
                   disabled={activeDraftPlan.days.length <= 1}
-                  className="p-1 text-[#AAAAAA] hover:text-[#FF5A5F] disabled:opacity-30 transition-colors"
+                  className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F] disabled:opacity-30"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
 
               {/* Day settings grid */}
@@ -1544,19 +1641,21 @@ export function PlannerPage() {
                   {AVAILABLE_MUSCLES.map((muscle) => {
                     const isSelected = (day.targetMuscles || []).includes(muscle);
                     return (
-                      <button
+                      <Button
                         type="button"
                         key={muscle}
+                        variant="outline"
+                        size="sm"
                         onClick={() => toggleMuscleInDay(day.id, muscle)}
                         className={cn(
-                          "px-2 py-0.5 rounded-full text-[9px] font-bold transition-all border",
+                          "h-6 rounded-full px-2 py-0 text-[9px] font-bold transition-all",
                           isSelected
                             ? "bg-[#4F8CFF]/15 text-[#4F8CFF] border-[#4F8CFF]/20"
                             : "bg-[#1F1F1F] text-[#AAAAAA] border-[#2B2B2B] hover:text-white"
                         )}
                       >
                         {muscle}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -1620,30 +1719,42 @@ export function PlannerPage() {
                                 </span>
                                 
                                 <div className="flex items-center gap-1.5">
-                                  <button
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
                                     onClick={() => moveExerciseInDay(day.id, item.id, "up")}
-                                    className="p-1 text-[#AAAAAA] hover:text-white bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#2B2B2B] hover:text-white"
                                   >
                                     <ChevronUp className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
                                     onClick={() => moveExerciseInDay(day.id, item.id, "down")}
-                                    className="p-1 text-[#AAAAAA] hover:text-white bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#2B2B2B] hover:text-white"
                                   >
                                     <ChevronDown className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
                                     onClick={() => duplicateExerciseInDay(day.id, item)}
-                                    className="p-1 text-[#AAAAAA] hover:text-[#4F8CFF] bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#4F8CFF]/10 hover:text-[#4F8CFF]"
                                   >
                                     <Copy className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
                                     onClick={() => removeExerciseFromDay(day.id, item.id)}
-                                    className="p-1 text-[#AAAAAA] hover:text-[#FF5A5F] bg-[#1F1F1F] rounded border border-[#2B2B2B]"
+                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
 
@@ -1651,33 +1762,42 @@ export function PlannerPage() {
                               <div className="grid grid-cols-2 gap-3.5">
                                 <div className="space-y-1">
                                   <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Rest Time</span>
-                                  <select
-                                    value={item.restSeconds}
-                                    onChange={(e) => updateExerciseField(day.id, item.id, "restSeconds", parseInt(e.target.value))}
-                                    className="w-full h-7 text-[10px] rounded bg-[#1F1F1F] border border-[#2B2B2B] text-white px-1 outline-none"
+                                  <Select
+                                    value={String(item.restSeconds)}
+                                    onValueChange={(value) => updateExerciseField(day.id, item.id, "restSeconds", parseInt(value))}
                                   >
-                                    <option value={30}>30s</option>
-                                    <option value={45}>45s</option>
-                                    <option value={60}>60s</option>
-                                    <option value={90}>90s</option>
-                                    <option value={120}>120s</option>
-                                    <option value={180}>180s</option>
-                                  </select>
+                                    <SelectTrigger className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-[10px] text-white focus:ring-0">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {[30, 45, 60, 90, 120, 180].map((seconds) => (
+                                        <SelectItem key={seconds} value={String(seconds)}>
+                                          {seconds}s
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                                 <div className="space-y-1">
                                   <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Superset Link</span>
-                                  <select
+                                  <Select
                                     value={extras.supersetGroup || "None"}
-                                    onChange={(e) => {
-                                      const groupVal = e.target.value === "None" ? "" : e.target.value;
+                                    onValueChange={(value) => {
+                                      const groupVal = value === "None" ? "" : value;
                                       updateExerciseField(day.id, item.id, "prGoal", serializeExtraFields(extras.tags, groupVal));
                                     }}
-                                    className="w-full h-7 text-[10px] rounded bg-[#1F1F1F] border border-[#2B2B2B] text-white px-1 outline-none"
                                   >
-                                    {SUPERSET_GROUPS.map((grp) => (
-                                      <option key={grp} value={grp}>{grp === "None" ? "No group" : `Group ${grp}`}</option>
-                                    ))}
-                                  </select>
+                                    <SelectTrigger className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-[10px] text-white focus:ring-0">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {SUPERSET_GROUPS.map((grp) => (
+                                        <SelectItem key={grp} value={grp}>
+                                          {grp === "None" ? "No group" : `Group ${grp}`}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
 
@@ -1688,9 +1808,11 @@ export function PlannerPage() {
                                   {TEMPLATE_TAGS.map((tag) => {
                                     const isTagged = extras.tags.includes(tag);
                                     return (
-                                      <button
+                                      <Button
                                         type="button"
                                         key={tag}
+                                        variant="outline"
+                                        size="sm"
                                         onClick={() => {
                                           const nextTags = isTagged 
                                             ? extras.tags.filter((t: string) => t !== tag)
@@ -1698,14 +1820,14 @@ export function PlannerPage() {
                                           updateExerciseField(day.id, item.id, "prGoal", serializeExtraFields(nextTags, extras.supersetGroup));
                                         }}
                                         className={cn(
-                                          "px-2 py-0.5 rounded text-[8px] font-bold transition-all border",
+                                          "h-6 rounded-lg px-2 py-0 text-[8px] font-bold transition-all",
                                           isTagged
                                             ? "bg-[#4F8CFF]/15 text-[#4F8CFF] border-[#4F8CFF]/20"
                                             : "bg-[#1F1F1F] text-[#AAAAAA] border-[#2B2B2B]"
                                         )}
                                       >
                                         {tag}
-                                      </button>
+                                      </Button>
                                     );
                                   })}
                                 </div>
@@ -1750,19 +1872,25 @@ export function PlannerPage() {
                                         className="h-7 text-center rounded bg-[#1F1F1F] border-[#2B2B2B] text-[10px] font-bold"
                                       />
                                       <div className="flex items-center gap-1">
-                                        <button
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
                                           onClick={() => handleDuplicateTemplateSet(day.id, item.id, setIdx, item)}
-                                          className="p-1 hover:text-white text-[#AAAAAA] bg-[#1F1F1F] border border-[#2B2B2B] rounded"
+                                          className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#2B2B2B] hover:text-white"
                                         >
                                           <Copy className="h-3 w-3" />
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
                                           onClick={() => handleRemoveTemplateSet(day.id, item.id, setIdx, item)}
                                           disabled={setList.length <= 1}
-                                          className="p-1 hover:text-[#FF5A5F] text-[#AAAAAA] disabled:opacity-20 bg-[#1F1F1F] border border-[#2B2B2B] rounded"
+                                          className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F] disabled:opacity-20"
                                         >
                                           <Trash2 className="h-3 w-3" />
-                                        </button>
+                                        </Button>
                                       </div>
                                     </div>
                                   ))}
@@ -1834,12 +1962,15 @@ export function PlannerPage() {
                   Choose exercise templates to add to split
                 </DialogDescription>
               </div>
-              <button 
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsExercisePickerOpen(false)}
-                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+                className="h-8 w-8 rounded-full p-0 text-[#AAAAAA] hover:bg-white/5 hover:text-white"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </DialogHeader>
 
             <div className="space-y-4 pt-3">
@@ -1860,18 +1991,20 @@ export function PlannerPage() {
                   { id: "favorites", label: "Favorites" },
                   { id: "recent", label: "Recent" },
                 ] as const).map((flt) => (
-                  <button
+                  <Button
                     key={flt.id}
+                    type="button"
+                    variant="ghost"
                     onClick={() => setPickerFilter(flt.id)}
                     className={cn(
-                      "py-1 text-[10px] font-bold rounded transition-all",
+                      "h-8 rounded-lg px-2 text-[10px] font-bold transition-all hover:bg-[#2B2B2B] hover:text-white",
                       pickerFilter === flt.id
                         ? "bg-[#2B2B2B] text-white"
                         : "text-[#AAAAAA] hover:text-white"
                     )}
                   >
                     {flt.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
@@ -1899,12 +2032,15 @@ export function PlannerPage() {
                           </span>
                         </div>
 
-                        <button
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => toggleFavoriteExercise(ex.id)}
-                          className="p-1 hover:bg-white/5 rounded-lg text-[#AAAAAA] transition-colors"
+                          className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-white/5"
                         >
                           <Star className={cn("h-4 w-4", isFavorite ? "fill-[#FFB547] text-[#FFB547]" : "text-[#AAAAAA]")} />
-                        </button>
+                        </Button>
                       </div>
                     );
                   })
@@ -1947,28 +2083,30 @@ export function PlannerPage() {
 
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Primary Muscle</span>
-                <select
-                  value={newExerciseMuscle}
-                  onChange={(e) => setNewExerciseMuscle(e.target.value)}
-                  className="w-full h-8.5 text-xs rounded-lg bg-[#1F1F1F] border border-[#2B2B2B] text-white px-2 outline-none"
-                >
-                  {AVAILABLE_MUSCLES.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
+                <Select value={newExerciseMuscle} onValueChange={setNewExerciseMuscle}>
+                  <SelectTrigger className="h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-xs text-white focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AVAILABLE_MUSCLES.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Equipment</span>
-                <select
-                  value={newExerciseEquipment}
-                  onChange={(e) => setNewExerciseEquipment(e.target.value)}
-                  className="w-full h-8.5 text-xs rounded-lg bg-[#1F1F1F] border border-[#2B2B2B] text-white px-2 outline-none"
-                >
-                  {["Barbell", "Dumbbell", "Machine", "Cable", "Smith", "EZ Bar", "Trap Bar", "Bodyweight", "Other"].map((eq) => (
-                    <option key={eq} value={eq}>{eq}</option>
-                  ))}
-                </select>
+                <Select value={newExerciseEquipment} onValueChange={setNewExerciseEquipment}>
+                  <SelectTrigger className="h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-xs text-white focus:ring-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Barbell", "Dumbbell", "Machine", "Cable", "Smith", "EZ Bar", "Trap Bar", "Bodyweight", "Other"].map((eq) => (
+                      <SelectItem key={eq} value={eq}>{eq}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-2 pt-2">
@@ -2000,29 +2138,60 @@ export function PlannerPage() {
   // ==========================================
   // RENDER INTERFACE 3: MAIN WORKOUT HUB
   // ==========================================
+  const totalPlanDays = plans.reduce((acc, plan) => acc + plan.days.length, 0);
+  const totalPlanExercises = plans.reduce(
+    (acc, plan) => acc + plan.days.reduce((dayAcc, day) => dayAcc + day.items.length, 0),
+    0
+  );
+  const latestSession = sessions[0];
+
   return (
-      <div className="mx-auto max-w-md md:max-w-4xl px-0 pb-16 space-y-4 sm:px-2 sm:space-y-6">
+      <div className="mx-auto max-w-md md:max-w-5xl px-0 pb-16 space-y-5 sm:px-2 sm:space-y-7">
       
-      {/* Top Bar with Brand and Tabs */}
-      <div className="flex flex-col gap-3">
-        <div className="hidden justify-between items-center px-1 sm:flex">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-[#4F8CFF]/15 text-[#4F8CFF] flex items-center justify-center shrink-0">
-              <Dumbbell className="h-3.5 w-3.5" />
+      <div className="rounded-[24px] border border-[#2B2B2B] bg-[#181818] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.2)] sm:rounded-[28px] sm:p-6">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0 space-y-2">
+            <div className="flex items-center gap-2 text-[#4F8CFF]">
+              <div className="h-8 w-8 rounded-xl bg-[#4F8CFF]/15 flex items-center justify-center">
+                <Dumbbell className="h-4 w-4" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-wider">Training hub</span>
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white font-[family:var(--font-display)]">
-              Kratos tracker
-            </h1>
+            <h1 className="truncate text-2xl font-black tracking-tight text-white sm:text-3xl">Training</h1>
+            <p className="hidden max-w-xl text-xs font-medium leading-relaxed text-[#AAAAAA] sm:block">
+              Build reusable gym plans, start today&apos;s session, and keep your logged sets connected to progress.
+            </p>
           </div>
-          {draftSession && (
-            <Badge className="bg-[#FFB547]/10 text-[#FFB547] border-none text-[9px] font-bold tracking-wider uppercase animate-pulse">
-              Active workout
-            </Badge>
-          )}
+          <Button
+            onClick={() => {
+              const newDraft = blankPlan(data.user.id);
+              setPlans((prev) => [newDraft, ...prev]);
+              setActiveDraftPlan(newDraft);
+              setIsEditingSplit(true);
+            }}
+            className="h-11 rounded-2xl bg-[#4F8CFF] px-5 text-xs font-bold text-white hover:bg-[#4F8CFF]/90"
+          >
+            <Plus className="h-4 w-4" />
+            New plan
+          </Button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-4 gap-x-3 border-t border-[#2B2B2B] pt-4">
+          {[
+            { label: "Plans", value: plans.length },
+            { label: "Days", value: totalPlanDays },
+            { label: "Lifts", value: totalPlanExercises },
+            { label: "Logged", value: sessions.length },
+          ].map((item) => (
+            <div key={item.label} className="min-w-0">
+              <p className="truncate text-[8px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[9px]">{item.label}</p>
+              <p className="mt-1 truncate text-lg font-black text-white">{item.value}</p>
+            </div>
+          ))}
         </div>
 
         {/* Tab switcher: Plans, Session, History */}
-        <div className="grid grid-cols-3 gap-1 bg-[#181818] p-1 rounded-xl border border-[#2B2B2B]">
+        <div className="mt-5 grid grid-cols-3 gap-1 bg-[#0D0D0D] p-1 rounded-2xl border border-[#2B2B2B]">
           {([
             { id: "plans", label: "Plans", icon: ClipboardList },
             { id: "session", label: "Session", icon: Play },
@@ -2031,19 +2200,21 @@ export function PlannerPage() {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button
+              <Button
+                type="button"
+                variant="ghost"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all select-none",
+                  "h-10 rounded-xl px-2 text-xs font-semibold transition-all select-none hover:bg-white/5 hover:text-white",
                   isActive 
-                    ? "bg-[#4F8CFF] text-white shadow-sm"
+                    ? "bg-white text-black shadow-sm"
                     : "text-[#AAAAAA] hover:text-white hover:bg-white/5"
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -2061,8 +2232,7 @@ export function PlannerPage() {
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
-            {/* Search and Sort controls */}
-            <div className="flex gap-2">
+            <div className="grid gap-3 rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3 sm:grid-cols-[1fr_auto] sm:p-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
                 <Input
@@ -2072,23 +2242,34 @@ export function PlannerPage() {
                   className="pl-9 h-9 rounded-xl border-[#2B2B2B] bg-[#181818] text-white placeholder-[#AAAAAA] text-xs font-semibold focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
                 />
               </div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as "alphabetical" | "edited" | "exercises")}
-                className="h-9 rounded-xl border border-[#2B2B2B] bg-[#181818] text-white text-xs font-semibold px-2.5 outline-none focus:ring-1 focus:ring-[#4F8CFF]"
-              >
-                <option value="edited">Recent</option>
-                <option value="alphabetical">Alphabetical</option>
-                <option value="exercises">Exercises</option>
-              </select>
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-[#0D0D0D] p-1">
+                {([
+                  ["edited", "Recent"],
+                  ["alphabetical", "A-Z"],
+                  ["exercises", "Volume"],
+                ] as const).map(([value, label]) => (
+                  <Button
+                    key={value}
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setSortBy(value)}
+                    className={cn(
+                      "h-8 rounded-lg px-3 text-[10px] font-bold transition hover:bg-white/5 hover:text-white",
+                      sortBy === value ? "bg-white text-black" : "text-[#AAAAAA] hover:text-white"
+                    )}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {/* Create new plan button */}
             <div className="flex justify-between items-center px-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA]">
-                Plans ({filteredPlans.length})
+                Manage plans ({filteredPlans.length})
               </span>
-              <Button 
+              <Button
                 onClick={() => {
                   const newDraft = blankPlan(data.user.id);
                   setPlans((prev) => [newDraft, ...prev]);
@@ -2103,7 +2284,7 @@ export function PlannerPage() {
             </div>
 
             {filteredPlans.length > 0 ? (
-              <div className="grid gap-3">
+              <div className="grid gap-3 md:grid-cols-2">
                 {filteredPlans.map((plan) => {
                   const daysCount = plan.days.length;
                   const totalExercises = plan.days.reduce((acc: number, d: WeeklyPlanDay) => acc + d.items.length, 0);
@@ -2112,13 +2293,13 @@ export function PlannerPage() {
                   return (
                     <Card
                       key={plan.id}
-                      className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl flex flex-col justify-between"
+                      className="p-5 border border-[#2B2B2B] bg-[#181818] rounded-2xl flex flex-col justify-between shadow-[0_16px_60px_rgba(0,0,0,0.12)]"
                     >
                       <div>
                         <div className="flex justify-between items-start">
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <h3 className="text-sm font-bold text-white">{plan.name}</h3>
+                              <h3 className="text-base font-bold text-white">{plan.name}</h3>
                               {isDraft && (
                                 <Badge className="bg-[#FFB547]/10 text-[#FFB547] text-[8px] font-bold px-1.5 py-0.25 border-none">
                                   DRAFT
@@ -2130,33 +2311,40 @@ export function PlannerPage() {
                               </p>
                           </div>
                           
-                          <div className="flex items-center gap-0.5">
-                            <button
+                          <div className="flex shrink-0 items-center gap-0.5">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
                               onClick={() => handleDuplicatePlan(plan)}
                               title="Duplicate Plan"
-                              className="p-1.5 text-[#AAAAAA] hover:text-[#4F8CFF] rounded-lg transition-colors"
+                              className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-[#4F8CFF]/10 hover:text-[#4F8CFF]"
                             >
                               <Copy className="h-3.5 w-3.5" />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
                               onClick={() => setDeletingPlanId(plan.id)}
                               title="Delete Plan"
-                              className="p-1.5 text-[#AAAAAA] hover:text-[#FF5A5F] rounded-lg transition-colors"
+                              className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            </Button>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 mt-3 text-[10px] text-[#AAAAAA] font-bold">
+                        <div className="mt-4 grid grid-cols-3 gap-2 text-[10px] text-[#AAAAAA] font-bold">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="h-3.5 w-3.5 text-[#AAAAAA]/60" />
                             {daysCount} {daysCount === 1 ? "day" : "days"}
                           </span>
                           <span className="flex items-center gap-1">
                             <Dumbbell className="h-3.5 w-3.5 text-[#AAAAAA]/60" />
-                            {totalExercises} exercises
+                            {totalExercises} lifts
                           </span>
+                          <span>{Math.round(totalExercises / Math.max(daysCount, 1))} / day</span>
                         </div>
                       </div>
 
@@ -2165,7 +2353,7 @@ export function PlannerPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => setViewingPlan(plan)}
-                          className="h-8.5 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B]"
+                          className="h-10 rounded-xl text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B]"
                         >
                           Review
                         </Button>
@@ -2176,7 +2364,7 @@ export function PlannerPage() {
                             setActiveDraftPlan(plan);
                             setIsEditingSplit(true);
                           }}
-                          className="h-8.5 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B]"
+                          className="h-10 rounded-xl text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-white hover:bg-[#2B2B2B]"
                         >
                           <Edit3 className="h-3 w-3 mr-1" /> Edit
                         </Button>
@@ -2209,7 +2397,7 @@ export function PlannerPage() {
           >
             <Card 
               onClick={startEmptyWorkout}
-              className="p-5 border border-[#2B2B2B] bg-[#181818] hover:border-[#4F8CFF]/50 transition-all rounded-xl cursor-pointer group"
+              className="p-5 border border-[#4F8CFF]/30 bg-[#181818] hover:border-[#4F8CFF]/60 transition-all rounded-2xl cursor-pointer group shadow-[0_16px_60px_rgba(79,140,255,0.08)]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3.5">
@@ -2229,13 +2417,39 @@ export function PlannerPage() {
               </div>
             </Card>
 
+            {latestSession ? (
+              <div className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-4">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA]">Last workout</p>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-white">{latestSession.title}</p>
+                    <p className="mt-1 text-[10px] font-semibold text-[#AAAAAA]">
+                      {latestSession.items.length} exercises • {new Date(latestSession.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setViewingSession(latestSession);
+                      setActiveTab("history");
+                    }}
+                    className="rounded-xl border-[#2B2B2B] bg-[#1F1F1F] text-[10px] font-bold text-white hover:bg-[#2B2B2B]"
+                  >
+                    View
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="space-y-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
                 Templates
               </span>
 
               {plans.length > 0 ? (
-                <div className="grid gap-2.5">
+                <div className="grid gap-3 md:grid-cols-2">
                   {plans.flatMap((plan) => 
                     plan.days.map((day) => {
                       const exerciseCount = day.items.length;
@@ -2243,7 +2457,7 @@ export function PlannerPage() {
                         <div
                           key={`${plan.id}-${day.id}`}
                           onClick={() => startWorkoutFromDay(day, plan)}
-                          className="flex items-center justify-between p-3.5 bg-[#181818] border border-[#2B2B2B] hover:border-[#4F8CFF]/30 rounded-xl transition-all cursor-pointer group"
+                          className="flex items-center justify-between p-4 bg-[#181818] border border-[#2B2B2B] hover:border-[#4F8CFF]/30 rounded-2xl transition-all cursor-pointer group"
                         >
                           <div className="flex items-center gap-3">
                             <div className="h-8 w-8 rounded-lg bg-[#4F8CFF]/15 text-[#4F8CFF] flex items-center justify-center font-bold text-xs shrink-0">
@@ -2368,12 +2582,15 @@ export function PlannerPage() {
                   Stimulus audit per muscle group
                 </DialogDescription>
               </div>
-              <button 
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setViewingPlan(null)}
-                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+                className="h-8 w-8 rounded-full p-0 text-[#AAAAAA] hover:bg-white/5 hover:text-white"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </DialogHeader>
 
             <div className="space-y-6 pt-4">
@@ -2427,12 +2644,15 @@ export function PlannerPage() {
                   Completed on {new Date(viewingSession.startedAt).toLocaleDateString()}
                 </DialogDescription>
               </div>
-              <button 
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setViewingSession(null)}
-                className="p-1 rounded-full text-[#AAAAAA] hover:text-white transition"
+                className="h-8 w-8 rounded-full p-0 text-[#AAAAAA] hover:bg-white/5 hover:text-white"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </Button>
             </DialogHeader>
 
             <div className="space-y-5 pt-3">
