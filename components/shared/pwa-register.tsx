@@ -1,141 +1,188 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { RefreshCw, Sparkles } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+const VERSION_FALLBACK = "latest";
+
+const readServiceWorkerVersion = async () => {
+  try {
+    const response = await fetch(`/sw.js?update-check=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    });
+    const source = await response.text();
+    return (
+      source.match(/SW_VERSION\s*=\s*["']([^"']+)["']/)?.[1] ||
+      source.match(/kratos-v([0-9]+\.[0-9]+\.[0-9]+)/)?.[1] ||
+      VERSION_FALLBACK
+    );
+  } catch {
+    return VERSION_FALLBACK;
+  }
+};
 
 export function PwaRegister() {
   const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(null);
-  const [show, setShow] = useState(false);
+  const [version, setVersion] = useState(VERSION_FALLBACK);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const dismissedVersionRef = useRef<string | null>(null);
+  const isApplyingRef = useRef(false);
 
-  const showBanner = useCallback((sw: ServiceWorker) => {
+  const showUpdate = useCallback(async (sw: ServiceWorker) => {
+    if (isApplyingRef.current) return;
+    const nextVersion = await readServiceWorkerVersion();
+    if (dismissedVersionRef.current === nextVersion) return;
+
     setWaitingSW(sw);
-    setShow(true);
+    setVersion(nextVersion);
+    setShowUpdateModal(true);
   }, []);
 
   const applyUpdate = useCallback(() => {
     if (!waitingSW) return;
+    isApplyingRef.current = true;
+    setIsApplying(true);
     waitingSW.postMessage({ type: "SKIP_WAITING" });
-    // Page reloads automatically via controllerchange listener below
   }, [waitingSW]);
+
+  const dismissUpdate = useCallback(() => {
+    dismissedVersionRef.current = version;
+    setShowUpdateModal(false);
+  }, [version]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+
+    let interval: ReturnType<typeof setInterval> | undefined;
+    let registration: ServiceWorkerRegistration | null = null;
 
     const watchInstalling = (reg: ServiceWorkerRegistration) => {
       const sw = reg.installing;
       if (!sw) return;
       sw.addEventListener("statechange", () => {
-        // Show banner as soon as the new SW is installed and waiting
-        // Note: intentionally NOT checking navigator.serviceWorker.controller
-        // because homescreen PWA cold-launches have controller=null initially
         if (sw.state === "installed") {
-          showBanner(sw);
+          void showUpdate(sw);
         }
       });
     };
 
-    navigator.serviceWorker.register("/sw.js").then(async (reg) => {
-      // Case 1: SW already waiting on load (tab was in background / homescreen relaunch)
-      if (reg.waiting) {
-        showBanner(reg.waiting);
-        return;
-      }
-
-      // Case 2: Listen for a new SW installing
-      reg.addEventListener("updatefound", () => watchInstalling(reg));
-
-      // Case 3: Force update check right now — critical for homescreen PWAs
-      // which bypass the browser's 24-hour update throttle
+    const pollForUpdate = async () => {
+      if (!registration) return;
       try {
-        await reg.update();
-        if (reg.waiting) showBanner(reg.waiting);
+        await registration.update();
+        if (registration.waiting) {
+          await showUpdate(registration.waiting);
+        }
       } catch {
         // Offline launches can fail update checks.
       }
+    };
 
-      // Case 4: Poll every 30s and on app foreground
-      const poll = async () => {
-        try {
-          await reg.update();
-          if (reg.waiting) showBanner(reg.waiting);
-        } catch {
-          // Offline launches can fail update checks.
-        }
-      };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void pollForUpdate();
+    };
 
-      const interval = setInterval(poll, 30_000);
-      const onVisible = () => { if (document.visibilityState === "visible") poll(); };
+    const onControllerChange = () => {
+      if (!reloading) {
+        reloading = true;
+        window.location.reload();
+      }
+    };
+
+    let reloading = false;
+
+    navigator.serviceWorker.register("/sw.js").then(async (reg) => {
+      registration = reg;
+
+      if (reg.waiting) {
+        await showUpdate(reg.waiting);
+      }
+
+      reg.addEventListener("updatefound", () => watchInstalling(reg));
+      await pollForUpdate();
+
+      interval = setInterval(pollForUpdate, 30_000);
+      window.addEventListener("focus", pollForUpdate);
+      window.addEventListener("online", pollForUpdate);
       document.addEventListener("visibilitychange", onVisible);
-
-      return () => {
-        clearInterval(interval);
-        document.removeEventListener("visibilitychange", onVisible);
-      };
     }).catch((err) => console.error("PWA: SW registration failed:", err));
 
-    // When the new SW takes control → reload to load fresh assets
-    let reloading = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!reloading) { reloading = true; window.location.reload(); }
-    });
-  }, [showBanner]);
+    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
-  if (!show) return null;
+    return () => {
+      if (interval) clearInterval(interval);
+      window.removeEventListener("focus", pollForUpdate);
+      window.removeEventListener("online", pollForUpdate);
+      document.removeEventListener("visibilitychange", onVisible);
+      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+    };
+  }, [showUpdate]);
 
   return (
-    <div style={{
-      position: "fixed",
-      bottom: "96px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      zIndex: 9999,
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      background: "#1d1d1f",
-      color: "#fff",
-      padding: "8px 10px",
-      borderRadius: "14px",
-      boxShadow: "0 8px 40px rgba(0,0,0,0.35)",
-      fontSize: "12px",
-      fontWeight: 600,
-      whiteSpace: "nowrap",
-      maxWidth: "calc(100vw - 24px)",
-      animation: "swBannerIn 0.3s cubic-bezier(0.34,1.56,0.64,1)",
-    }}>
-      <style>{`
-        @keyframes swBannerIn {
-          from { opacity:0; transform:translateX(-50%) translateY(14px) scale(0.95); }
-          to   { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+    <Dialog
+      open={showUpdateModal}
+      onOpenChange={(open) => {
+        if (open) {
+          setShowUpdateModal(true);
+        } else {
+          dismissUpdate();
         }
-      `}</style>
+      }}
+    >
+      <DialogContent className="w-[min(92vw,420px)] rounded-3xl border border-black/10 bg-white p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] sm:p-6">
+        <DialogHeader className="space-y-3 pr-8">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black text-white">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div className="space-y-1.5">
+            <DialogTitle className="text-xl font-bold tracking-tight text-black">
+              New update available
+            </DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed text-black/55">
+              Kratos version {version} is ready. Confirm to refresh the PWA and load the latest code.
+            </DialogDescription>
+          </div>
+        </DialogHeader>
 
-      <RefreshCw size={13} style={{ flexShrink: 0, opacity: 0.65, animation: "spin 2s linear infinite" }} />
-      <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
+        <div className="rounded-2xl border border-black/5 bg-neutral-50 p-3 text-[11px] font-semibold leading-relaxed text-black/55">
+          Your workout data stays saved. The app will reload once the update is activated.
+        </div>
 
-      <span style={{ opacity: 0.75, fontSize: "11px" }}>Update ready</span>
-
-      <button
-        onClick={applyUpdate}
-        style={{
-          background: "#fff", color: "#1d1d1f",
-          border: "none", borderRadius: "10px",
-          padding: "5px 10px", fontSize: "11px",
-          fontWeight: 700, cursor: "pointer", flexShrink: 0,
-        }}
-      >
-        Update
-      </button>
-
-      <button
-        onClick={() => setShow(false)}
-        style={{
-          background: "transparent", border: "none",
-          color: "rgba(255,255,255,0.35)", fontSize: "18px",
-          lineHeight: 1, cursor: "pointer", padding: "0 2px", flexShrink: 0,
-        }}
-        aria-label="Dismiss"
-      >×</button>
-    </div>
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+          <Button
+            type="button"
+            onClick={applyUpdate}
+            disabled={isApplying}
+            className="h-11 rounded-xl bg-black text-xs font-bold text-white hover:bg-black/90"
+          >
+            {isApplying ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {isApplying ? "Updating..." : "Update now"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={dismissUpdate}
+            className="h-11 rounded-xl text-xs font-semibold"
+          >
+            Later
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

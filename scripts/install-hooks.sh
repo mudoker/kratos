@@ -30,4 +30,4 @@ install_hook "pre-commit"
 
 echo ""
 echo "🪝  Git hooks installed. Every commit will now auto-bump the PWA cache version."
-echo "    PWA clients will detect the change and show the 'Update' banner within 30s."
+echo "    PWA clients will detect the change and show the update modal within 30s while open."

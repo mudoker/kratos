@@ -1,4 +1,5 @@
-const CACHE_NAME = "kratos-v5.1.2";
+const SW_VERSION = "5.1.3";
+const CACHE_NAME = `kratos-v${SW_VERSION}`;
 const STATIC_ASSETS = [
   "/",
   "/dashboard",
@@ -20,6 +21,10 @@ self.addEventListener("install", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+  }
+
+  if (event.data && event.data.type === "GET_VERSION") {
+    event.source?.postMessage({ type: "SW_VERSION", version: SW_VERSION });
   }
 });
 
