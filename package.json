@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "reseed": "bun scripts/reseed.ts"
+    "reseed": "bun scripts/reseed.ts",
+    "test:e2e": "playwright test --project=\"Mobile Chrome\"",
+    "test:e2e:headed": "playwright test --headed --project=\"Mobile Chrome\"",
+    "test:e2e:all": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.58",
@@ -39,6 +42,7 @@
     "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@types/node": "^24.12.0",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",

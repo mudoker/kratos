@@ -37,3 +37,6 @@ Thumbs.db
 db.db
 *.db
 .next/
+playwright-report/
+test-results/
+tsconfig.tsbuildinfo
