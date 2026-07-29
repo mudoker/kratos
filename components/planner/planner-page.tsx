@@ -1007,22 +1007,22 @@ export function PlannerPage() {
       : undefined;
 
     return (
-      <div className="mx-auto max-w-2xl pb-32 space-y-5 bg-[#0D0D0D] text-white">
+      <div className="mx-auto max-w-2xl pb-28 space-y-3.5 bg-[#0D0D0D] text-white sm:space-y-4">
         
         {/* Sticky top timer bar */}
-        <div className="sticky top-[47px] lg:top-0 z-30 -mx-3 bg-[#0D0D0D]/95 px-3 py-3 backdrop-blur-md border-b border-[#2B2B2B] sm:-mx-4 sm:px-4">
+        <div className="sticky top-[47px] lg:top-0 z-30 -mx-3 bg-[#0D0D0D]/95 px-3 py-2.5 backdrop-blur-md border-b border-[#2B2B2B] sm:-mx-4 sm:px-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[10px]">
                 Active workout
               </h1>
-              <p className="mt-0.5 truncate text-sm font-bold text-white">
+              <p className="mt-0.5 truncate text-sm font-semibold text-white">
                 {draftSession.title}
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#1F1F1F] rounded-lg border border-[#2B2B2B]">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] px-2 py-1.5">
                 <Clock className="h-3.5 w-3.5 text-[#AAAAAA]" />
                 <span className="text-xs font-black font-mono tracking-tight text-white">
                   {formatTime(elapsedTime)}
@@ -1031,60 +1031,60 @@ export function PlannerPage() {
 
               <Button
                 onClick={() => setIsFinishingWorkout(true)}
-                className="h-9 rounded-lg bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white font-bold text-[10px] px-4"
+                className="h-8 rounded-lg bg-[#4F8CFF] px-3 text-[10px] font-bold text-white hover:bg-[#4F8CFF]/90"
               >
                 Finish
               </Button>
             </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-3">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1F1F1F]">
+          <div className="mt-2.5 flex items-center gap-2.5">
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#1F1F1F]">
               <div className="h-full rounded-full bg-[#4F8CFF] transition-all" style={{ width: `${completionPercent}%` }} />
             </div>
             <span className="text-[10px] font-black text-[#AAAAAA]">{completionPercent}%</span>
           </div>
         </div>
 
-        <Card className="border border-[#2B2B2B] bg-[#181818] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.2)]">
-          <div className="flex items-start justify-between gap-4">
+        <Card className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 shadow-[0_14px_44px_rgba(0,0,0,0.16)] sm:p-4">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-wider text-[#4F8CFF]">Current set</p>
-              <h2 className="mt-1 truncate text-lg font-bold text-white">
+              <h2 className="mt-1 truncate text-sm font-semibold text-white sm:text-base">
                 {currentItem ? currentItem.exerciseName : "Workout complete"}
               </h2>
-              <p className="mt-1 text-xs font-semibold text-[#AAAAAA]">
+              <p className="mt-1 text-[11px] font-medium text-[#AAAAAA]">
                 {currentItem && currentSetIndex >= 0
                   ? `Set ${currentSetIndex + 1} of ${currentItem.sets.length}`
                   : "Review and finish your session."}
               </p>
             </div>
-            <div className="rounded-2xl border border-[#2B2B2B] bg-[#1F1F1F] px-3 py-2 text-right">
+            <div className="rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] px-2.5 py-2 text-right">
               <p className="text-[9px] font-bold uppercase text-[#AAAAAA]">Done</p>
               <p className="text-sm font-black text-white">{totalCompletedSets}/{totalPlannedSets}</p>
             </div>
           </div>
           {currentItem && currentSetIndex >= 0 ? (
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <div className="rounded-xl bg-[#1F1F1F] p-3">
+            <div className="mt-3 grid grid-cols-3 gap-3 border-t border-[#2B2B2B] pt-3">
+              <div className="min-w-0">
                 <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Target</p>
-                <p className="mt-1 text-xs font-bold text-white">{currentItem.reps || "8-12"} reps</p>
+                <p className="mt-1 truncate text-[11px] font-semibold text-white">{currentItem.reps || "8-12"} reps</p>
               </div>
-              <div className="rounded-xl bg-[#1F1F1F] p-3">
+              <div className="min-w-0">
                 <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Previous</p>
-                <p className="mt-1 truncate text-xs font-bold text-white">
+                <p className="mt-1 truncate text-[11px] font-semibold text-white">
                   {currentPreviousSet ? `${currentPreviousSet.weight || 0} x ${currentPreviousSet.reps}` : "None"}
                 </p>
               </div>
-              <div className="rounded-xl bg-[#1F1F1F] p-3">
+              <div className="min-w-0">
                 <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Rest</p>
-                <p className="mt-1 text-xs font-bold text-white">{currentItem.restSeconds || 90}s</p>
+                <p className="mt-1 text-[11px] font-semibold text-white">{currentItem.restSeconds || 90}s</p>
               </div>
             </div>
           ) : null}
         </Card>
 
-        <div className="flex justify-end px-1">
+        <div className="flex justify-end">
           <Button
             type="button"
             variant="ghost"
@@ -1098,14 +1098,14 @@ export function PlannerPage() {
                 localStorage.removeItem("kratos_completed_sets");
               }
             }}
-            className="h-8 rounded-xl px-3 text-[10px] font-bold text-[#FF5A5F] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
+            className="h-7 rounded-lg px-2.5 text-[10px] font-semibold text-[#FF5A5F] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
           >
             Discard
           </Button>
         </div>
 
         {/* Exercises list with set tracking */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {(draftSession.items || []).map((item, itemIdx) => {
             const isExpanded = loggerExpandedExercises[item.id] ?? false;
             
@@ -1119,8 +1119,8 @@ export function PlannerPage() {
               <Card
                 key={item.id}
                 className={cn(
-                  "p-4 border bg-[#181818] rounded-2xl space-y-4 transition sm:p-5",
-                  isCurrentExercise ? "border-[#4F8CFF]/50 shadow-[0_18px_70px_rgba(79,140,255,0.12)]" : "border-[#2B2B2B]"
+                  "rounded-2xl border bg-[#181818] p-3.5 space-y-3 transition sm:p-4",
+                  isCurrentExercise ? "border-[#4F8CFF]/45 shadow-[0_14px_52px_rgba(79,140,255,0.1)]" : "border-[#2B2B2B]"
                 )}
               >
                 
@@ -1128,16 +1128,16 @@ export function PlannerPage() {
                   onClick={() => setLoggerExpandedExercises((prev) => ({ ...prev, [item.id]: !isExpanded }))}
                   className="flex justify-between items-start cursor-pointer group"
                 >
-                  <div className="min-w-0 space-y-1">
+                  <div className="min-w-0 space-y-0.5">
                     <div className="flex items-center gap-1.5">
-                      <h3 className="truncate text-sm font-bold text-white group-hover:text-[#4F8CFF] transition-colors">
+                      <h3 className="truncate text-sm font-semibold text-white group-hover:text-[#4F8CFF] transition-colors">
                         {item.exerciseName}
                       </h3>
                       {isFavorite && <Star className="h-3 w-3 fill-[#FFB547] text-[#FFB547]" />}
                     </div>
                     
                     {!isExpanded && (
-                      <p className="text-[10px] text-[#AAAAAA] font-bold">
+                      <p className="text-[10px] text-[#AAAAAA] font-medium">
                         {item.sets.length} sets • PR: {pr ? `${pr.weight} kg x ${pr.reps}` : "None"}
                       </p>
                     )}
@@ -1158,7 +1158,7 @@ export function PlannerPage() {
                 </div>
 
                 {isExpanded && (
-                  <div className="space-y-3.5 pt-1.5">
+                  <div className="space-y-3 pt-1">
                     
                     {/* Previous/Best records panel */}
                     <div className="hidden grid-cols-2 gap-3 text-[10px] bg-[#1F1F1F] p-2.5 rounded-lg border border-[#2B2B2B] sm:grid">
@@ -1182,7 +1182,7 @@ export function PlannerPage() {
 
                     {/* Sets Logger Table */}
                     <div className="space-y-2">
-                      <div className="grid grid-cols-[30px_1fr_1fr_44px] gap-2.5 text-[8px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center sm:grid-cols-[34px_1fr_1fr_48px]">
+                      <div className="grid grid-cols-[26px_1fr_1fr_40px] gap-2 text-[8px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center sm:grid-cols-[32px_1fr_1fr_44px]">
                         <span>Set</span>
                         <span>Kg</span>
                         <span>Reps</span>
@@ -1200,7 +1200,7 @@ export function PlannerPage() {
                             key={setIdx}
                             ref={(!isDone && setIdx === 0) ? activeLoggerRowRef : null}
                             className={cn(
-                              "grid grid-cols-[30px_1fr_1fr_44px] gap-2.5 items-center text-center p-1.5 rounded-xl border transition-all sm:grid-cols-[34px_1fr_1fr_48px]",
+                              "grid grid-cols-[26px_1fr_1fr_40px] gap-2 items-center rounded-xl border p-1 text-center transition-all sm:grid-cols-[32px_1fr_1fr_44px]",
                               isDone 
                                 ? "bg-[#34C759]/5 text-[#34C759] border-[#34C759]/20" 
                                 : "bg-[#1F1F1F]/40 border-transparent"
@@ -1214,7 +1214,7 @@ export function PlannerPage() {
                               placeholder={prevSet?.weight || "0"}
                               value={set.weight}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "weight", e.target.value)}
-                              className="h-11 text-center text-[16px] font-bold rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-10 sm:text-sm"
+                              className="h-10 rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-center text-sm font-semibold text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-9"
                             />
                             
                             <Input
@@ -1223,7 +1223,7 @@ export function PlannerPage() {
                               placeholder={prevSet?.reps || "8"}
                               value={set.reps}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "reps", e.target.value)}
-                              className="h-11 text-center text-[16px] font-bold rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-10 sm:text-sm"
+                              className="h-10 rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-center text-sm font-semibold text-white focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-9"
                             />
 
                             <Button
@@ -1231,7 +1231,7 @@ export function PlannerPage() {
                               variant="ghost"
                               onClick={() => handleToggleSetComplete(itemIdx, setIdx)}
                               className={cn(
-                                "h-9 w-9 rounded-full flex items-center justify-center border mx-auto p-0 transition-all active:scale-90 sm:h-10 sm:w-10",
+                                "mx-auto flex h-8 w-8 items-center justify-center rounded-full border p-0 transition-all active:scale-95 sm:h-9 sm:w-9",
                                 isDone
                                   ? "bg-[#34C759] border-[#34C759] text-white"
                                   : "border-[#2B2B2B] text-transparent hover:border-[#AAAAAA]"
@@ -1540,7 +1540,7 @@ export function PlannerPage() {
   // ==========================================
   if (isEditingSplit && activeDraftPlan) {
     return (
-      <div className="mx-auto max-w-xl pb-16 space-y-5 bg-[#0D0D0D] text-white">
+      <div className="mx-auto max-w-xl pb-16 space-y-3.5 bg-[#0D0D0D] text-white sm:space-y-4">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -1554,13 +1554,13 @@ export function PlannerPage() {
             <ArrowLeft className="h-4.5 w-4.5" />
           </Button>
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Edit Plan Template</h1>
+            <h1 className="text-base font-semibold tracking-tight text-white">Edit plan</h1>
             <p className="text-[10px] text-[#AAAAAA]">Configure targets and set schema</p>
           </div>
         </div>
 
         {/* Global info cards */}
-        <Card className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3.5">
+        <Card className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 space-y-3 sm:p-4">
           <div className="space-y-1">
             <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Plan Name</span>
             <Input
@@ -1585,9 +1585,9 @@ export function PlannerPage() {
         </Card>
 
         {/* Days List */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {activeDraftPlan.days.map((day, dayIndex) => (
-            <Card key={day.id} className="p-4 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-4">
+            <Card key={day.id} className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 space-y-3 sm:p-4">
               <div className="flex justify-between items-center pb-2.5 border-b border-[#2B2B2B]">
                 <div className="flex items-center gap-2">
                   <span className="h-5 w-5 bg-[#1F1F1F] border border-[#2B2B2B] text-white rounded flex items-center justify-center text-[10px] font-black">
@@ -2146,19 +2146,19 @@ export function PlannerPage() {
   const latestSession = sessions[0];
 
   return (
-      <div className="mx-auto max-w-md md:max-w-5xl px-0 pb-16 space-y-5 sm:px-2 sm:space-y-7">
+      <div className="mx-auto max-w-md px-0 pb-16 space-y-4 sm:px-2 md:max-w-5xl md:space-y-6">
       
-      <div className="rounded-[24px] border border-[#2B2B2B] bg-[#181818] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.2)] sm:rounded-[28px] sm:p-6">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div className="min-w-0 space-y-2">
+      <div className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] sm:p-5 md:rounded-[24px]">
+        <div className="flex flex-col gap-3.5 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0 space-y-1.5">
             <div className="flex items-center gap-2 text-[#4F8CFF]">
-              <div className="h-8 w-8 rounded-xl bg-[#4F8CFF]/15 flex items-center justify-center">
-                <Dumbbell className="h-4 w-4" />
+              <div className="h-7 w-7 rounded-lg bg-[#4F8CFF]/15 flex items-center justify-center">
+                <Dumbbell className="h-3.5 w-3.5" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider">Training hub</span>
             </div>
-            <h1 className="truncate text-2xl font-black tracking-tight text-white sm:text-3xl">Training</h1>
-            <p className="hidden max-w-xl text-xs font-medium leading-relaxed text-[#AAAAAA] sm:block">
+            <h1 className="truncate text-xl font-semibold tracking-tight text-white sm:text-2xl">Training</h1>
+            <p className="hidden max-w-xl text-xs font-medium leading-relaxed text-[#AAAAAA] md:block">
               Build reusable gym plans, start today&apos;s session, and keep your logged sets connected to progress.
             </p>
           </div>
@@ -2169,14 +2169,14 @@ export function PlannerPage() {
               setActiveDraftPlan(newDraft);
               setIsEditingSplit(true);
             }}
-            className="h-11 rounded-2xl bg-[#4F8CFF] px-5 text-xs font-bold text-white hover:bg-[#4F8CFF]/90"
+            className="h-9 rounded-xl bg-[#4F8CFF] px-3.5 text-xs font-semibold text-white hover:bg-[#4F8CFF]/90 sm:h-10 sm:px-4"
           >
             <Plus className="h-4 w-4" />
             New plan
           </Button>
         </div>
 
-        <div className="mt-5 grid grid-cols-4 gap-x-3 border-t border-[#2B2B2B] pt-4">
+        <div className="mt-4 grid grid-cols-4 gap-x-3 border-t border-[#2B2B2B] pt-3">
           {[
             { label: "Plans", value: plans.length },
             { label: "Days", value: totalPlanDays },
@@ -2185,13 +2185,13 @@ export function PlannerPage() {
           ].map((item) => (
             <div key={item.label} className="min-w-0">
               <p className="truncate text-[8px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[9px]">{item.label}</p>
-              <p className="mt-1 truncate text-lg font-black text-white">{item.value}</p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-white sm:text-base">{item.value}</p>
             </div>
           ))}
         </div>
 
         {/* Tab switcher: Plans, Session, History */}
-        <div className="mt-5 grid grid-cols-3 gap-1 bg-[#0D0D0D] p-1 rounded-2xl border border-[#2B2B2B]">
+        <div className="mt-4 grid grid-cols-3 gap-1 rounded-xl border border-[#2B2B2B] bg-[#0D0D0D] p-1">
           {([
             { id: "plans", label: "Plans", icon: ClipboardList },
             { id: "session", label: "Session", icon: Play },
@@ -2206,7 +2206,7 @@ export function PlannerPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "h-10 rounded-xl px-2 text-xs font-semibold transition-all select-none hover:bg-white/5 hover:text-white",
+                  "h-8 rounded-lg px-2 text-xs font-medium transition-all select-none hover:bg-white/5 hover:text-white sm:h-9",
                   isActive 
                     ? "bg-white text-black shadow-sm"
                     : "text-[#AAAAAA] hover:text-white hover:bg-white/5"
@@ -2230,16 +2230,16 @@ export function PlannerPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="space-y-4"
+            className="space-y-3.5"
           >
-            <div className="grid gap-3 rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3 sm:grid-cols-[1fr_auto] sm:p-4">
+            <div className="grid gap-2.5 rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3 sm:grid-cols-[1fr_auto]">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search plans..."
-                  className="pl-9 h-9 rounded-xl border-[#2B2B2B] bg-[#181818] text-white placeholder-[#AAAAAA] text-xs font-semibold focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
+                  className="h-9 rounded-xl border-[#2B2B2B] bg-[#181818] pl-9 text-xs font-medium text-white placeholder-[#AAAAAA] focus-visible:ring-1 focus-visible:ring-[#4F8CFF]"
                 />
               </div>
               <div className="grid grid-cols-3 gap-1 rounded-xl bg-[#0D0D0D] p-1">
@@ -2276,8 +2276,8 @@ export function PlannerPage() {
                   setActiveDraftPlan(newDraft);
                   setIsEditingSplit(true);
                 }}
-                size="sm" 
-                className="h-8 rounded-xl bg-[#4F8CFF] hover:bg-[#4F8CFF]/90 text-white text-[10px] font-bold gap-1 px-3"
+                size="sm"
+                className="h-8 rounded-lg bg-[#4F8CFF] px-3 text-[10px] font-semibold text-white hover:bg-[#4F8CFF]/90"
               >
                 <Plus className="h-3.5 w-3.5" /> Create
               </Button>
@@ -2293,13 +2293,13 @@ export function PlannerPage() {
                   return (
                     <Card
                       key={plan.id}
-                      className="p-5 border border-[#2B2B2B] bg-[#181818] rounded-2xl flex flex-col justify-between shadow-[0_16px_60px_rgba(0,0,0,0.12)]"
+                      className="flex flex-col justify-between rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 shadow-[0_12px_42px_rgba(0,0,0,0.1)] sm:p-4"
                     >
                       <div>
                         <div className="flex justify-between items-start">
                           <div>
-                            <div className="flex items-center gap-1.5">
-                              <h3 className="text-base font-bold text-white">{plan.name}</h3>
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <h3 className="truncate text-sm font-semibold text-white">{plan.name}</h3>
                               {isDraft && (
                                 <Badge className="bg-[#FFB547]/10 text-[#FFB547] text-[8px] font-bold px-1.5 py-0.25 border-none">
                                   DRAFT
@@ -2335,7 +2335,7 @@ export function PlannerPage() {
                           </div>
                         </div>
 
-                        <div className="mt-4 grid grid-cols-3 gap-2 text-[10px] text-[#AAAAAA] font-bold">
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-medium text-[#AAAAAA]">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="h-3.5 w-3.5 text-[#AAAAAA]/60" />
                             {daysCount} {daysCount === 1 ? "day" : "days"}
@@ -2348,7 +2348,7 @@ export function PlannerPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-[#2B2B2B]">
+                      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#2B2B2B] pt-3">
                         <Button
                           variant="outline"
                           size="sm"
@@ -2393,19 +2393,19 @@ export function PlannerPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="space-y-5"
+            className="space-y-3.5"
           >
-            <Card 
+            <Card
               onClick={startEmptyWorkout}
-              className="p-5 border border-[#4F8CFF]/30 bg-[#181818] hover:border-[#4F8CFF]/60 transition-all rounded-2xl cursor-pointer group shadow-[0_16px_60px_rgba(79,140,255,0.08)]"
+              className="cursor-pointer rounded-2xl border border-[#4F8CFF]/30 bg-[#181818] p-3.5 shadow-[0_12px_42px_rgba(79,140,255,0.07)] transition-all hover:border-[#4F8CFF]/60 group sm:p-4"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3.5">
-                  <div className="h-10 w-10 rounded-xl bg-[#4F8CFF] text-white flex items-center justify-center shrink-0">
-                    <Play className="h-5 w-5 fill-current ml-0.5" />
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-[#4F8CFF] text-white flex items-center justify-center shrink-0">
+                    <Play className="h-4 w-4 fill-current ml-0.5" />
                   </div>
                   <div>
-                    <CardTitle className="text-sm font-bold tracking-tight text-white">
+                    <CardTitle className="text-sm font-semibold tracking-tight text-white">
                       Start Workout
                     </CardTitle>
                       <CardDescription className="hidden text-xs text-[#AAAAAA] mt-0.5 sm:block">
@@ -2418,11 +2418,11 @@ export function PlannerPage() {
             </Card>
 
             {latestSession ? (
-              <div className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-4">
+              <div className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5">
                 <p className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA]">Last workout</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-white">{latestSession.title}</p>
+                    <p className="truncate text-sm font-semibold text-white">{latestSession.title}</p>
                     <p className="mt-1 text-[10px] font-semibold text-[#AAAAAA]">
                       {latestSession.items.length} exercises • {new Date(latestSession.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                     </p>
@@ -2435,7 +2435,7 @@ export function PlannerPage() {
                       setViewingSession(latestSession);
                       setActiveTab("history");
                     }}
-                    className="rounded-xl border-[#2B2B2B] bg-[#1F1F1F] text-[10px] font-bold text-white hover:bg-[#2B2B2B]"
+                    className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-[10px] font-semibold text-white hover:bg-[#2B2B2B]"
                   >
                     View
                   </Button>

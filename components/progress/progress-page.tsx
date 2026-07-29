@@ -102,34 +102,34 @@ export function ProgressPage() {
     : null;
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="space-y-3.5 lg:space-y-6">
       
       {/* Visual Header Panel */}
-      <div className="rounded-2xl bg-black p-4 text-white shadow-lg relative overflow-hidden md:rounded-[36px] md:p-10 md:shadow-2xl">
+      <div className="rounded-2xl bg-black p-3.5 text-white shadow-lg relative overflow-hidden md:rounded-[28px] md:p-8 md:shadow-2xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-          <div className="space-y-1.5 md:space-y-2">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3.5 md:gap-6">
+          <div className="space-y-1 md:space-y-2">
             <Badge className="hidden bg-white/10 hover:bg-white/20 border-transparent text-white/60 font-bold uppercase tracking-widest text-[9px] px-3 py-1 sm:inline-flex">
               Progress
             </Badge>
-            <h1 className="text-xl md:text-5xl font-black tracking-tight leading-tight text-white">
+            <h1 className="text-lg font-semibold tracking-tight leading-tight text-white md:text-4xl md:font-black">
               Personal records
             </h1>
-            <p className="text-white/55 text-[11px] md:text-base max-w-xl font-medium leading-snug md:leading-relaxed">
+            <p className="text-white/55 text-[11px] md:text-sm max-w-xl font-medium leading-snug md:leading-relaxed">
               Track PRs and strength trends.
             </p>
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button className="h-10 w-full px-4 bg-white hover:bg-white/90 text-neutral-900 font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200 md:h-12 md:w-auto md:px-5" onClick={() => setForm(blankRecord())}>
+              <Button className="h-9 w-full rounded-xl border-none bg-white px-4 text-xs font-semibold text-neutral-900 shadow-md transition duration-200 hover:bg-white/90 md:h-10 md:w-auto" onClick={() => setForm(blankRecord())}>
                 <Plus className="h-4 w-4" />
                 <span>Log PR</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[32px] p-6 max-w-md bg-white border border-black/10">
+            <DialogContent className="rounded-2xl p-5 max-w-md bg-white border border-black/10">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <DialogTitle className="text-base font-semibold flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-amber-500" />
                   <span>{form.id ? "Edit Personal Record" : "Log Personal Record"}</span>
                 </DialogTitle>
@@ -138,7 +138,7 @@ export function ProgressPage() {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-4 space-y-4">
+              <div className="mt-4 space-y-3.5">
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Select Exercise</label>
                   <Combobox
@@ -156,7 +156,7 @@ export function ProgressPage() {
                       type="number"
                       value={String(form.value)}
                       onChange={(event) => setForm((current) => ({ ...current, value: Number(event.target.value) }))}
-                      className="bg-black/5 border-black/5 rounded-xl py-2 text-xs focus:border-black/20 focus:bg-white"
+                      className="h-9 rounded-xl border-black/5 bg-black/5 py-2 text-xs focus:border-black/20 focus:bg-white"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -165,7 +165,7 @@ export function ProgressPage() {
                       value={form.unit}
                       onValueChange={(value) => setForm((current) => ({ ...current, unit: value as PersonalRecord["unit"] }))}
                     >
-                      <SelectTrigger className="bg-black/5 border-black/5 rounded-xl text-xs">
+                      <SelectTrigger className="h-9 rounded-xl border-black/5 bg-black/5 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -181,7 +181,7 @@ export function ProgressPage() {
                       type="number"
                       value={String(form.reps)}
                       onChange={(event) => setForm((current) => ({ ...current, reps: Number(event.target.value) }))}
-                      className="bg-black/5 border-black/5 rounded-xl py-2 text-xs focus:border-black/20 focus:bg-white"
+                      className="h-9 rounded-xl border-black/5 bg-black/5 py-2 text-xs focus:border-black/20 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -192,7 +192,7 @@ export function ProgressPage() {
                     type="date"
                     value={form.achievedAt}
                     onChange={(event) => setForm((current) => ({ ...current, achievedAt: event.target.value }))}
-                    className="bg-black/5 border-black/5 rounded-xl py-2 text-xs focus:border-black/20 focus:bg-white"
+                    className="h-9 rounded-xl border-black/5 bg-black/5 py-2 text-xs focus:border-black/20 focus:bg-white"
                   />
                 </div>
 
@@ -202,12 +202,12 @@ export function ProgressPage() {
                     value={form.notes || ""}
                     onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                     placeholder="Optional setup or effort notes..."
-                    className="bg-black/5 border-black/5 rounded-xl text-xs min-h-[60px]"
+                    className="min-h-[56px] rounded-xl border-black/5 bg-black/5 text-xs"
                   />
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-black/5">
-                  <Button type="button" className="h-11 rounded-xl bg-black hover:bg-black/90 text-white font-semibold text-xs shadow-md w-full border-none" onClick={saveRecord} disabled={!form.exerciseId}>
+                  <Button type="button" className="h-10 rounded-xl bg-black hover:bg-black/90 text-white font-semibold text-xs shadow-md w-full border-none" onClick={saveRecord} disabled={!form.exerciseId}>
                     <span>{form.id ? "Update PR" : "Save PR"}</span>
                   </Button>
                 </div>
@@ -220,7 +220,7 @@ export function ProgressPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-2.5 sm:grid-cols-3">
         {[
           {
             label: "Last 30 days",
@@ -241,15 +241,15 @@ export function ProgressPage() {
             icon: Trophy,
           },
         ].map((item) => (
-          <Card key={item.label} className="border-transparent bg-white/80 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center justify-between gap-3">
+          <Card key={item.label} className="rounded-2xl border-transparent bg-white/80 p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.035)]">
+            <div className="flex items-center justify-between gap-2.5">
               <div className="min-w-0">
                 <p className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">{item.label}</p>
-                <p className="mt-1 text-xl font-black leading-none text-black">{item.value}</p>
+                <p className="mt-1 text-base font-semibold leading-none text-black">{item.value}</p>
                 <p className="mt-1 truncate text-[10px] font-semibold text-black/40">{item.detail}</p>
               </div>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black text-white">
-                <item.icon className="h-4 w-4" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white">
+                <item.icon className="h-3.5 w-3.5" />
               </div>
             </div>
           </Card>
@@ -257,13 +257,13 @@ export function ProgressPage() {
       </div>
 
       {/* Main Tabs Workspace layout */}
-      <Tabs defaultValue="analytics" className="space-y-4 md:space-y-6 flex flex-col flex-1">
+      <Tabs defaultValue="analytics" className="space-y-3.5 md:space-y-6 flex flex-col flex-1">
         <TabsList className="grid w-full shrink-0 grid-cols-2 items-center gap-1 bg-black/5 p-1 rounded-xl md:inline-flex md:w-fit md:flex-wrap md:gap-2 md:p-1.5 md:rounded-2xl">
-          <TabsTrigger value="analytics" className="px-3 py-2 text-xs font-bold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
+          <TabsTrigger value="analytics" className="px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
             <BarChart3 className="h-3.5 w-3.5" />
             <span>Charts</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="px-3 py-2 text-xs font-bold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
+          <TabsTrigger value="history" className="px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
             <Trophy className="h-3.5 w-3.5" />
             <span>History</span>
           </TabsTrigger>
