@@ -10,6 +10,7 @@ test.describe('Kratos Mobile Flow E2E Tests', () => {
     // Navigate to the main application page.
     // Auth automatically mocks a logged-in user, which redirects to `/dashboard`.
     await page.goto('/');
+    await page.waitForURL(/\/dashboard/);
     await expect(page).toHaveURL(/\/dashboard/);
   });
 

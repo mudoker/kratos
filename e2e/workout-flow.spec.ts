@@ -9,6 +9,7 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
 
     // Start at `/` which redirects to `/dashboard`
     await page.goto('/');
+    await page.waitForURL(/\/dashboard/);
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
