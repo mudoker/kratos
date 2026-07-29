@@ -30,10 +30,10 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     await expect(plansTabBtn).toBeVisible();
     await plansTabBtn.click();
 
-    // Click 'Create' to configure a new split plan template
-    const createBtn = page.getByRole('button', { name: 'Create' });
-    await expect(createBtn).toBeVisible();
-    await createBtn.click();
+    // Click 'New plan' button at the top to configure a new split plan template
+    const newPlanBtn = page.getByRole('button', { name: 'New plan' });
+    await expect(newPlanBtn).toBeVisible();
+    await newPlanBtn.click();
 
     // Verify template editor loaded
     await expect(page.getByText('Edit plan')).toBeVisible();
