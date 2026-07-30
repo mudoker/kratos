@@ -297,7 +297,11 @@ export const ensureAppTables = async () => {
     ADD COLUMN IF NOT EXISTS order_index INTEGER NOT NULL DEFAULT 0;
   `);
 
-  await seedExerciseCatalog(pool);
+  const exercisesCount = await executeQuery<{ count: string }>(pool, "SELECT COUNT(*) FROM exercises");
+  const count = parseInt(exercisesCount.rows[0].count, 10);
+  if (count === 0) {
+    await seedExerciseCatalog(pool);
+  }
   appTablesReady = true;
 };
 
