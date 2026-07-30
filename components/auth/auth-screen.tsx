@@ -96,12 +96,23 @@ export function AuthScreen() {
       provider: "google",
       callbackURL: `${origin}/dashboard`,
       errorCallbackURL: `${origin}/login`,
+      disableRedirect: true,
     });
 
     if (result.error) {
       setError(result.error.message || "Could not start Google sign-in.");
       setGooglePending(false);
+      return;
     }
+
+    const redirectUrl = result.data?.url;
+    if (redirectUrl) {
+      window.location.assign(redirectUrl);
+      return;
+    }
+
+    setError("Google sign-in did not return a redirect URL.");
+    setGooglePending(false);
   };
 
   return (
