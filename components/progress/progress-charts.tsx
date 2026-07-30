@@ -60,17 +60,17 @@ export function ProgressCharts({ data }: { data: DashboardData }) {
   }, [chartData]);
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+    <div className="space-y-2.5 md:space-y-6">
+      <div className="flex flex-col justify-between gap-2.5 sm:flex-row sm:items-center sm:gap-4">
         <div>
-          <CardTitle className="text-base sm:text-xl">Strength Trend</CardTitle>
+          <CardTitle className="text-sm font-semibold sm:text-xl">Strength Trend</CardTitle>
           <CardDescription className="mt-1 hidden sm:block">
             Track your selected lift over time.
           </CardDescription>
         </div>
         <div className="w-full sm:w-64">
           <Select value={activeExerciseId} onValueChange={setSelectedExerciseId}>
-            <SelectTrigger>
+            <SelectTrigger className="h-8 rounded-lg text-xs sm:h-10 sm:rounded-xl">
               <SelectValue placeholder="Select exercise" />
             </SelectTrigger>
             <SelectContent>
@@ -85,19 +85,25 @@ export function ProgressCharts({ data }: { data: DashboardData }) {
       </div>
 
       {chartData.length > 0 ? (
-        <Card className="p-3.5 sm:p-6">
-          <div className="flex items-center justify-between border-b border-[color:var(--border)] pb-3 sm:hidden">
+        <Card className="rounded-xl p-2.5 sm:rounded-2xl sm:p-6">
+          <div className="flex items-center justify-between border-b border-[color:var(--border)] pb-2 sm:hidden">
             <div>
               <p className="text-[9px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)]">Current</p>
-              <p className="font-[family:var(--font-display)] text-lg font-bold text-[color:var(--foreground)]">{stats?.current}</p>
+              <p className="font-[family:var(--font-display)] text-sm font-semibold text-[color:var(--foreground)]">{stats?.current}</p>
             </div>
             <div className="text-right">
               <p className="text-[9px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)]">Growth</p>
-              <p className="font-[family:var(--font-display)] text-lg font-bold text-[color:var(--support)]">{stats?.growth}</p>
+              <p className="font-[family:var(--font-display)] text-sm font-semibold text-[color:var(--support)]">{stats?.growth}</p>
             </div>
           </div>
-          <div className="h-[220px] w-full mt-3 sm:h-[300px] sm:mt-4">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="mt-2.5 h-[145px] min-w-0 w-full sm:h-[300px] sm:mt-4">
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+              minWidth={0}
+              minHeight={145}
+              initialDimension={{ width: 390, height: 145 }}
+            >
               <AreaChart data={chartData} margin={{ top: 10, right: 6, left: -28, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">

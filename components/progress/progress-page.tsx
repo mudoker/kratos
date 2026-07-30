@@ -102,29 +102,29 @@ export function ProgressPage() {
     : null;
 
   return (
-    <div className="space-y-3.5 lg:space-y-6">
+    <div className="space-y-3 pb-16 lg:space-y-6 lg:pb-0">
       
       {/* Visual Header Panel */}
-      <div className="rounded-2xl bg-black p-3.5 text-white shadow-lg relative overflow-hidden md:rounded-[28px] md:p-8 md:shadow-2xl">
+      <div className="rounded-xl bg-black p-2.5 text-white shadow-lg relative overflow-hidden md:rounded-[28px] md:p-8 md:shadow-2xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3.5 md:gap-6">
+        <div className="relative z-10 flex items-center justify-between gap-3 md:gap-6">
           <div className="space-y-1 md:space-y-2">
             <Badge className="hidden bg-white/10 hover:bg-white/20 border-transparent text-white/60 font-bold uppercase tracking-widest text-[9px] px-3 py-1 sm:inline-flex">
               Progress
             </Badge>
-            <h1 className="text-lg font-semibold tracking-tight leading-tight text-white md:text-4xl md:font-black">
-              Personal records
+            <h1 className="text-base font-semibold tracking-tight leading-tight text-white sm:text-lg md:text-4xl md:font-black">
+              Records
             </h1>
-            <p className="text-white/55 text-[11px] md:text-sm max-w-xl font-medium leading-snug md:leading-relaxed">
+            <p className="hidden text-white/55 text-[11px] md:block md:text-sm max-w-xl font-medium leading-snug md:leading-relaxed">
               Track PRs and strength trends.
             </p>
           </div>
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button className="h-9 w-full rounded-xl border-none bg-white px-4 text-xs font-semibold text-neutral-900 shadow-md transition duration-200 hover:bg-white/90 md:h-10 md:w-auto" onClick={() => setForm(blankRecord())}>
-                <Plus className="h-4 w-4" />
-                <span>Log PR</span>
+              <Button className="h-7 w-auto rounded-lg border-none bg-white px-2.5 text-[11px] font-semibold text-neutral-900 shadow-md transition duration-200 hover:bg-white/90 md:h-10 md:rounded-xl md:px-4 md:text-xs" onClick={() => setForm(blankRecord())}>
+                <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                <span>Log</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-2xl p-5 max-w-md bg-white border border-black/10">
@@ -220,7 +220,7 @@ export function ProgressPage() {
         </div>
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
         {[
           {
             label: "Last 30 days",
@@ -241,14 +241,14 @@ export function ProgressPage() {
             icon: Trophy,
           },
         ].map((item) => (
-          <Card key={item.label} className="rounded-2xl border-transparent bg-white/80 p-3.5 shadow-[0_10px_28px_rgba(0,0,0,0.035)]">
-            <div className="flex items-center justify-between gap-2.5">
+          <Card key={item.label} className="rounded-xl border-transparent bg-white/80 p-2 shadow-[0_10px_24px_rgba(0,0,0,0.03)] sm:rounded-2xl sm:p-3.5">
+            <div className="flex items-start justify-between gap-2.5">
               <div className="min-w-0">
-                <p className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">{item.label}</p>
-                <p className="mt-1 text-base font-semibold leading-none text-black">{item.value}</p>
-                <p className="mt-1 truncate text-[10px] font-semibold text-black/40">{item.detail}</p>
+                <p className="truncate text-[7.5px] font-extrabold uppercase tracking-wider text-black/40 sm:text-[9px]">{item.label}</p>
+                <p className="mt-0.5 truncate text-xs font-semibold leading-none text-black sm:mt-1 sm:text-base">{item.value}</p>
+                <p className="mt-1 hidden truncate text-[10px] font-semibold text-black/40 sm:block">{item.detail}</p>
               </div>
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white">
+              <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white sm:flex">
                 <item.icon className="h-3.5 w-3.5" />
               </div>
             </div>
@@ -257,19 +257,19 @@ export function ProgressPage() {
       </div>
 
       {/* Main Tabs Workspace layout */}
-      <Tabs defaultValue="analytics" className="space-y-3.5 md:space-y-6 flex flex-col flex-1">
+      <Tabs defaultValue="analytics" className="space-y-3 md:space-y-6 flex flex-col flex-1">
         <TabsList className="grid w-full shrink-0 grid-cols-2 items-center gap-1 bg-black/5 p-1 rounded-xl md:inline-flex md:w-fit md:flex-wrap md:gap-2 md:p-1.5 md:rounded-2xl">
-          <TabsTrigger value="analytics" className="px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
-            <BarChart3 className="h-3.5 w-3.5" />
+          <TabsTrigger value="analytics" className="h-7 rounded-lg px-3 py-0 text-[11px] font-semibold gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:h-auto md:px-4 md:py-2.5 md:text-xs md:rounded-xl">
+            <BarChart3 className="h-3 w-3 md:h-3.5 md:w-3.5" />
             <span>Charts</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="px-3 py-1.5 text-xs font-semibold rounded-lg gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:px-4 md:py-2.5 md:rounded-xl">
-            <Trophy className="h-3.5 w-3.5" />
+          <TabsTrigger value="history" className="h-7 rounded-lg px-3 py-0 text-[11px] font-semibold gap-1.5 hover:text-black data-[state=active]:bg-white data-[state=active]:text-black md:h-auto md:px-4 md:py-2.5 md:text-xs md:rounded-xl">
+            <Trophy className="h-3 w-3 md:h-3.5 md:w-3.5" />
             <span>History</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="analytics" className="mt-0 outline-none space-y-4 md:space-y-6">
+        <TabsContent value="analytics" className="mt-0 outline-none space-y-3 md:space-y-6">
           <ProgressCharts data={data} />
         </TabsContent>
 

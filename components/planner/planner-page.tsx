@@ -1540,7 +1540,7 @@ export function PlannerPage() {
   // ==========================================
   if (isEditingSplit && activeDraftPlan) {
     return (
-      <div className="mx-auto max-w-xl pb-16 space-y-3.5 bg-[#0D0D0D] text-white sm:space-y-4">
+      <div className="mx-auto max-w-xl pb-32 space-y-3.5 bg-[#0D0D0D] text-white sm:space-y-4 lg:pb-16">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -1934,7 +1934,7 @@ export function PlannerPage() {
         </div>
 
         {/* Action row at bottom */}
-        <div className="flex gap-2 sticky bottom-0 bg-[#0D0D0D] py-2 z-10 border-t border-[#2B2B2B]">
+        <div className="flex gap-2 sticky bottom-20 bg-[#0D0D0D] py-2 z-30 border-t border-[#2B2B2B] lg:bottom-0">
           <Button
             onClick={addWorkoutDay}
             variant="outline"
@@ -2144,20 +2144,28 @@ export function PlannerPage() {
     0
   );
   const latestSession = sessions[0];
+  const templateEntries = plans.flatMap((plan) =>
+    plan.days.map((day) => ({
+      plan,
+      day,
+      exerciseCount: day.items.length,
+    }))
+  );
+  const mobileTemplateLimit = 2;
 
   return (
-      <div className="mx-auto max-w-md px-0 pb-16 space-y-4 sm:px-2 md:max-w-5xl md:space-y-6">
+      <div className="mx-auto max-w-md px-0 pb-14 space-y-3 sm:px-2 md:max-w-5xl md:space-y-6">
       
-      <div className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] sm:p-5 md:rounded-[24px]">
-        <div className="flex flex-col gap-3.5 md:flex-row md:items-end md:justify-between">
-          <div className="min-w-0 space-y-1.5">
-            <div className="flex items-center gap-2 text-[#4F8CFF]">
-              <div className="h-7 w-7 rounded-lg bg-[#4F8CFF]/15 flex items-center justify-center">
+      <div className="rounded-xl border border-[#2B2B2B] bg-[#181818] p-2.5 shadow-[0_12px_36px_rgba(0,0,0,0.12)] sm:rounded-2xl sm:p-5 md:rounded-[24px]">
+        <div className="flex items-center justify-between gap-3 md:items-end">
+          <div className="min-w-0 space-y-1">
+            <div className="hidden items-center gap-2 text-[#4F8CFF] sm:flex">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#4F8CFF]/15">
                 <Dumbbell className="h-3.5 w-3.5" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider">Training hub</span>
             </div>
-            <h1 className="truncate text-xl font-semibold tracking-tight text-white sm:text-2xl">Training</h1>
+            <h1 className="truncate text-base font-semibold tracking-tight text-white sm:text-2xl">Training</h1>
             <p className="hidden max-w-xl text-xs font-medium leading-relaxed text-[#AAAAAA] md:block">
               Build reusable gym plans, start today&apos;s session, and keep your logged sets connected to progress.
             </p>
@@ -2169,14 +2177,14 @@ export function PlannerPage() {
               setActiveDraftPlan(newDraft);
               setIsEditingSplit(true);
             }}
-            className="h-9 rounded-xl bg-[#4F8CFF] px-3.5 text-xs font-semibold text-white hover:bg-[#4F8CFF]/90 sm:h-10 sm:px-4"
+            className="h-7 shrink-0 rounded-lg bg-[#4F8CFF] px-2.5 text-[11px] font-semibold text-white hover:bg-[#4F8CFF]/90 sm:h-10 sm:rounded-xl sm:px-4 sm:text-xs"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             New plan
           </Button>
         </div>
 
-        <div className="mt-4 grid grid-cols-4 gap-x-3 border-t border-[#2B2B2B] pt-3">
+        <div className="mt-4 hidden grid-cols-4 gap-x-3 border-t border-[#2B2B2B] pt-3 sm:grid">
           {[
             { label: "Plans", value: plans.length },
             { label: "Days", value: totalPlanDays },
@@ -2191,7 +2199,7 @@ export function PlannerPage() {
         </div>
 
         {/* Tab switcher: Plans, Session, History */}
-        <div className="mt-4 grid grid-cols-3 gap-1 rounded-xl border border-[#2B2B2B] bg-[#0D0D0D] p-1">
+        <div className="mt-2.5 grid grid-cols-3 gap-1 rounded-lg border border-[#2B2B2B] bg-[#0D0D0D] p-1 sm:mt-3 sm:rounded-xl">
           {([
             { id: "plans", label: "Plans", icon: ClipboardList },
             { id: "session", label: "Session", icon: Play },
@@ -2206,13 +2214,13 @@ export function PlannerPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "h-8 rounded-lg px-2 text-xs font-medium transition-all select-none hover:bg-white/5 hover:text-white sm:h-9",
+                  "h-7 rounded-md px-2 text-[11px] font-medium transition-all select-none hover:bg-white/5 hover:text-white sm:h-9 sm:rounded-lg sm:text-xs",
                   isActive 
                     ? "bg-white text-black shadow-sm"
                     : "text-[#AAAAAA] hover:text-white hover:bg-white/5"
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 <span>{tab.label}</span>
               </Button>
             );
@@ -2230,7 +2238,7 @@ export function PlannerPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="space-y-3.5"
+            className="space-y-3"
           >
             <div className="grid gap-2.5 rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3 sm:grid-cols-[1fr_auto]">
               <div className="relative flex-1">
@@ -2397,15 +2405,15 @@ export function PlannerPage() {
           >
             <Card
               onClick={startEmptyWorkout}
-              className="cursor-pointer rounded-2xl border border-[#4F8CFF]/30 bg-[#181818] p-3.5 shadow-[0_12px_42px_rgba(79,140,255,0.07)] transition-all hover:border-[#4F8CFF]/60 group sm:p-4"
+              className="cursor-pointer rounded-xl border border-[#4F8CFF]/30 bg-[#181818] p-2.5 shadow-[0_10px_30px_rgba(79,140,255,0.05)] transition-all hover:border-[#4F8CFF]/60 group sm:rounded-2xl sm:p-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-[#4F8CFF] text-white flex items-center justify-center shrink-0">
-                    <Play className="h-4 w-4 fill-current ml-0.5" />
+                  <div className="h-7 w-7 rounded-lg bg-[#4F8CFF] text-white flex items-center justify-center shrink-0 sm:h-8 sm:w-8">
+                    <Play className="h-3.5 w-3.5 fill-current ml-0.5 sm:h-4 sm:w-4" />
                   </div>
                   <div>
-                    <CardTitle className="text-sm font-semibold tracking-tight text-white">
+                    <CardTitle className="text-xs font-semibold tracking-tight text-white sm:text-sm">
                       Start Workout
                     </CardTitle>
                       <CardDescription className="hidden text-xs text-[#AAAAAA] mt-0.5 sm:block">
@@ -2418,7 +2426,7 @@ export function PlannerPage() {
             </Card>
 
             {latestSession ? (
-              <div className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5">
+              <div className="hidden rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 sm:block">
                 <p className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA]">Last workout</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -2443,40 +2451,52 @@ export function PlannerPage() {
               </div>
             ) : null}
 
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
                 Templates
               </span>
 
-              {plans.length > 0 ? (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {plans.flatMap((plan) => 
-                    plan.days.map((day) => {
-                      const exerciseCount = day.items.length;
+              {templateEntries.length > 0 ? (
+                <div className="grid gap-2.5 md:grid-cols-2">
+                  {templateEntries.map(({ plan, day, exerciseCount }, index) => {
                       return (
-                        <div
+                        <Button
+                          type="button"
+                          variant="ghost"
                           key={`${plan.id}-${day.id}`}
                           onClick={() => startWorkoutFromDay(day, plan)}
-                          className="flex items-center justify-between p-4 bg-[#181818] border border-[#2B2B2B] hover:border-[#4F8CFF]/30 rounded-2xl transition-all cursor-pointer group"
+                          className={cn(
+                            "group h-auto min-h-14 w-full justify-between rounded-xl border border-[#2B2B2B] bg-[#181818] p-2 text-left transition-all hover:border-[#4F8CFF]/30 hover:bg-[#181818] sm:min-h-0 sm:rounded-2xl sm:p-4",
+                            index >= mobileTemplateLimit && "hidden sm:flex"
+                          )}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-[#4F8CFF]/15 text-[#4F8CFF] flex items-center justify-center font-bold text-xs shrink-0">
+                          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+                            <div className="h-7 w-7 rounded-lg bg-[#4F8CFF]/15 text-[#4F8CFF] flex items-center justify-center font-bold text-[10px] shrink-0 sm:h-8 sm:w-8 sm:text-xs">
                               {day.title.slice(0, 3)}
                             </div>
-                            <div>
-                              <h3 className="text-xs font-bold text-white group-hover:text-[#4F8CFF] transition-colors">
+                            <div className="min-w-0">
+                              <h3 className="line-clamp-1 text-xs font-semibold text-white group-hover:text-[#4F8CFF] transition-colors">
                                 {plan.name} • {day.title}
                               </h3>
-                              <p className="text-[9.5px] text-[#AAAAAA] mt-0.5 font-semibold">
+                              <p className="truncate text-[9px] text-[#AAAAAA] mt-0.5 font-semibold sm:text-[9.5px]">
                                 {day.focus || "Routine"} • {exerciseCount} exercises
                               </p>
                             </div>
                           </div>
                           <Play className="h-3.5 w-3.5 text-[#AAAAAA] fill-current group-hover:text-[#4F8CFF] transition-colors" />
-                        </div>
+                        </Button>
                       );
-                    })
-                  )}
+                    })}
+                  {templateEntries.length > mobileTemplateLimit ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setActiveTab("plans")}
+                      className="h-8 rounded-xl border border-[#2B2B2B] bg-[#181818] text-[11px] font-semibold text-[#AAAAAA] hover:bg-[#1F1F1F] hover:text-white sm:hidden"
+                    >
+                      View all templates
+                    </Button>
+                  ) : null}
                 </div>
               ) : (
                 <Card className="p-8 text-center border border-dashed border-[#2B2B2B] bg-[#181818] rounded-xl">

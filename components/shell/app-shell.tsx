@@ -197,7 +197,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
   const activeTitle = items.find((item) => item.href === pathname)?.label || "Kratos";
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col px-3 pt-3 pb-24 lg:grid lg:grid-cols-[80px_1fr] lg:gap-6 lg:px-4 lg:pb-8 lg:pt-4">
+    <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col px-3 pt-3 pb-20 lg:grid lg:grid-cols-[80px_1fr] lg:gap-6 lg:px-4 lg:pb-8 lg:pt-4">
       
       {/* Desktop Left Sticky Sidebar */}
       <aside className="hidden lg:block relative w-20 shrink-0 h-[calc(100vh-2rem)] sticky top-4 z-40">
@@ -207,10 +207,10 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </aside>
 
       {/* Responsive Mobile Top Sticky Navigation Header Bar (Flush edge-to-edge) */}
-      <header className="lg:hidden flex items-center justify-between -mx-3 -mt-3 mb-4 rounded-none border-b border-black/5 px-4 py-2.5 bg-white/75 backdrop-blur-md sticky top-0 z-40">
+      <header className="lg:hidden flex items-center justify-between -mx-3 -mt-3 mb-3 rounded-none border-b border-black/5 px-4 py-2 bg-white/75 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-            <Dumbbell className="h-3.5 w-3.5" />
+          <div className="h-5.5 w-5.5 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <Dumbbell className="h-3 w-3" />
           </div>
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-black/40 block leading-none">Kratos</span>
         </div>
@@ -223,7 +223,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </main>
 
       {/* Responsive Mobile Bottom Tab Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-3 left-1/2 z-40 w-[min(320px,calc(100vw-24px))] -translate-x-1/2 bg-white/95 backdrop-blur-xl border border-black/[0.06] px-2 py-1.5 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.05)] flex items-center justify-around">
+      <nav className="lg:hidden fixed bottom-3 left-1/2 z-40 w-[min(300px,calc(100vw-32px))] -translate-x-1/2 bg-white/95 backdrop-blur-xl border border-black/[0.06] px-2 py-1 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-center justify-around">
         {[
           { href: "/dashboard" as Route, label: "Home", icon: BarChart3 },
           { href: "/train" as Route, label: "Train", icon: Dumbbell },
@@ -236,12 +236,12 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center py-1 flex-1 transition-colors duration-150 active:scale-98 select-none",
+                "flex flex-col items-center justify-center py-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
                 isActive ? "text-black" : "text-[#8e8e93]"
               )}
             >
-              <Icon className="h-5.5 w-5.5" strokeWidth={isActive ? 2.25 : 1.8} />
-              <span className="text-[9px] font-semibold tracking-tight mt-0.5">{item.label}</span>
+              <Icon className="h-5 w-5" strokeWidth={isActive ? 2.25 : 1.8} />
+              <span className="text-[8.5px] font-semibold tracking-tight mt-0.5">{item.label}</span>
             </Link>
           );
         })}
@@ -252,12 +252,12 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
             <button
               type="button"
               className={cn(
-                "flex flex-col items-center justify-center py-1 flex-1 transition-colors duration-150 active:scale-98 select-none",
+                "flex flex-col items-center justify-center py-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
                 ["/progress", "/exercises", "/coach", "/settings"].includes(pathname) ? "text-black" : "text-[#8e8e93]"
               )}
             >
-              <Menu className="h-5.5 w-5.5" strokeWidth={1.8} />
-              <span className="text-[9px] font-semibold tracking-tight mt-0.5">More</span>
+              <Menu className="h-5 w-5" strokeWidth={1.8} />
+              <span className="text-[8.5px] font-semibold tracking-tight mt-0.5">More</span>
             </button>
           </DialogTrigger>
           <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[240px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-white p-4 border-r border-black/10 overflow-y-auto max-w-full z-50">
