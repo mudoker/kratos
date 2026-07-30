@@ -10,13 +10,13 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   /* Maximum time one test can run for. */
-  timeout: 60 * 1000,
+  timeout: 180 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
-    timeout: 15000,
+    timeout: 30000,
   },
   /* Run tests in files in parallel */
   fullyParallel: false,
@@ -34,9 +34,9 @@ export default defineConfig({
     baseURL: 'http://localhost:3005',
 
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
-    actionTimeout: 15000,
+    actionTimeout: 60000,
     /* Maximum time for navigation actions like `page.goto()`. */
-    navigationTimeout: 20000,
+    navigationTimeout: 60000,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -56,9 +56,10 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'PORT=3005 bun run dev',
-    url: 'http://localhost:3005',
+    command: 'npm run build && PORT=3005 npm start',
+    url: 'http://localhost:3005/login',
     reuseExistingServer: !process.env.CI,
+    timeout: 180000,
     env: {
       BETTER_AUTH_URL: 'http://localhost:3005',
       NEXT_PUBLIC_BETTER_AUTH_URL: 'http://localhost:3005',

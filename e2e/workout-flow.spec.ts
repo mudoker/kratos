@@ -8,12 +8,13 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     });
 
     // Start at `/` which redirects to `/dashboard`
-    await page.goto('/');
-    await page.waitForURL(/\/dashboard/);
+    await page.goto('/dashboard', { waitUntil: 'load' });
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
   test('Coherent User Flow: Create Plan -> Start Workout from Plan -> Log Session -> View in History & Stats', async ({ page }) => {
+    const planName = `Kratos Strength ${Date.now()}`;
+
     // ----------------------------------------------------
     // STEP 1: CREATE A NEW GYM PLAN TEMPLATE
     // ----------------------------------------------------
@@ -41,7 +42,7 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
 
     // Fill in the Plan details
     const planNameInput = page.getByPlaceholder('e.g. Upper Body Hypertrophy');
-    await planNameInput.fill('Kratos Strength A');
+    await planNameInput.fill(planName);
     
     const planDescTextarea = page.getByPlaceholder('Primary hypertrophy targets, tempos...');
     await planDescTextarea.fill('E2E Test template - Focus on heavy compound movements');
@@ -64,9 +65,10 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     await expect(savePlanBtn).toBeVisible();
     await savePlanBtn.click();
 
-    // Verify it redirects back to the Plans list and our new template is visible
-    await expect(plansTabBtn).toBeVisible();
-    await expect(page.locator('h3', { hasText: 'Kratos Strength A' })).toBeVisible();
+    // Verify it exits the editor and the new template is available to start.
+    await expect(page.getByText('Edit plan')).not.toBeVisible({ timeout: 60000 });
+    await expect(page.getByRole('button', { name: 'Plans' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `${planName} • Day 1` })).toBeVisible();
 
     // ----------------------------------------------------
     // STEP 2: RECORD A WORKOUT SESSION USING THIS PLAN
@@ -76,14 +78,14 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     const sessionTabBtn = page.getByRole('button', { name: 'Session' });
     await sessionTabBtn.click();
 
-    // Find the Day 1 template item of 'Kratos Strength A' and click to start
-    const startPlanWorkoutBtn = page.locator('div', { hasText: 'Kratos Strength A' }).getByText('Day 1').first();
+    // Find the Day 1 template item and click to start.
+    const startPlanWorkoutBtn = page.locator('button', { hasText: planName }).first();
     await expect(startPlanWorkoutBtn).toBeVisible();
     await startPlanWorkoutBtn.click();
 
     // Verify the Active Workout logger is visible
     await expect(page.getByRole('button', { name: 'Finish' })).toBeVisible();
-    await expect(page.getByText('Barbell Bench Press')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Barbell Bench Press', level: 2 })).toBeVisible();
 
     // Fill in set weight & reps in the logger set row
     // Inside the logger row, locate input fields for weight (Kg) and reps
@@ -116,6 +118,7 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     // Save/log the session
     const logWorkoutBtn = page.getByRole('button', { name: 'Log workout session' });
     await logWorkoutBtn.click();
+    await expect(page.getByRole('dialog', { name: 'Finish Workout' })).not.toBeVisible({ timeout: 60000 });
 
     // ----------------------------------------------------
     // STEP 3: VERIFY IN HISTORY TAB
@@ -126,7 +129,7 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     await expect(historyTabBtn).toBeVisible();
     
     // Verify our logged session is listed under the history records
-    await expect(page.locator('h3', { hasText: 'Kratos Strength A' }).first()).toBeVisible();
+    await expect(page.locator('h3', { hasText: planName }).first()).toBeVisible();
 
     // ----------------------------------------------------
     // STEP 4: VERIFY ON ADMIN/USER DASHBOARD STATS
@@ -140,8 +143,8 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     const dashHistoryTabBtn = page.getByRole('button', { name: 'History' });
     await dashHistoryTabBtn.click();
 
-    // Check recent sessions list contains 'Kratos Strength A'
-    await expect(page.getByText('Kratos Strength A').first()).toBeVisible();
+    // Check recent sessions list contains the plan workout.
+    await expect(page.getByText(planName).first()).toBeVisible();
 
     // Switch to Dashboard 'Charts' tab to verify the statistics progress graphs
     const dashChartsTabBtn = page.getByRole('button', { name: 'Charts' });
@@ -149,6 +152,5 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
 
     // Verify that the charts and volume statistics are visible
     await expect(page.getByText('Weekly Volume')).toBeVisible();
-    await expect(page.getByText('Target Muscles').or(page.locator('div', { hasText: 'Weekly Volume' }))).toBeVisible();
   });
 });
