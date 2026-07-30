@@ -1,4 +1,3 @@
-import { ensureAuthTables } from "@/lib/auth";
 import {
   createId,
   defaultPlanDays,
@@ -36,7 +35,6 @@ let dataReady: Promise<void> | null = null;
 export const ensureDataReady = async () => {
   if (!dataReady) {
     dataReady = (async () => {
-      await ensureAuthTables();
       await ensureAppTables();
     })();
   }
@@ -457,4 +455,3 @@ export const saveExercise = async (exercise: Omit<Exercise, "createdAt" | "updat
   );
   return exercise;
 };
-

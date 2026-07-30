@@ -61,8 +61,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 180000,
     env: {
-      BETTER_AUTH_URL: 'http://localhost:3005',
-      NEXT_PUBLIC_BETTER_AUTH_URL: 'http://localhost:3005',
+      KRATOS_E2E_AUTH_BYPASS: 'true',
       PORT: '3005',
     },
     stdout: 'pipe',
