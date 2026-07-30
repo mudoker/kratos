@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 
 const VERSION_FALLBACK = "latest";
+const SEEN_VERSION_KEY = "kratos_pwa_seen_version";
 
 const readServiceWorkerVersion = async () => {
   try {
@@ -38,23 +39,34 @@ export function PwaRegister() {
   const [isApplying, setIsApplying] = useState(false);
   const dismissedVersionRef = useRef<string | null>(null);
   const isApplyingRef = useRef(false);
+  const versionRef = useRef(version);
 
-  const showUpdate = useCallback(async (sw: ServiceWorker) => {
+  useEffect(() => {
+    versionRef.current = version;
+  }, [version]);
+
+  const showUpdate = useCallback(async (sw: ServiceWorker | null, nextVersion?: string) => {
     if (isApplyingRef.current) return;
-    const nextVersion = await readServiceWorkerVersion();
-    if (dismissedVersionRef.current === nextVersion) return;
+    const detectedVersion = nextVersion || await readServiceWorkerVersion();
+    if (dismissedVersionRef.current === detectedVersion) return;
 
     setWaitingSW(sw);
-    setVersion(nextVersion);
+    setVersion(detectedVersion);
     setShowUpdateModal(true);
   }, []);
 
   const applyUpdate = useCallback(() => {
-    if (!waitingSW) return;
     isApplyingRef.current = true;
     setIsApplying(true);
-    waitingSW.postMessage({ type: "SKIP_WAITING" });
-  }, [waitingSW]);
+    localStorage.setItem(SEEN_VERSION_KEY, version);
+
+    if (waitingSW) {
+      waitingSW.postMessage({ type: "SKIP_WAITING" });
+      return;
+    }
+
+    window.location.reload();
+  }, [version, waitingSW]);
 
   const dismissUpdate = useCallback(() => {
     dismissedVersionRef.current = version;
@@ -66,6 +78,42 @@ export function PwaRegister() {
 
     let interval: ReturnType<typeof setInterval> | undefined;
     let registration: ServiceWorkerRegistration | null = null;
+    let reloading = false;
+
+    const readControllerVersion = () =>
+      new Promise<string | null>((resolve) => {
+        const controller = navigator.serviceWorker.controller;
+        if (!controller) {
+          resolve(null);
+          return;
+        }
+
+        const channel = new MessageChannel();
+        const timeout = window.setTimeout(() => resolve(null), 800);
+        channel.port1.onmessage = (event) => {
+          window.clearTimeout(timeout);
+          resolve(event.data?.type === "SW_VERSION" ? event.data.version : null);
+        };
+        controller.postMessage({ type: "GET_VERSION" }, [channel.port2]);
+      });
+
+    const checkVersionMismatch = async () => {
+      const latestVersion = await readServiceWorkerVersion();
+      if (latestVersion === VERSION_FALLBACK) return;
+
+      const controllerVersion = await readControllerVersion();
+      const seenVersion = localStorage.getItem(SEEN_VERSION_KEY);
+      const activeVersion = controllerVersion || seenVersion;
+
+      if (!activeVersion) {
+        localStorage.setItem(SEEN_VERSION_KEY, latestVersion);
+        return;
+      }
+
+      if (activeVersion !== latestVersion && dismissedVersionRef.current !== latestVersion) {
+        await showUpdate(registration?.waiting || null, latestVersion);
+      }
+    };
 
     const watchInstalling = (reg: ServiceWorkerRegistration) => {
       const sw = reg.installing;
@@ -78,12 +126,15 @@ export function PwaRegister() {
     };
 
     const pollForUpdate = async () => {
-      if (!registration) return;
       try {
-        await registration.update();
-        if (registration.waiting) {
-          await showUpdate(registration.waiting);
+        const reg = registration;
+        if (reg) {
+          await reg.update();
         }
+        if (reg?.waiting) {
+          await showUpdate(reg.waiting);
+        }
+        await checkVersionMismatch();
       } catch {
         // Offline launches can fail update checks.
       }
@@ -96,11 +147,10 @@ export function PwaRegister() {
     const onControllerChange = () => {
       if (!reloading) {
         reloading = true;
+        localStorage.setItem(SEEN_VERSION_KEY, versionRef.current);
         window.location.reload();
       }
     };
-
-    let reloading = false;
 
     navigator.serviceWorker.register("/sw.js").then(async (reg) => {
       registration = reg;
