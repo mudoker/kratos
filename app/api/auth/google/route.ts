@@ -2,11 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+const neonAuthBaseUrl =
+  process.env.NEON_AUTH_BASE_URL ||
+  "https://ep-billowing-hill-aygutuu1.neonauth.c-5.us-east-2.aws.neon.tech/neondb/auth";
+
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
-  const response = await fetch(`${origin}/api/auth/sign-in/social`, {
+  const response = await fetch(`${neonAuthBaseUrl}/sign-in/social`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: origin },
     body: JSON.stringify({
       provider: "google",
       callbackURL: "/dashboard",
