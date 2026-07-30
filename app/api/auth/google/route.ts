@@ -9,8 +9,9 @@ export async function GET(request: NextRequest) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       provider: "google",
-      callbackURL: `${origin}/dashboard`,
-      errorCallbackURL: `${origin}/login`,
+      callbackURL: "/dashboard",
+      errorCallbackURL: "/login",
+      requestSignUp: true,
       disableRedirect: true,
     }),
   });
