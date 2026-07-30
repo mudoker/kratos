@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { RefreshCw, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,8 @@ const readServiceWorkerVersion = async () => {
 };
 
 export function PwaRegister() {
+  const pathname = usePathname();
+  const isAuthPath = pathname === "/login" || pathname.startsWith("/api/auth");
   const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(null);
   const [version, setVersion] = useState(VERSION_FALLBACK);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -40,13 +43,19 @@ export function PwaRegister() {
   const dismissedVersionRef = useRef<string | null>(null);
   const isApplyingRef = useRef(false);
   const versionRef = useRef(version);
+  const isAuthPathRef = useRef(false);
 
   useEffect(() => {
     versionRef.current = version;
   }, [version]);
 
+  useEffect(() => {
+    isAuthPathRef.current = isAuthPath;
+  }, [isAuthPath]);
+
   const showUpdate = useCallback(async (sw: ServiceWorker | null, nextVersion?: string) => {
     if (isApplyingRef.current) return;
+    if (isAuthPathRef.current) return;
     const detectedVersion = nextVersion || await readServiceWorkerVersion();
     if (dismissedVersionRef.current === detectedVersion) return;
 
@@ -181,7 +190,7 @@ export function PwaRegister() {
 
   return (
     <Dialog
-      open={showUpdateModal}
+      open={showUpdateModal && !isAuthPath}
       onOpenChange={(open) => {
         if (open) {
           setShowUpdateModal(true);

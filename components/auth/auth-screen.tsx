@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Dumbbell, KeyRound, Mail } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 
 function GoogleIcon() {
   return (
@@ -37,7 +37,6 @@ export function AuthScreen() {
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const [googlePending, setGooglePending] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -87,34 +86,6 @@ export function AuthScreen() {
     router.refresh();
   };
 
-  const signInWithGoogle = async () => {
-    setGooglePending(true);
-    setError("");
-    const origin = window.location.origin;
-
-    const result = await authClient.signIn.social({
-      provider: "google",
-      callbackURL: `${origin}/dashboard`,
-      errorCallbackURL: `${origin}/login`,
-      disableRedirect: true,
-    });
-
-    if (result.error) {
-      setError(result.error.message || "Could not start Google sign-in.");
-      setGooglePending(false);
-      return;
-    }
-
-    const redirectUrl = result.data?.url;
-    if (redirectUrl) {
-      window.location.assign(redirectUrl);
-      return;
-    }
-
-    setError("Google sign-in did not return a redirect URL.");
-    setGooglePending(false);
-  };
-
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08090A] px-4 py-8 text-white">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:36px_36px] opacity-30" />
@@ -149,13 +120,13 @@ export function AuthScreen() {
 
           <div className="mt-3.5 space-y-2.5">
             <Button
-              type="button"
-              onClick={signInWithGoogle}
-              disabled={googlePending || pending}
+              asChild
               className="h-8 w-full rounded-lg border border-white/10 bg-white text-xs font-semibold text-[#090A0B] shadow-[0_14px_34px_rgba(0,0,0,0.2)] hover:bg-emerald-100"
             >
-              <GoogleIcon />
-              {googlePending ? "Opening Google..." : "Continue with Google"}
+              <a href="/api/auth/google">
+                <GoogleIcon />
+                <span>Continue with Google</span>
+              </a>
             </Button>
 
             <div className="flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/24">
@@ -213,7 +184,7 @@ export function AuthScreen() {
 
             <Button
               type="submit"
-              disabled={pending || googlePending}
+              disabled={pending}
               className="h-8 w-full rounded-lg border border-white/10 bg-white/[0.07] text-xs font-semibold text-white shadow-none hover:bg-white/[0.1]"
             >
               {pending ? (
