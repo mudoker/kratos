@@ -197,7 +197,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
   const activeTitle = items.find((item) => item.href === pathname)?.label || "Kratos";
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[1680px] flex flex-col px-3 pt-3 pb-14 lg:grid lg:grid-cols-[80px_1fr] lg:gap-6 lg:px-4 lg:pb-8 lg:pt-4">
+    <div className="mx-auto flex min-h-screen w-full max-w-[1680px] flex-col bg-[color:var(--background)] px-3 pb-[calc(env(safe-area-inset-bottom)+3.5rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] lg:grid lg:grid-cols-[80px_1fr] lg:gap-6 lg:px-4 lg:pb-8 lg:pt-4">
       
       {/* Desktop Left Sticky Sidebar */}
       <aside className="hidden lg:block relative w-20 shrink-0 h-[calc(100vh-2rem)] sticky top-4 z-40">
@@ -207,7 +207,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </aside>
 
       {/* Responsive Mobile Top Sticky Navigation Header Bar (Flush edge-to-edge) */}
-      <header className="lg:hidden flex items-center justify-between -mx-3 -mt-3 mb-2 rounded-none border-b border-black/5 px-4 py-1.5 bg-white/75 backdrop-blur-md sticky top-0 z-40">
+      <header className="lg:hidden sticky top-0 z-40 -mx-3 -mt-[calc(env(safe-area-inset-top)+0.75rem)] mb-2 flex items-center justify-between border-b border-black/5 bg-white/75 px-4 pb-1.5 pt-[calc(env(safe-area-inset-top)+0.375rem)] backdrop-blur-md">
         <div className="flex items-center gap-2">
           <div className="h-5 w-5 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
             <Dumbbell className="h-3 w-3" />
@@ -223,7 +223,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </main>
 
       {/* Responsive Mobile Bottom Tab Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-2 left-1/2 z-40 w-[min(244px,calc(100vw-56px))] -translate-x-1/2 bg-white/95 backdrop-blur-xl border border-black/[0.06] px-2 py-1 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-center justify-around">
+      <nav className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-1/2 z-40 w-[min(244px,calc(100vw-56px))] -translate-x-1/2 bg-white/95 backdrop-blur-xl border border-black/[0.06] px-2 py-1 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-center justify-around">
         {[
           { href: "/dashboard" as Route, label: "Home", icon: BarChart3 },
           { href: "/train" as Route, label: "Train", icon: Dumbbell },

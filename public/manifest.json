@@ -4,8 +4,8 @@
   "description": "Strength planning, workout execution, and AI coaching.",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#09090b",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
   "orientation": "portrait-primary",
   "categories": ["sports", "health", "fitness"],
   "icons": [
