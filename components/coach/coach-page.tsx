@@ -118,25 +118,25 @@ export function CoachPage() {
     <div className="grid gap-3 pb-14 xl:grid-cols-[1.2fr_0.8fr] xl:gap-6 xl:pb-0 items-start">
       
       {/* LEFT COLUMN: Chat Interface */}
-      <Card className="flex h-[calc(100dvh-112px)] min-h-[390px] flex-col rounded-xl border-transparent bg-white/80 p-3 shadow-[0_15px_50px_rgba(0,0,0,0.05)] backdrop-blur sm:p-5 md:rounded-[32px] md:p-8 lg:h-[780px]">
-        <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-2.5 sm:pb-5">
+      <Card className="flex h-[calc(100dvh-112px)] min-h-[390px] flex-col rounded-xl border-transparent bg-card/80 p-3 shadow-[0_15px_50px_rgba(0,0,0,0.05)] backdrop-blur sm:p-5 md:rounded-[32px] md:p-8 lg:h-[780px]">
+        <div className="flex items-center justify-between gap-3 border-b border-border pb-2.5 sm:pb-5">
           <div className="space-y-1">
             <div className="hidden items-center gap-2 sm:flex">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/45">Coach</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-foreground/45">Coach</span>
             </div>
-            <h2 className="text-sm font-semibold tracking-tight text-black sm:mt-2 sm:text-2xl">Kratos Coach</h2>
+            <h2 className="text-sm font-semibold tracking-tight text-foreground sm:mt-2 sm:text-2xl">Kratos Coach</h2>
           </div>
 
           {/* Model selection & settings button */}
           <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-black/5 border border-black/5 rounded-xl text-[10px] font-bold text-black/60 uppercase">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 border border-border rounded-xl text-[10px] font-bold text-foreground/60 uppercase">
               <Sparkles className="h-3 w-3 text-neutral-500" />
               <span>Model: {aiModel}</span>
             </div>
             <Button
               type="button"
               onClick={() => setShowConfigModal(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border-none bg-black/5 p-0 text-black/60 shadow-sm transition hover:bg-black/10 sm:h-11 sm:w-11 sm:rounded-xl"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border-none bg-foreground/5 p-0 text-foreground/60 shadow-sm transition hover:bg-black/10 sm:h-11 sm:w-11 sm:rounded-xl"
               title="Configure Coach API"
             >
               <Settings className="h-4 w-4" />
@@ -165,7 +165,7 @@ export function CoachPage() {
                         className={`max-w-[86%] rounded-2xl px-3.5 py-3 text-xs leading-relaxed shadow-sm whitespace-pre-wrap sm:max-w-[80%] sm:rounded-[24px] sm:px-5 sm:py-4 ${
                           isUser
                             ? "bg-black text-white rounded-tr-none font-medium"
-                            : "border border-black/5 bg-white/60 text-black rounded-tl-none"
+                            : "border border-border bg-card/60 text-foreground rounded-tl-none"
                         }`}
                       >
                         {msg.content}
@@ -175,11 +175,11 @@ export function CoachPage() {
                 })
               ) : (
                 <div className="mx-auto flex max-w-[260px] flex-col items-center justify-center py-8 text-center sm:max-w-sm sm:py-20">
-                  <div className="mb-2.5 rounded-xl bg-black/5 p-2.5 text-black sm:mb-4 sm:p-4 sm:rounded-2xl">
+                  <div className="mb-2.5 rounded-xl bg-foreground/5 p-2.5 text-foreground sm:mb-4 sm:p-4 sm:rounded-2xl">
                     <Bot className="h-5 w-5 sm:h-8 sm:w-8" />
                   </div>
-                  <h4 className="text-xs font-semibold text-black sm:text-sm">Start your coaching thread</h4>
-                  <p className="mt-1.5 text-[10.5px] leading-relaxed text-black/50 sm:mt-2 sm:text-xs">
+                  <h4 className="text-xs font-semibold text-foreground sm:text-sm">Start your coaching thread</h4>
+                  <p className="mt-1.5 text-[10.5px] leading-relaxed text-foreground/50 sm:mt-2 sm:text-xs">
                     Ask about your plan, load choices, or recent session.
                   </p>
                   {!hasApiKey && (
@@ -195,9 +195,9 @@ export function CoachPage() {
                   <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-black text-white shadow-sm">
                     <Bot className="h-4.5 w-4.5" />
                   </div>
-                  <div className="max-w-[80%] rounded-[24px] px-5 py-4 border border-black/5 bg-white/40 text-black rounded-tl-none flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-black/40" />
-                    <span className="text-xs font-medium text-black/40">Thinking...</span>
+                  <div className="max-w-[80%] rounded-[24px] px-5 py-4 border border-border bg-card/40 text-foreground rounded-tl-none flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-foreground/40" />
+                    <span className="text-xs font-medium text-foreground/40">Thinking...</span>
                   </div>
                 </div>
               )}
@@ -206,8 +206,8 @@ export function CoachPage() {
         </div>
 
         {/* Input Text Box area */}
-        <div className="mt-2 border-t border-black/5 pt-2.5 sm:pt-4">
-          <div className="relative flex items-end rounded-xl border border-black/5 bg-black/5 p-1.5 transition duration-300 focus-within:border-black/20 focus-within:bg-white sm:rounded-2xl sm:p-2">
+        <div className="mt-2 border-t border-border pt-2.5 sm:pt-4">
+          <div className="relative flex items-end rounded-xl border border-border bg-foreground/5 p-1.5 transition duration-300 focus-within:border-black/20 focus-within:bg-card sm:rounded-2xl sm:p-2">
             <Textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -218,7 +218,7 @@ export function CoachPage() {
                 }
               }}
               placeholder={hasApiKey ? "Ask the coach..." : "Configure API key first..."}
-              className="min-h-[38px] max-h-[90px] resize-none border-none bg-transparent py-1.5 pr-10 text-xs text-black placeholder-black/30 focus-visible:ring-0 focus-visible:ring-offset-0 sm:min-h-[46px] sm:max-h-[110px] sm:pr-12"
+              className="min-h-[38px] max-h-[90px] resize-none border-none bg-transparent py-1.5 pr-10 text-xs text-foreground placeholder-black/30 focus-visible:ring-0 focus-visible:ring-offset-0 sm:min-h-[46px] sm:max-h-[110px] sm:pr-12"
               disabled={!hasApiKey || pending}
             />
             <Button 
@@ -244,8 +244,8 @@ export function CoachPage() {
         
         {/* API Credentials Warning banner (if missing) */}
         {!hasApiKey && (
-          <Card className="p-6 border border-black/5 bg-neutral-50/50 text-neutral-800 rounded-[32px] flex gap-4">
-            <div className="p-2 bg-neutral-100 rounded-xl text-neutral-600 h-fit">
+          <Card className="p-6 border border-border bg-card/65/50 text-foreground rounded-[32px] flex gap-4">
+            <div className="p-2 bg-card/85 rounded-xl text-neutral-600 h-fit">
               <Key className="h-5 w-5" />
             </div>
             <div className="space-y-2">
@@ -261,27 +261,27 @@ export function CoachPage() {
         )}
 
         {/* Recent context panel */}
-        <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
-          <CardTitle className="text-lg font-bold text-black flex items-center gap-2">
+        <Card className="p-6 md:p-8 border-transparent bg-card/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
+          <CardTitle className="text-lg font-bold text-foreground flex items-center gap-2">
             <Info className="h-4.5 w-4.5 text-neutral-600" />
             <span>Recent context</span>
           </CardTitle>
-          <p className="mt-2 text-xs leading-relaxed text-black/50">
+          <p className="mt-2 text-xs leading-relaxed text-foreground/50">
             The coach uses your profile, plans, and workout logs.
           </p>
 
           <div className="mt-5 space-y-3">
             {recentSessions.length ? (
               recentSessions.map((session) => (
-                <div key={session.id} className="rounded-2xl border border-black/5 bg-white/40 p-4 hover:border-black/10 transition">
-                  <p className="text-xs font-bold text-black leading-tight">{session.title}</p>
-                  <p className="mt-1 text-[10px] text-black/40 font-semibold">
+                <div key={session.id} className="rounded-2xl border border-border bg-card/40 p-4 hover:border-border-strong transition">
+                  <p className="text-xs font-bold text-foreground leading-tight">{session.title}</p>
+                  <p className="mt-1 text-[10px] text-foreground/40 font-semibold">
                     {new Date(session.startedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
                 </div>
               ))
             ) : (
-              <div className="text-center py-6 text-black/30 border border-dashed border-black/10 rounded-xl">
+              <div className="text-center py-6 text-foreground/30 border border-dashed border-border-strong rounded-xl">
                 <p className="text-xs">No recent sessions found.</p>
               </div>
             )}
@@ -289,8 +289,8 @@ export function CoachPage() {
         </Card>
 
         {/* Athlete stats box */}
-        <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
-          <CardTitle className="text-lg font-bold text-black">Profile baselines</CardTitle>
+        <Card className="p-6 md:p-8 border-transparent bg-card/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
+          <CardTitle className="text-lg font-bold text-foreground">Profile baselines</CardTitle>
           <div className="mt-5 grid grid-cols-2 gap-4">
             {[
               ["Experience", data.profile.experienceLevel],
@@ -298,11 +298,11 @@ export function CoachPage() {
               ["PR Checkpoints", String(data.records.length)],
               ["Core Target Goal", data.profile.goal || "Strength Build"],
             ].map(([label, value]) => (
-              <div key={label} className="border-b border-black/5 pb-2.5">
-                <p className="text-[9px] font-extrabold uppercase tracking-wider text-black/40">
+              <div key={label} className="border-b border-border pb-2.5">
+                <p className="text-[9px] font-extrabold uppercase tracking-wider text-foreground/40">
                   {label}
                 </p>
-                <p className="mt-1 text-sm font-bold text-black">
+                <p className="mt-1 text-sm font-bold text-foreground">
                   {value}
                 </p>
               </div>
@@ -313,36 +313,36 @@ export function CoachPage() {
 
       {/* API Key configuration Dialog modal */}
       <Dialog open={showConfigModal} onOpenChange={setShowConfigModal}>
-        <DialogContent className="rounded-[32px] p-6 max-w-md bg-white border border-black/10">
+        <DialogContent className="rounded-[32px] p-6 max-w-md bg-card border border-border-strong">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <Settings className="h-5 w-5 text-black animate-spin-slow" />
+              <Settings className="h-5 w-5 text-foreground animate-spin-slow" />
               <span>Configure AI Coach credentials</span>
             </DialogTitle>
-            <DialogDescription className="text-xs text-black/50 mt-1 leading-relaxed">
+            <DialogDescription className="text-xs text-foreground/50 mt-1 leading-relaxed">
               Enter your Google Gemini API Key and preferred model. These credentials are saved purely inside your browser's local sandbox storage.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 my-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">Gemini API Key</label>
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-foreground/50 block">Gemini API Key</label>
               <Input
                 type="password"
                 placeholder="AIzaSy..."
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                className="bg-black/5 border-black/5 rounded-xl py-3 text-sm focus:border-black/20 focus:bg-white"
+                className="bg-foreground/5 border-border rounded-xl py-3 text-sm focus:border-black/20 focus:bg-card"
               />
-              <p className="text-[10px] text-black/40 leading-relaxed">
-                Need a key? Acquire one free from the <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="underline font-semibold hover:text-black">Google AI Studio</a>.
+              <p className="text-[10px] text-foreground/40 leading-relaxed">
+                Need a key? Acquire one free from the <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" className="underline font-semibold hover:text-foreground">Google AI Studio</a>.
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-black/50 block">AI Intelligence Model</label>
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-foreground/50 block">AI Intelligence Model</label>
               <Select value={aiModel} onValueChange={setAiModel}>
-                <SelectTrigger className="bg-black/5 border-black/5 rounded-xl py-3 text-sm">
+                <SelectTrigger className="bg-foreground/5 border-border rounded-xl py-3 text-sm">
                   <SelectValue placeholder="Choose a model" />
                 </SelectTrigger>
                 <SelectContent>
@@ -355,7 +355,7 @@ export function CoachPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-black/5">
+          <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-border">
             <Button
               type="button"
               variant="ghost"

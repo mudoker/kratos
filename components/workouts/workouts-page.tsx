@@ -390,12 +390,12 @@ export function WorkoutsPage() {
                   const primaryTag = tags[0];
                   const borderClass = primaryTag
                     ? primaryTag.type === "superset"
-                      ? "border-l-4 border-l-purple-500"
+                      ? "border-l-4 border-l-black/70"
                       : primaryTag.type === "dropset"
-                      ? "border-l-4 border-l-amber-500"
+                      ? "border-l-4 border-l-black/45"
                       : primaryTag.type === "warmup"
-                      ? "border-l-4 border-l-blue-500"
-                      : "border-l-4 border-l-teal-500"
+                      ? "border-l-4 border-l-black/25"
+                      : "border-l-4 border-l-black/55"
                     : "";
 
                   return (
@@ -437,7 +437,7 @@ export function WorkoutsPage() {
                         {/* Prescription specifications box */}
                         <div className="rounded-xl border border-black/5 bg-black/[0.02] p-4 text-xs space-y-3">
                           <div className="flex items-center gap-1.5 text-black/50 border-b border-black/5 pb-1.5 font-bold text-xs">
-                            <Sparkles className="h-3 w-3 text-indigo-500" />
+                            <Sparkles className="h-3 w-3 text-black/45" />
                             <span>Planned Prescription</span>
                           </div>
                           <div className="space-y-1.5 text-black/70 font-semibold leading-relaxed">

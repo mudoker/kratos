@@ -82,7 +82,7 @@ function SidebarContent({
 
         {/* Athlete User info */}
         <div className={cn(
-          "border border-black/[0.04] bg-neutral-50 flex items-center transition-all duration-200",
+          "border border-black/[0.04] bg-card/65 flex items-center transition-all duration-200",
           isMobile 
             ? "p-3 rounded-xl w-full" 
             : "p-0 rounded-lg w-9 h-9 justify-center lg:group-hover:p-3 lg:group-hover:w-full lg:group-hover:justify-start"
@@ -96,7 +96,7 @@ function SidebarContent({
               ? "opacity-100 block" 
               : "opacity-0 lg:group-hover:opacity-100 hidden lg:group-hover:block overflow-hidden whitespace-nowrap"
           )}>
-            <p className="text-xs font-bold text-neutral-800 truncate leading-none">{user.name}</p>
+            <p className="text-xs font-bold text-foreground truncate leading-none">{user.name}</p>
             <p className="text-[9px] text-neutral-400 truncate mt-1 leading-none">{user.email}</p>
           </div>
         </div>
@@ -118,17 +118,17 @@ function SidebarContent({
                     ? "w-full justify-start px-3 gap-2.5" 
                     : "lg:group-hover:w-full lg:group-hover:justify-start lg:group-hover:px-3 lg:group-hover:gap-2.5",
                   isActive
-                    ? "bg-neutral-100 text-neutral-900 font-semibold"
-                    : "text-neutral-600 font-medium hover:bg-neutral-50 hover:text-neutral-900"
+                    ? "bg-card/85 text-foreground font-semibold"
+                    : "text-neutral-600 font-medium hover:bg-card/65 hover:text-foreground"
                 )}
               >
-                <Icon className={cn("h-4.5 w-4.5 shrink-0 transition-colors", isActive ? "text-black" : "text-neutral-500")} />
+                <Icon className={cn("h-4.5 w-4.5 shrink-0 transition-colors", isActive ? "text-foreground" : "text-neutral-500")} />
                 <span className={cn(
                   "transition-all duration-200 ease-in-out inline-block text-xs font-semibold", 
                   isMobile 
                     ? "opacity-100 ml-2.5" 
                     : "w-0 opacity-0 ml-0 overflow-hidden whitespace-nowrap lg:group-hover:w-auto lg:group-hover:opacity-100 lg:group-hover:ml-2.5",
-                  isActive ? "text-black font-semibold" : "text-neutral-600 font-medium"
+                  isActive ? "text-foreground font-semibold" : "text-neutral-600 font-medium"
                 )}>
                   {item.label}
                 </span>
@@ -141,13 +141,13 @@ function SidebarContent({
       {/* Logout button & status */}
       <div className={cn("space-y-3 border-t border-black/[0.04] w-full flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "pt-3 mt-3" : "pt-4 mt-4")}>
         <div className={cn(
-          "border border-indigo-100 bg-indigo-50/10 text-indigo-700 transition-all duration-200",
+          "border border-border-strong bg-black/[0.03] text-foreground/60 transition-all duration-200",
           isMobile 
             ? "hidden" 
             : "p-0 rounded-lg w-9 h-9 flex items-center justify-center lg:group-hover:p-3 lg:group-hover:w-full"
         )}>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-indigo-600 shrink-0" />
+            <Sparkles className="h-4 w-4 text-foreground/55 shrink-0" />
             <span className={cn(
               "text-[9px] font-extrabold uppercase tracking-wide transition-all duration-200 inline-block", 
               isMobile 
@@ -202,20 +202,20 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       
       {/* Desktop Left Sticky Sidebar */}
       <aside className="hidden lg:block relative w-20 shrink-0 h-[calc(100vh-2rem)] sticky top-4 z-40">
-        <div className="absolute left-0 top-0 h-full w-20 hover:w-[280px] transition-all duration-300 ease-in-out border border-black/5 bg-white/90 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.04)] backdrop-blur rounded-[36px] overflow-y-auto overflow-x-hidden flex flex-col group">
+        <div className="absolute left-0 top-0 h-full w-20 hover:w-[280px] transition-all duration-300 ease-in-out border border-border bg-card/90 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.04)] backdrop-blur rounded-[36px] overflow-y-auto overflow-x-hidden flex flex-col group">
           <SidebarContent isMobile={false} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
         </div>
       </aside>
 
       {/* Responsive Mobile Top Sticky Navigation Header Bar (Flush edge-to-edge) */}
-      <header className="lg:hidden sticky top-0 z-40 -mx-3 -mt-[calc(env(safe-area-inset-top)+0.75rem)] mb-2 flex items-center justify-between border-b border-black/5 bg-[color:var(--background)] px-4 pb-1.5 pt-[calc(env(safe-area-inset-top)+0.375rem)]">
+      <header className="lg:hidden sticky top-0 z-40 -mx-3 -mt-[calc(env(safe-area-inset-top)+0.75rem)] mb-2 flex items-center justify-between border-b border-border bg-[color:var(--background)] px-4 pb-1.5 pt-[calc(env(safe-area-inset-top)+0.375rem)]">
         <div className="flex items-center gap-2">
           <div className="h-5 w-5 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
             <Dumbbell className="h-3 w-3" />
           </div>
-          <span className="text-[9px] font-extrabold uppercase tracking-widest text-black/40 block leading-none">Kratos</span>
+          <span className="text-[9px] font-extrabold uppercase tracking-widest text-foreground/40 block leading-none">Kratos</span>
         </div>
-        <span className="max-w-[40vw] truncate text-[10px] font-bold text-black/70 tracking-tight">{activeTitle}</span>
+        <span className="max-w-[40vw] truncate text-[10px] font-bold text-foreground/70 tracking-tight">{activeTitle}</span>
       </header>
 
       {/* Main Work Area Content */}
@@ -224,7 +224,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </main>
 
       {/* Responsive Mobile Bottom Tab Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-1/2 z-50 w-[min(244px,calc(100vw-56px))] -translate-x-1/2 bg-white/95 backdrop-blur-xl border border-black/[0.06] px-2 py-1 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-center justify-around">
+      <nav className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-1/2 z-50 w-[min(244px,calc(100vw-56px))] -translate-x-1/2 bg-card/95 backdrop-blur-xl border border-black/[0.06] px-2 py-1 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.05)] flex items-center justify-around">
         {[
           { href: "/dashboard" as Route, label: "Home", icon: BarChart3 },
           { href: "/train" as Route, label: "Train", icon: Dumbbell },
@@ -238,7 +238,7 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center py-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
-                isActive ? "text-black" : "text-[#8e8e93]"
+                isActive ? "text-foreground" : "text-[#8e8e93]"
               )}
             >
               <Icon className="h-4.5 w-4.5" strokeWidth={isActive ? 2.25 : 1.8} />
@@ -254,14 +254,14 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               type="button"
               className={cn(
                 "flex flex-col items-center justify-center py-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
-                ["/progress", "/exercises", "/coach", "/settings"].includes(pathname) ? "text-black" : "text-[#8e8e93]"
+                ["/progress", "/exercises", "/coach", "/settings"].includes(pathname) ? "text-foreground" : "text-[#8e8e93]"
               )}
             >
               <Menu className="h-4.5 w-4.5" strokeWidth={1.8} />
               <span className="text-[7.5px] font-semibold tracking-tight mt-0.5">More</span>
             </button>
           </DialogTrigger>
-          <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[240px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-white p-4 border-r border-black/10 overflow-y-auto max-w-full z-50">
+          <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[240px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-card p-4 border-r border-border-strong overflow-y-auto max-w-full z-50">
             <SidebarContent isMobile={true} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
           </DialogContent>
         </Dialog>

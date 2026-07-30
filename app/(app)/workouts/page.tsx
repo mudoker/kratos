@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { WorkoutsPage } from "@/components/workouts/workouts-page";
 
 export default function WorkoutsRoute() {
-  redirect("/train");
+  return <WorkoutsPage />;
 }

@@ -53,16 +53,32 @@ export function PwaRegister() {
     isAuthPathRef.current = isAuthPath;
   }, [isAuthPath]);
 
+  const activateUpdate = useCallback((sw: ServiceWorker | null, nextVersion: string) => {
+    if (isApplyingRef.current) return;
+    isApplyingRef.current = true;
+    localStorage.setItem(SEEN_VERSION_KEY, nextVersion);
+
+    if (sw) {
+      sw.postMessage({ type: "SKIP_WAITING" });
+      return;
+    }
+
+    window.location.reload();
+  }, []);
+
   const showUpdate = useCallback(async (sw: ServiceWorker | null, nextVersion?: string) => {
     if (isApplyingRef.current) return;
-    if (isAuthPathRef.current) return;
     const detectedVersion = nextVersion || await readServiceWorkerVersion();
+    if (isAuthPathRef.current) {
+      activateUpdate(sw, detectedVersion);
+      return;
+    }
     if (dismissedVersionRef.current === detectedVersion) return;
 
     setWaitingSW(sw);
     setVersion(detectedVersion);
     setShowUpdateModal(true);
-  }, []);
+  }, [activateUpdate]);
 
   const applyUpdate = useCallback(() => {
     isApplyingRef.current = true;
