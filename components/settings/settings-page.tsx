@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Save, UserCircle, Activity, HeartPulse, Key, Settings, Sparkles, Trophy, CalendarCheck, Palette } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/shared/page-header";
@@ -30,16 +30,19 @@ export function SettingsPage() {
 
   // Appearance Theme state
   const [activeTheme, setActiveTheme] = useState(() =>
-    typeof window !== "undefined" ? localStorage.getItem("kratos_theme") || "theme-titanium" : "theme-titanium"
+    typeof window !== "undefined" ? localStorage.getItem("kratos_theme") || "theme-light" : "theme-light"
   );
 
   const changeTheme = (newTheme: string) => {
     setActiveTheme(newTheme);
     if (typeof window !== "undefined") {
       localStorage.setItem("kratos_theme", newTheme);
-      document.documentElement.className = newTheme;
     }
   };
+
+  useEffect(() => {
+    document.documentElement.className = activeTheme === "theme-dark" ? "theme-dark" : "";
+  }, [activeTheme]);
 
   const save = async () => {
     setSaving(true);
@@ -88,7 +91,7 @@ export function SettingsPage() {
             title="Profile & Coach"
             description="Keep the essentials current."
             actions={
-              <Button type="button" onClick={save} disabled={saving} className="h-9 w-full px-3 bg-black hover:bg-black/90 text-white font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200 sm:h-12 sm:w-auto sm:px-5">
+              <Button type="button" onClick={save} disabled={saving} className="h-9 w-full px-3 bg-brand hover:bg-brand/90 text-background font-semibold text-xs rounded-xl shadow-md border-none flex items-center gap-2 transition duration-200 sm:h-12 sm:w-auto sm:px-5">
                 <Save className="h-4 w-4" />
                 <span>{saving ? "Saving..." : "Save"}</span>
               </Button>
@@ -347,49 +350,22 @@ export function SettingsPage() {
                 <div className="grid gap-3.5 sm:grid-cols-2 md:grid-cols-3">
                   {[
                     {
-                      id: "theme-titanium",
-                      name: "Titanium Slate",
-                      description: "Clean slate aesthetics with cool blue accents.",
-                      bgClass: "bg-[#f5f5f7]",
-                      cardClass: "bg-card",
+                      id: "theme-light",
+                      name: "Light Mode",
+                      description: "Clean paper white background with dark charcoal borders and details.",
+                      bgClass: "bg-card",
+                      cardClass: "bg-[#f5f5f7]",
                       brandClass: "bg-brand",
-                      vibe: "Light / Sporty"
+                      vibe: "Stark Clean"
                     },
                     {
-                      id: "theme-onyx",
-                      name: "Kratos Onyx",
-                      description: "Ultra-premium pitch dark canvas highlighted in rich gold.",
-                      bgClass: "bg-black",
-                      cardClass: "bg-[#121212]",
-                      brandClass: "bg-[#D4AF37]",
-                      vibe: "Luxurious Dark"
-                    },
-                    {
-                      id: "theme-forest",
-                      name: "Nordic Forest",
-                      description: "Calm deep green landscape coupled with active mint.",
-                      bgClass: "bg-[#0f1613]",
-                      cardClass: "bg-[#18231f]",
-                      brandClass: "bg-[#00D28E]",
-                      vibe: "Quiet focus"
-                    },
-                    {
-                      id: "theme-sunset",
-                      name: "Sunset Rose",
-                      description: "Warm crimson-terracotta rose and rose gold highlights.",
-                      bgClass: "bg-[#1c1012]",
-                      cardClass: "bg-[#2c1a1d]",
-                      brandClass: "bg-[#ff6b8b]",
-                      vibe: "Energizing warm"
-                    },
-                    {
-                      id: "theme-cyber",
-                      name: "Neon Cyber",
-                      description: "Futuristic dark cyber realm glowing with hot pink.",
-                      bgClass: "bg-[#0b0713]",
-                      cardClass: "bg-[#140d24]",
-                      brandClass: "bg-[#ff007f]",
-                      vibe: "Vibrant neon"
+                      id: "theme-dark",
+                      name: "Dark Mode",
+                      description: "Deep pitch black canvas with carbon cards and crisp white accents.",
+                      bgClass: "bg-brand",
+                      cardClass: "bg-[#18181b]",
+                      brandClass: "bg-card",
+                      vibe: "Stark Dark"
                     }
                   ].map((themeOpt) => {
                     const isSelected = activeTheme === themeOpt.id;
@@ -418,7 +394,7 @@ export function SettingsPage() {
                            <div className={cn("h-4.5 w-4.5 rounded-full border border-border shadow-sm shrink-0", themeOpt.brandClass)} title="Accent" />
                            <div className="ml-auto flex items-center">
                              {isSelected ? (
-                               <div className="h-4.5 w-4.5 rounded-full bg-brand text-white flex items-center justify-center shrink-0">
+                               <div className="h-4.5 w-4.5 rounded-full bg-brand text-background flex items-center justify-center shrink-0">
                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-2.5 h-2.5">
                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                  </svg>
@@ -474,12 +450,12 @@ export function SettingsPage() {
             ))}
           </div>
 
-          <div className="mt-6 rounded-2xl bg-black p-5 text-white shadow-xl relative overflow-hidden">
+          <div className="mt-6 rounded-2xl bg-brand p-5 text-background shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-3 opacity-15">
-              <Sparkles className="h-10 w-10 text-white" />
+              <Sparkles className="h-10 w-10 text-background" />
             </div>
             <p className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400">Coach alignment</p>
-            <p className="mt-3 text-xs leading-relaxed text-white/80">
+            <p className="mt-3 text-xs leading-relaxed text-background/80">
               {profile.nickname ? `Stay sharp, ${profile.nickname}. ` : "Stay sharp. "}
               Your saved context helps the coach tailor advice.
             </p>

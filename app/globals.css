@@ -8,86 +8,31 @@
 :root {
   --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --background: #f5f5f7;
-  --foreground: #1d1d1f;
-  --muted-foreground: #86868b;
+  --background: #ffffff;
+  --foreground: #09090b;
+  --muted-foreground: #71717a;
   --card: #ffffff;
-  --border: rgba(0, 0, 0, 0.05);
-  --border-strong: rgba(0, 0, 0, 0.1);
-  --brand: #4F8CFF;
-  --brand-deep: #3b7fff;
-  --support: #515154;
-  --danger: #ff3b30;
-  --ring: rgba(0, 0, 0, 0.08);
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --brand: #18181b;
+  --brand-deep: #09090b;
+  --support: #71717a;
+  --danger: #ef4444;
+  --ring: rgba(9, 9, 11, 0.08);
 }
 
-/* Light / Slate Default theme */
-.theme-titanium {
-  --background: #f5f5f7;
-  --foreground: #1d1d1f;
-  --muted-foreground: #86868b;
-  --card: #ffffff;
-  --border: rgba(0, 0, 0, 0.05);
-  --border-strong: rgba(0, 0, 0, 0.1);
-  --brand: #4F8CFF;
-  --brand-deep: #3b7fff;
-  --support: #515154;
-}
-
-/* Kratos Onyx - Pitch Black & Gold */
-.theme-onyx {
-  --background: #000000;
-  --foreground: #f5f5f7;
-  --muted-foreground: #a1a1a6;
-  --card: #121212;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --brand: #D4AF37;
-  --brand-deep: #AA8B1F;
-  --support: #a1a1a6;
-  --ring: rgba(212, 175, 55, 0.2);
-}
-
-/* Nordic Forest - Sage Green & Mint */
-.theme-forest {
-  --background: #0f1613;
-  --foreground: #eef3f1;
-  --muted-foreground: #7d8f88;
-  --card: #18231f;
-  --border: rgba(255, 255, 255, 0.04);
-  --border-strong: rgba(255, 255, 255, 0.08);
-  --brand: #00D28E;
-  --brand-deep: #00B177;
-  --support: #7d8f88;
-  --ring: rgba(0, 210, 142, 0.2);
-}
-
-/* Sunset Rose - Rose Gold & Crimson */
-.theme-sunset {
-  --background: #1c1012;
-  --foreground: #faeded;
-  --muted-foreground: #ad9396;
-  --card: #2c1a1d;
-  --border: rgba(255, 255, 255, 0.05);
-  --border-strong: rgba(255, 255, 255, 0.1);
-  --brand: #ff6b8b;
-  --brand-deep: #e04a6c;
-  --support: #ad9396;
-  --ring: rgba(255, 107, 139, 0.2);
-}
-
-/* Neon Cyber - Purple & Hot Pink */
-.theme-cyber {
-  --background: #0b0713;
-  --foreground: #e9e5f3;
-  --muted-foreground: #9a8bb6;
-  --card: #140d24;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
-  --brand: #ff007f;
-  --brand-deep: #cc0066;
-  --support: #9a8bb6;
-  --ring: rgba(255, 0, 127, 0.2);
+/* shadcn/ui zinc dark mode theme */
+.theme-dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --muted-foreground: #a1a1aa;
+  --card: #18181b;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --brand: #fafafa;
+  --brand-deep: #ffffff;
+  --support: #a1a1aa;
+  --ring: rgba(250, 250, 250, 0.15);
 }
 
 * {

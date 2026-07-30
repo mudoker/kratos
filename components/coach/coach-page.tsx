@@ -136,7 +136,7 @@ export function CoachPage() {
             <Button
               type="button"
               onClick={() => setShowConfigModal(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border-none bg-foreground/5 p-0 text-foreground/60 shadow-sm transition hover:bg-black/10 sm:h-11 sm:w-11 sm:rounded-xl"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border-none bg-foreground/5 p-0 text-foreground/60 shadow-sm transition hover:bg-brand/10 sm:h-11 sm:w-11 sm:rounded-xl"
               title="Configure Coach API"
             >
               <Settings className="h-4 w-4" />
@@ -157,14 +157,14 @@ export function CoachPage() {
                       className={`flex gap-2.5 sm:gap-3.5 ${isUser ? "justify-end" : "justify-start"}`}
                     >
                       {!isUser && (
-                        <div className="h-7 w-7 shrink-0 flex items-center justify-center rounded-lg bg-black text-white shadow-sm mt-1 sm:h-9 sm:w-9 sm:rounded-xl">
+                        <div className="h-7 w-7 shrink-0 flex items-center justify-center rounded-lg bg-brand text-background shadow-sm mt-1 sm:h-9 sm:w-9 sm:rounded-xl">
                           <Bot className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5" />
                         </div>
                       )}
                       <div
                         className={`max-w-[86%] rounded-2xl px-3.5 py-3 text-xs leading-relaxed shadow-sm whitespace-pre-wrap sm:max-w-[80%] sm:rounded-[24px] sm:px-5 sm:py-4 ${
                           isUser
-                            ? "bg-black text-white rounded-tr-none font-medium"
+                            ? "bg-brand text-background rounded-tr-none font-medium"
                             : "border border-border bg-card/60 text-foreground rounded-tl-none"
                         }`}
                       >
@@ -183,7 +183,7 @@ export function CoachPage() {
                     Ask about your plan, load choices, or recent session.
                   </p>
                   {!hasApiKey && (
-                    <Button onClick={() => setShowConfigModal(true)} className="mt-4 h-8 rounded-lg border-none bg-black px-3 text-[11px] font-semibold text-white shadow-md hover:bg-black/90 sm:h-11 sm:rounded-xl sm:px-5 sm:text-xs">
+                    <Button onClick={() => setShowConfigModal(true)} className="mt-4 h-8 rounded-lg border-none bg-brand px-3 text-[11px] font-semibold text-background shadow-md hover:bg-brand/90 sm:h-11 sm:rounded-xl sm:px-5 sm:text-xs">
                       Configure key
                     </Button>
                   )}
@@ -192,7 +192,7 @@ export function CoachPage() {
 
               {pending && (
                 <div className="flex gap-3.5 justify-start">
-                  <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-black text-white shadow-sm">
+                  <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-brand text-background shadow-sm">
                     <Bot className="h-4.5 w-4.5" />
                   </div>
                   <div className="max-w-[80%] rounded-[24px] px-5 py-4 border border-border bg-card/40 text-foreground rounded-tl-none flex items-center gap-2">
@@ -225,7 +225,7 @@ export function CoachPage() {
               type="button" 
               onClick={send} 
               disabled={pending || !input.trim() || !hasApiKey}
-              className="absolute bottom-2 right-2 h-8 w-8 rounded-lg bg-black p-0 text-white shadow-sm transition hover:bg-black/90 disabled:opacity-30 sm:bottom-3 sm:right-3 sm:h-9 sm:w-9 sm:rounded-xl"
+              className="absolute bottom-2 right-2 h-8 w-8 rounded-lg bg-brand p-0 text-background shadow-sm transition hover:bg-brand/90 disabled:opacity-30 sm:bottom-3 sm:right-3 sm:h-9 sm:w-9 sm:rounded-xl"
             >
               <SendHorizonal className="h-4 w-4" />
             </Button>
@@ -253,7 +253,7 @@ export function CoachPage() {
               <p className="text-xs text-neutral-500 leading-relaxed">
                 Add a Gemini key to chat with the coach.
               </p>
-              <Button onClick={() => setShowConfigModal(true)} className="h-10 px-4 rounded-xl text-xs font-semibold bg-black hover:bg-neutral-900 text-white transition border-none shadow-sm mt-1">
+              <Button onClick={() => setShowConfigModal(true)} className="h-10 px-4 rounded-xl text-xs font-semibold bg-brand hover:bg-brand-deep text-background transition border-none shadow-sm mt-1">
                 Configure Credentials
               </Button>
             </div>
@@ -367,7 +367,7 @@ export function CoachPage() {
             <Button
               type="button"
               onClick={saveConfig}
-              className="h-11 rounded-xl bg-black text-white hover:bg-black/90 px-5 text-xs font-semibold shadow-md flex gap-1.5 items-center border-none"
+              className="h-11 rounded-xl bg-brand text-background hover:bg-brand/90 px-5 text-xs font-semibold shadow-md flex gap-1.5 items-center border-none"
             >
               <Check className="h-4 w-4" />
               <span>Save Credentials</span>

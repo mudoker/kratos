@@ -35,8 +35,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('kratos_theme') || 'theme-titanium';
-                  document.documentElement.className = theme;
+                  var theme = localStorage.getItem('kratos_theme') || 'theme-light';
+                  if (theme === 'theme-dark') {
+                    document.documentElement.className = 'theme-dark';
+                  } else {
+                    document.documentElement.className = '';
+                  }
                 } catch (e) {}
               })();
             `,

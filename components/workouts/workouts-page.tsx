@@ -27,14 +27,14 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
 
   // 2. Standard auto-detected tags from notes
   if (lowerNotes.includes("superset") || lowerId.includes("superset")) {
-    tags.push({ label: "SUPERSET", type: "superset", color: "bg-neutral-100 text-neutral-600 border-transparent" });
+    tags.push({ label: "SUPERSET", type: "superset", color: "bg-card/85 text-neutral-600 border-transparent" });
   }
   if (lowerNotes.includes("dropset") || lowerNotes.includes("drop-set") || lowerNotes.includes("drop set")) {
-    tags.push({ label: "DROPSET", type: "dropset", color: "bg-neutral-100 text-neutral-600 border-transparent" });
+    tags.push({ label: "DROPSET", type: "dropset", color: "bg-card/85 text-neutral-600 border-transparent" });
   }
   if (lowerNotes.includes("warm-up") || lowerNotes.includes("warmup") || categoryLower === "mobility") {
     if (!tags.some(t => t.label === "WARM-UP")) {
-      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-neutral-100 text-neutral-600 border-transparent" });
+      tags.push({ label: "WARM-UP", type: "warmup", color: "bg-card/85 text-neutral-600 border-transparent" });
     }
   }
   
@@ -43,7 +43,7 @@ const getItemTags = (notes: string, exerciseId: string, exerciseCategory?: strin
                      lowerNotes.includes("cool-down") || 
                      lowerNotes.includes("flow");
   if (hasStretch) {
-    tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-neutral-100 text-neutral-600 border-transparent" });
+    tags.push({ label: "STRETCH / FLOW", type: "stretch", color: "bg-card/85 text-neutral-600 border-transparent" });
   }
 
   // 3. Parse custom TAGS: line
@@ -231,9 +231,9 @@ export function WorkoutsPage() {
 
   if (!data.plans.length) {
     return (
-      <Card className="p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] text-center max-w-xl mx-auto mt-12 rounded-[36px]">
+      <Card className="p-8 border-transparent bg-card/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] text-center max-w-xl mx-auto mt-12 rounded-[36px]">
         <div className="flex justify-center mb-4">
-          <div className="p-4 bg-black/5 text-black rounded-2xl">
+          <div className="p-4 bg-brand/5 text-foreground rounded-2xl">
             <Dumbbell className="h-8 w-8" />
           </div>
         </div>
@@ -242,7 +242,7 @@ export function WorkoutsPage() {
           title="Load a planned day to log"
           description="Build a structured split schedule inside the Weekly Planner first. Once done, this workspace will load plans dynamically."
         />
-        <Button asChild className="mt-8 py-5 rounded-2xl bg-black text-white hover:bg-black/90 font-bold uppercase tracking-wider text-xs shadow-lg">
+        <Button asChild className="mt-8 py-5 rounded-2xl bg-brand text-background hover:bg-brand/90 font-bold uppercase tracking-wider text-xs shadow-lg">
           <Link href="/train" style={{ color: "#fff" }}>Open Splits Planner</Link>
         </Button>
       </Card>
@@ -253,11 +253,11 @@ export function WorkoutsPage() {
     <div className="space-y-6">
       
       {/* Compact header */}
-      <div className="rounded-[24px] bg-black p-5 text-white relative overflow-hidden">
+      <div className="rounded-[24px] bg-brand p-5 text-background relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
         <div className="relative z-10 flex items-center justify-between gap-4">
           <div className="space-y-0.5">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Active Runner</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-background/40">Active Runner</p>
             <h1 className="text-base font-black tracking-tight">Workout Studio</h1>
           </div>
 
@@ -269,7 +269,7 @@ export function WorkoutsPage() {
                   setDraft(baseSession());
                   setStatus("");
                 }}
-                className="h-8 rounded-xl border border-white/10 text-white hover:bg-white/10 px-3 text-xs font-semibold transition"
+                className="h-8 rounded-xl border border-white/10 text-background hover:bg-card/10 px-3 text-xs font-semibold transition"
               >
                 Cancel
               </Button>
@@ -278,9 +278,9 @@ export function WorkoutsPage() {
               type="button" 
               onClick={saveSession} 
               disabled={saving || !(draft.items || []).length} 
-              className="bg-white hover:bg-neutral-100 text-black rounded-xl font-bold text-xs px-4 h-8 border-none shadow-none transition flex items-center gap-1.5"
+              className="bg-card hover:bg-card/85 text-foreground rounded-xl font-bold text-xs px-4 h-8 border-none shadow-none transition flex items-center gap-1.5"
             >
-              {saving ? <Loader2 className="h-3 w-3 animate-spin text-black" /> : <Save className="h-3 w-3 text-black" />}
+              {saving ? <Loader2 className="h-3 w-3 animate-spin text-foreground" /> : <Save className="h-3 w-3 text-foreground" />}
               <span>{draft.id ? "Update" : "Save"}</span>
             </Button>
           </div>
@@ -292,10 +292,10 @@ export function WorkoutsPage() {
         
         {/* Left Side: Logger Card */}
         <div className="space-y-6">
-          <Card className="p-4 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[24px] md:rounded-[32px] space-y-6">
+          <Card className="p-4 md:p-8 border-transparent bg-card/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[24px] md:rounded-[32px] space-y-6">
             
             {/* Split loader bar */}
-            <div className="p-3.5 sm:p-5 border border-black/5 bg-white/45 rounded-[20px] md:rounded-[24px] grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
+            <div className="p-3.5 sm:p-5 border border-border bg-card/45 rounded-[20px] md:rounded-[24px] grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
               <div className="space-y-1.5">
                 <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Choose Program Split</label>
                 <Select
@@ -306,7 +306,7 @@ export function WorkoutsPage() {
                     setDayId(plan?.days.find((day) => day.items.length)?.id ?? plan?.days[0]?.id ?? "");
                   }}
                 >
-                  <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-bold py-4">
+                  <SelectTrigger className="w-full bg-card border-border rounded-xl text-xs font-bold py-4">
                     <SelectValue placeholder="Choose plan" />
                   </SelectTrigger>
                   <SelectContent>
@@ -322,7 +322,7 @@ export function WorkoutsPage() {
               <div className="space-y-1.5">
                 <label className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 block">Choose Training Day</label>
                 <Select value={dayId} onValueChange={setDayId}>
-                  <SelectTrigger className="w-full bg-white border-black/5 rounded-xl text-xs font-bold py-4">
+                  <SelectTrigger className="w-full bg-card border-border rounded-xl text-xs font-bold py-4">
                     <SelectValue placeholder="Choose day" />
                   </SelectTrigger>
                   <SelectContent>
@@ -335,8 +335,8 @@ export function WorkoutsPage() {
                 </Select>
               </div>
 
-              <div className="text-[11px] text-black/50 font-bold pb-3.5 pl-2">
-                Active Program: <span className="text-black">{selectedPlan?.name}</span>
+              <div className="text-[11px] text-foreground/50 font-bold pb-3.5 pl-2">
+                Active Program: <span className="text-foreground">{selectedPlan?.name}</span>
               </div>
             </div>
 
@@ -348,7 +348,7 @@ export function WorkoutsPage() {
                   value={draft.title}
                   onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                   placeholder="e.g. Upper Body Focus - Volume Benchmark"
-                  className="bg-white border-black/5 focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
+                  className="bg-card border-border focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
                 />
               </div>
 
@@ -358,7 +358,7 @@ export function WorkoutsPage() {
                   value={draft.effort}
                   onChange={(event) => setDraft((current) => ({ ...current, effort: event.target.value }))}
                   placeholder="How strong did you feel? RPE 8..."
-                  className="bg-white border-black/5 focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
+                  className="bg-card border-border focus:border-black rounded-2xl py-4.5 px-4.5 text-sm font-semibold transition"
                 />
               </div>
             </div>
@@ -370,20 +370,20 @@ export function WorkoutsPage() {
                 value={draft.notes}
                 onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
                 placeholder="Sleep debt, fatigue notes, nutrition details, overall session cues..."
-                className="bg-white border-black/5 focus:border-black rounded-2xl text-sm min-h-[52px] py-3 px-4 transition"
+                className="bg-card border-border focus:border-black rounded-2xl text-sm min-h-[52px] py-3 px-4 transition"
               />
             </div>
 
             {/* Exercises List section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-black/5 pb-2">
-                <h4 className="text-xs font-bold text-black/50">Exercise Telemetry Runner</h4>
-                <Badge className="bg-black/5 border-transparent text-black/60 text-[10px] font-bold px-2 py-0.5">
+              <div className="flex items-center justify-between border-b border-border pb-2">
+                <h4 className="text-xs font-bold text-foreground/50">Exercise Telemetry Runner</h4>
+                <Badge className="bg-brand/5 border-transparent text-foreground/60 text-[10px] font-bold px-2 py-0.5">
                   {(draft.items || []).length} exercise{(draft.items || []).length !== 1 && "s"} loaded
                 </Badge>
               </div>
 
-              <div className="border border-black/[0.04] bg-white rounded-2xl divide-y divide-black/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.015)] overflow-hidden">
+              <div className="border border-black/[0.04] bg-card rounded-2xl divide-y divide-black/[0.04] shadow-[0_4px_16px_rgba(0,0,0,0.015)] overflow-hidden">
                 {(draft.items || []).map((item, index) => {
                   const exercise = data.exercises.find((e) => e.id === item.exerciseId);
                   const tags = getItemTags(item.notes, item.exerciseId, exercise?.category, data.exercises);
@@ -401,19 +401,19 @@ export function WorkoutsPage() {
                   return (
                     <div
                       key={`${item.exerciseId}-${index}`}
-                      className={cn("p-4.5 bg-white hover:bg-neutral-50/30 transition duration-200 space-y-4 relative", borderClass)}
+                      className={cn("p-4.5 bg-card hover:bg-card/65/30 transition duration-200 space-y-4 relative", borderClass)}
                     >
                       {/* Exercise basic header */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 pb-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
                         <div className="flex items-center gap-3">
                           {exercise?.imageUrl && (
-                            <div className="h-10 w-10 overflow-hidden rounded-xl border border-black/5">
+                            <div className="h-10 w-10 overflow-hidden rounded-xl border border-border">
                               <img src={exercise.imageUrl} alt={item.exerciseName} className="h-full w-full object-cover" />
                             </div>
                           )}
                           <div>
-                            <p className="font-bold text-sm text-black leading-tight">{item.exerciseName}</p>
-                            <p className="text-[10px] text-black/45 mt-1 font-bold">
+                            <p className="font-bold text-sm text-foreground leading-tight">{item.exerciseName}</p>
+                            <p className="text-[10px] text-foreground/45 mt-1 font-bold">
                               prescribed rest {item.restSeconds}s
                             </p>
                           </div>
@@ -425,7 +425,7 @@ export function WorkoutsPage() {
                               {tag.label}
                             </Badge>
                           ))}
-                          <Badge className="bg-black text-white text-[9px] font-extrabold py-0.5 px-2">
+                          <Badge className="bg-brand text-background text-[9px] font-extrabold py-0.5 px-2">
                             Lift {index + 1}
                           </Badge>
                         </div>
@@ -435,22 +435,22 @@ export function WorkoutsPage() {
                       <div className="grid gap-4 md:grid-cols-[200px_1fr] items-start">
                         
                         {/* Prescription specifications box */}
-                        <div className="rounded-xl border border-black/5 bg-black/[0.02] p-4 text-xs space-y-3">
-                          <div className="flex items-center gap-1.5 text-black/50 border-b border-black/5 pb-1.5 font-bold text-xs">
-                            <Sparkles className="h-3 w-3 text-black/45" />
+                        <div className="rounded-xl border border-border bg-brand/[0.02] p-4 text-xs space-y-3">
+                          <div className="flex items-center gap-1.5 text-foreground/50 border-b border-border pb-1.5 font-bold text-xs">
+                            <Sparkles className="h-3 w-3 text-foreground/45" />
                             <span>Planned Prescription</span>
                           </div>
-                          <div className="space-y-1.5 text-black/70 font-semibold leading-relaxed">
+                          <div className="space-y-1.5 text-foreground/70 font-semibold leading-relaxed">
                             <div className="flex justify-between">
-                              <span className="text-black/40 font-medium">Sets/Reps:</span>
+                              <span className="text-foreground/40 font-medium">Sets/Reps:</span>
                               <span>{item.plannedSets} x {item.reps}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-black/40 font-medium">Load Goal:</span>
+                              <span className="text-foreground/40 font-medium">Load Goal:</span>
                               <span>{item.targetLoad || "No load"}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-black/40 font-medium">RPE Goal:</span>
+                              <span className="text-foreground/40 font-medium">RPE Goal:</span>
                               <span>{item.targetRpe || "No RPE"}</span>
                             </div>
                           </div>
@@ -458,11 +458,11 @@ export function WorkoutsPage() {
 
                         {/* Outcomes logging form details */}
                         <div className="space-y-4">
-                          <div className="flex items-center justify-between border-b border-black/5 pb-1">
-                            <p className="text-xs font-bold text-black/50">
+                          <div className="flex items-center justify-between border-b border-border pb-1">
+                            <p className="text-xs font-bold text-foreground/50">
                               Logged Outcomes
                             </p>
-                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-semibold text-black hover:bg-black/5 rounded-lg flex items-center gap-1" onClick={() => addSet(index)}>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-semibold text-foreground hover:bg-brand/5 rounded-lg flex items-center gap-1" onClick={() => addSet(index)}>
                               <Plus className="h-3.5 w-3.5" />
                               <span>Add Set</span>
                             </Button>
@@ -470,8 +470,8 @@ export function WorkoutsPage() {
 
                           <div className="space-y-2">
                             {(item.sets || []).map((set, sIdx) => (
-                              <div key={sIdx} className="flex items-center gap-3 bg-black/[0.01] p-1.5 rounded-xl border border-black/[0.02]">
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-black text-white text-[9px] font-extrabold">
+                              <div key={sIdx} className="flex items-center gap-3 bg-brand/[0.01] p-1.5 rounded-xl border border-black/[0.02]">
+                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand text-background text-[9px] font-extrabold">
                                   {sIdx + 1}
                                 </div>
                                 <div className="grid flex-1 grid-cols-2 gap-2">
@@ -479,19 +479,19 @@ export function WorkoutsPage() {
                                     <Input 
                                       value={set.weight} 
                                       placeholder="Load" 
-                                      className="h-10 px-3 bg-white text-xs rounded-xl border-black/5 text-center font-bold"
+                                      className="h-10 px-3 bg-card text-xs rounded-xl border-border text-center font-bold"
                                       onChange={(e) => updateSet(index, sIdx, "weight", e.target.value)}
                                     />
-                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">kg</span>
+                                    <span className="absolute right-3 text-[9px] font-extrabold text-foreground/30 pointer-events-none">kg</span>
                                   </div>
                                   <div className="relative flex items-center">
                                     <Input 
                                       value={set.reps} 
                                       placeholder="Reps" 
-                                      className="h-10 px-3 bg-white text-xs rounded-xl border-black/5 text-center font-bold"
+                                      className="h-10 px-3 bg-card text-xs rounded-xl border-border text-center font-bold"
                                       onChange={(e) => updateSet(index, sIdx, "reps", e.target.value)}
                                     />
-                                    <span className="absolute right-3 text-[9px] font-extrabold text-black/30 pointer-events-none">reps</span>
+                                    <span className="absolute right-3 text-[9px] font-extrabold text-foreground/30 pointer-events-none">reps</span>
                                   </div>
                                 </div>
                                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-rose-500 hover:bg-rose-50 rounded-lg shrink-0" onClick={() => removeSet(index, sIdx)}>
@@ -518,7 +518,7 @@ export function WorkoutsPage() {
                                 }));
                               }}
                               placeholder="Missed sets, shoulder checks, tempo pacing..."
-                              className="bg-white border-black/5 rounded-xl text-xs min-h-[46px] py-2.5 px-3.5 transition"
+                              className="bg-card border-border rounded-xl text-xs min-h-[46px] py-2.5 px-3.5 transition"
                             />
                           </div>
 
@@ -543,41 +543,41 @@ export function WorkoutsPage() {
 
         {/* Right Side: Execution Logs */}
         <div className="space-y-6 lg:sticky lg:top-4">
-          <Card className="p-6 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
-            <div className="flex items-center gap-2 border-b border-black/5 pb-3">
-              <History className="h-4 w-4 text-black/50" />
-              <span className="text-xs font-bold text-black/50">Execution Logs</span>
+          <Card className="p-6 md:p-8 border-transparent bg-card/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.03)] rounded-[32px] space-y-6">
+            <div className="flex items-center gap-2 border-b border-border pb-3">
+              <History className="h-4 w-4 text-foreground/50" />
+              <span className="text-xs font-bold text-foreground/50">Execution Logs</span>
             </div>
 
-            <CardDescription className="text-xs text-black/50 mt-1 leading-relaxed">
+            <CardDescription className="text-xs text-foreground/50 mt-1 leading-relaxed">
               Verify your completed logs. Scrub records, edit details, or trace pacing timelines.
             </CardDescription>
 
             <ScrollArea className="h-[450px] -mr-2 pr-2">
-              <div className="space-y-4 relative border-l border-black/5 pl-4 ml-2 pb-6">
+              <div className="space-y-4 relative border-l border-border pl-4 ml-2 pb-6">
                 {sessions.length ? (
                   sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="relative group p-4 rounded-2xl border border-black/5 bg-white/45 hover:bg-white/80 hover:shadow-sm transition duration-300"
+                      className="relative group p-4 rounded-2xl border border-border bg-card/45 hover:bg-card/80 hover:shadow-sm transition duration-300"
                     >
                       {/* Timeline bullet */}
-                      <div className="absolute left-[-22px] top-5 w-3 h-3 rounded-full bg-black border-2 border-white shadow-sm" />
+                      <div className="absolute left-[-22px] top-5 w-3 h-3 rounded-full bg-brand border-2 border-white shadow-sm" />
                       
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <p className="font-bold text-sm text-black leading-snug">{session.title}</p>
-                          <p className="text-[10px] text-black/40 mt-1 font-semibold">{formatDate(session.startedAt)}</p>
+                          <p className="font-bold text-sm text-foreground leading-snug">{session.title}</p>
+                          <p className="text-[10px] text-foreground/40 mt-1 font-semibold">{formatDate(session.startedAt)}</p>
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
-                          <Badge className="bg-black/5 border-transparent text-black/60 text-[10px] px-1.5 py-0.5">
+                          <Badge className="bg-brand/5 border-transparent text-foreground/60 text-[10px] px-1.5 py-0.5">
                             {session.items.length} lift{session.items.length !== 1 && "s"}
                           </Badge>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 w-7 rounded-md p-0 hover:bg-black/5 text-black/70 hover:text-black transition"
+                            className="h-7 w-7 rounded-md p-0 hover:bg-brand/5 text-foreground/70 hover:text-foreground transition"
                             onClick={() => startEdit(session)}
                           >
                             <Edit2 className="h-3.5 w-3.5" />
@@ -593,16 +593,16 @@ export function WorkoutsPage() {
                         </div>
                       </div>
 
-                      <p className="mt-2 text-xs leading-relaxed text-black/60 italic border-t border-black/5 pt-2">
+                      <p className="mt-2 text-xs leading-relaxed text-foreground/60 italic border-t border-border pt-2">
                         {session.notes || session.effort || "No qualitative log captured."}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-12 text-black/40">
-                    <Dumbbell className="h-10 w-10 mx-auto text-black/20 mb-3" />
+                  <div className="text-center py-12 text-foreground/40">
+                    <Dumbbell className="h-10 w-10 mx-auto text-foreground/20 mb-3" />
                     <p className="text-xs font-semibold">No Sessions Logged</p>
-                    <p className="text-[10px] mt-1 leading-relaxed text-black/30">Sync an active day above to establish your telemetry database.</p>
+                    <p className="text-[10px] mt-1 leading-relaxed text-foreground/30">Sync an active day above to establish your telemetry database.</p>
                   </div>
                 )}
               </div>

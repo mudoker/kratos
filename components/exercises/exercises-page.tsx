@@ -66,16 +66,16 @@ export function ExercisesPage() {
   return (
     <div className="min-w-0 space-y-3 pb-14 lg:space-y-6 lg:pb-0">
       
-      <div className="relative overflow-hidden rounded-xl bg-black p-3 text-white shadow-lg md:rounded-[36px] md:p-8">
+      <div className="relative overflow-hidden rounded-xl bg-brand p-3 text-background shadow-lg md:rounded-[36px] md:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
         <div className="relative z-10 space-y-1">
-          <Badge className="hidden bg-card/10 border-transparent text-white font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 sm:inline-flex">
+          <Badge className="hidden bg-card/10 border-transparent text-background font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 sm:inline-flex">
             Exercise Encyclopedia
           </Badge>
           <h1 className="text-base font-semibold tracking-tight leading-tight sm:text-xl sm:font-black">
             Movement Library
           </h1>
-          <p className="text-[10.5px] font-medium leading-snug text-white/50 sm:text-[11px]">
+          <p className="text-[10.5px] font-medium leading-snug text-background/50 sm:text-[11px]">
             Search movements and check setup cues.
           </p>
         </div>
@@ -111,7 +111,7 @@ export function ExercisesPage() {
                 className={cn(
                   "h-7 shrink-0 rounded-lg px-2.5 py-0 text-[9px] font-bold uppercase tracking-wider transition duration-300 sm:rounded-xl sm:px-3 sm:text-[10px]",
                   category === entry
-                    ? "bg-black text-white shadow-sm"
+                    ? "bg-brand text-background shadow-sm"
                     : "border border-border bg-card/40 text-foreground/60 hover:bg-card hover:text-foreground"
                 )}
               >
@@ -215,7 +215,7 @@ export function ExercisesPage() {
               </div>
 
               {selected.imageUrl && (
-                <div className="overflow-hidden rounded-2xl border border-border bg-black/[0.02]">
+                <div className="overflow-hidden rounded-2xl border border-border bg-brand/[0.02]">
                   <img
                     src={selected.imageUrl}
                     alt={selected.name}
@@ -232,7 +232,7 @@ export function ExercisesPage() {
                   </p>
                   <div className="flex gap-1 overflow-x-auto scrollbar-none pb-0.5">
                     {selected.primaryMuscles.slice(0, 6).map((muscle) => (
-                      <Badge key={muscle} className="bg-black/8 border-transparent text-foreground/70 text-[9px] font-bold px-2 py-0.5 shrink-0">
+                      <Badge key={muscle} className="bg-brand/8 border-transparent text-foreground/70 text-[9px] font-bold px-2 py-0.5 shrink-0">
                         {muscle}
                       </Badge>
                     ))}

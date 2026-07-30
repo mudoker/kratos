@@ -105,17 +105,17 @@ export function ProgressPage() {
     <div className="space-y-3 pb-16 lg:space-y-6 lg:pb-0">
       
       {/* Visual Header Panel */}
-      <div className="rounded-xl bg-black p-2.5 text-white shadow-lg relative overflow-hidden md:rounded-[28px] md:p-8 md:shadow-2xl">
+      <div className="rounded-xl bg-brand p-2.5 text-background shadow-lg relative overflow-hidden md:rounded-[28px] md:p-8 md:shadow-2xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
         <div className="relative z-10 flex items-center justify-between gap-3 md:gap-6">
           <div className="space-y-1 md:space-y-2">
-            <Badge className="hidden bg-card/10 hover:bg-card/20 border-transparent text-white/60 font-bold uppercase tracking-widest text-[9px] px-3 py-1 sm:inline-flex">
+            <Badge className="hidden bg-card/10 hover:bg-card/20 border-transparent text-background/60 font-bold uppercase tracking-widest text-[9px] px-3 py-1 sm:inline-flex">
               Progress
             </Badge>
-            <h1 className="text-base font-semibold tracking-tight leading-tight text-white sm:text-lg md:text-4xl md:font-black">
+            <h1 className="text-base font-semibold tracking-tight leading-tight text-background sm:text-lg md:text-4xl md:font-black">
               Records
             </h1>
-            <p className="hidden text-white/55 text-[11px] md:block md:text-sm max-w-xl font-medium leading-snug md:leading-relaxed">
+            <p className="hidden text-background/55 text-[11px] md:block md:text-sm max-w-xl font-medium leading-snug md:leading-relaxed">
               Track PRs and strength trends.
             </p>
           </div>
@@ -207,7 +207,7 @@ export function ProgressPage() {
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-border">
-                  <Button type="button" className="h-10 rounded-xl bg-black hover:bg-black/90 text-white font-semibold text-xs shadow-md w-full border-none" onClick={saveRecord} disabled={!form.exerciseId}>
+                  <Button type="button" className="h-10 rounded-xl bg-brand hover:bg-brand/90 text-background font-semibold text-xs shadow-md w-full border-none" onClick={saveRecord} disabled={!form.exerciseId}>
                     <span>{form.id ? "Update PR" : "Save PR"}</span>
                   </Button>
                 </div>
@@ -248,7 +248,7 @@ export function ProgressPage() {
                 <p className="mt-0.5 truncate text-xs font-semibold leading-none text-foreground sm:mt-1 sm:text-base">{item.value}</p>
                 <p className="mt-1 hidden truncate text-[10px] font-semibold text-foreground/40 sm:block">{item.detail}</p>
               </div>
-              <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black text-white sm:flex">
+              <div className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand text-background sm:flex">
                 <item.icon className="h-3.5 w-3.5" />
               </div>
             </div>
@@ -304,7 +304,7 @@ export function ProgressPage() {
                               </p>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <Badge className="bg-black text-white text-[9px] font-extrabold py-0.5 px-2">
+                              <Badge className="bg-brand text-background text-[9px] font-extrabold py-0.5 px-2">
                                 {record.value}{record.unit} x {record.reps}
                               </Badge>
                               <div className="flex items-center">
@@ -334,7 +334,7 @@ export function ProgressPage() {
             <div className="hidden space-y-6 xl:block">
               <Card className="p-6 md:p-8 border-transparent bg-card/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-[32px]">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="p-2 bg-black/[0.04] text-foreground/60 rounded-xl">
+                  <span className="p-2 bg-brand/[0.04] text-foreground/60 rounded-xl">
                     <ArrowUpRight className="h-4 w-4" />
                   </span>
                   <span className="text-[10px] font-extrabold uppercase tracking-widest text-foreground/55">PR notes</span>
@@ -347,7 +347,7 @@ export function ProgressPage() {
                     "Higher load weight or rep increments automatically update your physical baseline."
                   ].map((line, idx) => (
                     <div key={idx} className="rounded-2xl border border-border bg-card/45 p-4 text-xs leading-relaxed text-foreground/60 relative overflow-hidden">
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-black/35" />
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand/35" />
                       {line}
                     </div>
                   ))}

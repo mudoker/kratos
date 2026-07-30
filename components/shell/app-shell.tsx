@@ -49,7 +49,7 @@ function SidebarContent({
         
         {/* Core Brand Card */}
         <div className={cn(
-          "bg-black text-white shadow-sm relative overflow-hidden transition-all duration-200",
+          "bg-brand text-background shadow-sm relative overflow-hidden transition-all duration-200",
           isMobile 
             ? "p-3 rounded-xl w-full" 
             : "p-0 rounded-lg w-9 h-9 flex items-center justify-center lg:group-hover:p-4.5 lg:group-hover:rounded-2xl lg:group-hover:w-full lg:group-hover:h-auto"
@@ -70,10 +70,10 @@ function SidebarContent({
               </span>
             </div>
             <div className={cn("transition-all duration-200", isMobile ? "hidden" : "h-0 opacity-0 overflow-hidden lg:group-hover:h-auto lg:group-hover:opacity-100 lg:group-hover:mt-2.5 space-y-1")}>
-              <h1 className="font-bold text-xs leading-snug tracking-tight text-white">
+              <h1 className="font-bold text-xs leading-snug tracking-tight text-background">
                 Strength training
               </h1>
-              <p className="text-[9px] leading-relaxed text-white/50">
+              <p className="text-[9px] leading-relaxed text-background/50">
                 Plans, workouts, and progress.
               </p>
             </div>
@@ -87,7 +87,7 @@ function SidebarContent({
             ? "p-3 rounded-xl w-full" 
             : "p-0 rounded-lg w-9 h-9 justify-center lg:group-hover:p-3 lg:group-hover:w-full lg:group-hover:justify-start"
         )}>
-          <div className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md bg-black text-white font-bold text-[10px]">
+          <div className="h-7 w-7 shrink-0 flex items-center justify-center rounded-md bg-brand text-background font-bold text-[10px]">
             {user.name.slice(0, 2).toUpperCase()}
           </div>
           <div className={cn(
@@ -141,7 +141,7 @@ function SidebarContent({
       {/* Logout button & status */}
       <div className={cn("space-y-3 border-t border-black/[0.04] w-full flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "pt-3 mt-3" : "pt-4 mt-4")}>
         <div className={cn(
-          "border border-border-strong bg-black/[0.03] text-foreground/60 transition-all duration-200",
+          "border border-border-strong bg-brand/[0.03] text-foreground/60 transition-all duration-200",
           isMobile 
             ? "hidden" 
             : "p-0 rounded-lg w-9 h-9 flex items-center justify-center lg:group-hover:p-3 lg:group-hover:w-full"

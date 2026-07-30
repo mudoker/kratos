@@ -1,4 +1,4 @@
-const SW_VERSION = "5.1.34";
+const SW_VERSION = "5.1.35";
 const CACHE_NAME = `kratos-v${SW_VERSION}`;
 const STATIC_ASSETS = [
   "/logo.png",
