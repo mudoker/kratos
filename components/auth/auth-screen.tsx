@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Dumbbell, KeyRound, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -37,7 +36,6 @@ export function AuthScreen() {
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     document.body.style.setProperty("--safe-area-background", "#08090A");
@@ -82,8 +80,7 @@ export function AuthScreen() {
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    window.location.assign("/dashboard");
   };
 
   return (
