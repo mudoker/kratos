@@ -68,15 +68,16 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     // Verify it exits the editor and the new template is available to start.
     await expect(page.getByText('Edit plan')).not.toBeVisible({ timeout: 60000 });
     await expect(page.getByRole('button', { name: 'Plans' })).toBeVisible();
+
+    // Switch back to the 'Session' tab to verify and start a workout
+    const sessionTabBtn = page.getByRole('button', { name: 'Session' });
+    await sessionTabBtn.click();
+
     await expect(page.getByRole('heading', { name: `${planName} • Day 1` })).toBeVisible();
 
     // ----------------------------------------------------
     // STEP 2: RECORD A WORKOUT SESSION USING THIS PLAN
     // ----------------------------------------------------
-
-    // Switch back to the 'Session' tab to start a workout
-    const sessionTabBtn = page.getByRole('button', { name: 'Session' });
-    await sessionTabBtn.click();
 
     // Find the Day 1 template item and click to start.
     const startPlanWorkoutBtn = page.locator('button', { hasText: planName }).first();

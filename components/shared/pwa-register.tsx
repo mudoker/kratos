@@ -83,7 +83,7 @@ export function PwaRegister() {
   }, [version]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+    if (typeof window === "undefined" || !("serviceWorker" in navigator) || navigator.webdriver) return;
 
     let interval: ReturnType<typeof setInterval> | undefined;
     let registration: ServiceWorkerRegistration | null = null;

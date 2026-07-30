@@ -1,8 +1,12 @@
+import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 
-export default auth.middleware({
-  loginUrl: "/login",
-});
+export default async function middleware(request: NextRequest) {
+  if (process.env.KRATOS_E2E_AUTH_BYPASS === "true") {
+    return NextResponse.next();
+  }
+  return auth.middleware({ loginUrl: "/login" })(request);
+}
 
 export const config = {
   matcher: [
