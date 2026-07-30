@@ -2151,12 +2151,12 @@ export function PlannerPage() {
       exerciseCount: day.items.length,
     }))
   );
-  const mobileTemplateLimit = 2;
+  const mobileTemplateLimit = 1;
 
   return (
       <div className="mx-auto max-w-md px-0 pb-14 space-y-3 sm:px-2 md:max-w-5xl md:space-y-6">
       
-      <div className="rounded-xl border border-[#2B2B2B] bg-[#181818] p-2.5 shadow-[0_12px_36px_rgba(0,0,0,0.12)] sm:rounded-2xl sm:p-5 md:rounded-[24px]">
+      <div className="rounded-xl border border-[#2B2B2B] bg-[#151515] p-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.1)] sm:rounded-2xl sm:p-5 md:rounded-[24px]">
         <div className="flex items-center justify-between gap-3 md:items-end">
           <div className="min-w-0 space-y-1">
             <div className="hidden items-center gap-2 text-[#4F8CFF] sm:flex">
@@ -2177,10 +2177,11 @@ export function PlannerPage() {
               setActiveDraftPlan(newDraft);
               setIsEditingSplit(true);
             }}
+            aria-label="New plan"
             className="h-7 shrink-0 rounded-lg bg-[#4F8CFF] px-2.5 text-[11px] font-semibold text-white hover:bg-[#4F8CFF]/90 sm:h-10 sm:rounded-xl sm:px-4 sm:text-xs"
           >
             <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            New plan
+            <span className="hidden sm:inline">New plan</span>
           </Button>
         </div>
 
@@ -2214,7 +2215,7 @@ export function PlannerPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "h-7 rounded-md px-2 text-[11px] font-medium transition-all select-none hover:bg-white/5 hover:text-white sm:h-9 sm:rounded-lg sm:text-xs",
+                  "h-7 rounded-md px-2 text-[10px] font-medium transition-all select-none hover:bg-white/5 hover:text-white sm:h-9 sm:rounded-lg sm:text-xs",
                   isActive 
                     ? "bg-white text-black shadow-sm"
                     : "text-[#AAAAAA] hover:text-white hover:bg-white/5"
@@ -2401,7 +2402,7 @@ export function PlannerPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="space-y-3.5"
+            className="space-y-3"
           >
             <Card
               onClick={startEmptyWorkout}
@@ -2452,7 +2453,7 @@ export function PlannerPage() {
             ) : null}
 
             <div className="space-y-2.5 sm:space-y-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
                 Templates
               </span>
 
@@ -2466,7 +2467,7 @@ export function PlannerPage() {
                           key={`${plan.id}-${day.id}`}
                           onClick={() => startWorkoutFromDay(day, plan)}
                           className={cn(
-                            "group h-auto min-h-14 w-full justify-between rounded-xl border border-[#2B2B2B] bg-[#181818] p-2 text-left transition-all hover:border-[#4F8CFF]/30 hover:bg-[#181818] sm:min-h-0 sm:rounded-2xl sm:p-4",
+                            "group h-auto min-h-12 w-full justify-between rounded-xl border border-[#2B2B2B] bg-[#181818] p-2 text-left transition-all hover:border-[#4F8CFF]/30 hover:bg-[#181818] sm:min-h-0 sm:rounded-2xl sm:p-4",
                             index >= mobileTemplateLimit && "hidden sm:flex"
                           )}
                         >

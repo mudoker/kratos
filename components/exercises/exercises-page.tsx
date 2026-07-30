@@ -19,7 +19,7 @@ export function ExercisesPage() {
   const [category, setCategory] = useState<ExerciseCategory | "All">("All");
   const [selectedId, setSelectedId] = useState(data.exercises[0]?.id ?? "");
   const [page, setPage] = useState(0);
-  const PAGE_SIZE = 8;
+  const PAGE_SIZE = 6;
 
 
   const filtered = useMemo(
@@ -64,28 +64,28 @@ export function ExercisesPage() {
   };
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="min-w-0 space-y-3 pb-14 lg:space-y-6 lg:pb-0">
       
-      <div className="rounded-2xl bg-black p-4 md:rounded-[36px] md:p-8 text-white shadow-lg relative overflow-hidden">
+      <div className="relative overflow-hidden rounded-xl bg-black p-3 text-white shadow-lg md:rounded-[36px] md:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
         <div className="relative z-10 space-y-1">
           <Badge className="hidden bg-white/10 border-transparent text-white font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 sm:inline-flex">
             Exercise Encyclopedia
           </Badge>
-          <h1 className="text-xl font-black tracking-tight leading-tight">
+          <h1 className="text-base font-semibold tracking-tight leading-tight sm:text-xl sm:font-black">
             Movement Library
           </h1>
-          <p className="text-white/50 text-[11px] font-medium leading-snug">
+          <p className="text-[10.5px] font-medium leading-snug text-white/50 sm:text-[11px]">
             Search movements and check setup cues.
           </p>
         </div>
       </div>
 
       {/* Main interactive grid */}
-      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr] xl:gap-6 items-start">
+      <div className="grid min-w-0 items-start gap-3 xl:grid-cols-[0.95fr_1.05fr] xl:gap-6">
         
         {/* LEFT COLUMN: Search & scrolling movements list */}
-        <Card className="flex flex-col p-3.5 md:p-6 border-transparent bg-white/70 backdrop-blur shadow-sm rounded-2xl md:rounded-[24px]">
+        <Card className="flex min-w-0 flex-col rounded-xl border-transparent bg-white/70 p-3 shadow-sm backdrop-blur md:rounded-[24px] md:p-6">
 
           <p className="hidden text-[10px] font-bold uppercase tracking-widest text-black/40 mb-3 sm:block">Browse</p>
 
@@ -101,32 +101,33 @@ export function ExercisesPage() {
           </div>
 
           {/* Filter Pills */}
-          <div className="mt-3 flex gap-1.5 overflow-x-auto border-b border-black/5 pb-3 scrollbar-none sm:mt-4 sm:flex-wrap">
+          <div className="mt-2.5 flex max-w-full gap-1.5 overflow-x-auto border-b border-black/5 pb-2.5 scrollbar-none sm:mt-4 sm:flex-wrap">
             {categories.map((entry) => (
-              <button
+              <Button
                 key={entry}
                 type="button"
+                variant="ghost"
                 onClick={() => handleCategoryChange(entry)}
                 className={cn(
-                  "shrink-0 rounded-xl px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition duration-300",
+                  "h-7 shrink-0 rounded-lg px-2.5 py-0 text-[9px] font-bold uppercase tracking-wider transition duration-300 sm:rounded-xl sm:px-3 sm:text-[10px]",
                   category === entry
                     ? "bg-black text-white shadow-sm"
                     : "border border-black/5 bg-white/40 text-black/60 hover:bg-white hover:text-black"
                 )}
               >
                 {entry}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Catalog count indicators */}
-          <div className="mt-3 flex items-center justify-between gap-3 text-[10px] font-extrabold uppercase tracking-wider text-black/45">
+          <div className="mt-2.5 flex items-center justify-between gap-3 text-[9px] font-extrabold uppercase tracking-wider text-black/45 sm:text-[10px]">
             <span>{filtered.length} movements</span>
             <span className="text-black/30">{page + 1}/{pageCount || 1}</span>
           </div>
 
           {/* Movement List items - paginated */}
-          <div className="mt-3 space-y-2">
+          <div className="mt-2.5 space-y-1.5 sm:space-y-2">
             {paginatedExercises.map((exercise) => {
               const isChosen = exercise.id === selected?.id;
               return (
@@ -135,18 +136,18 @@ export function ExercisesPage() {
                   type="button"
                   onClick={() => setSelectedId(exercise.id)}
                   className={cn(
-                    "w-full rounded-xl border p-2.5 text-left transition duration-200 relative group sm:p-3",
+                    "group relative w-full rounded-lg border p-2 text-left transition duration-200 sm:rounded-xl sm:p-3",
                     isChosen
                       ? "border-black/20 bg-black/5 shadow-sm"
                       : "border-black/5 bg-white/40 hover:bg-white/80"
                   )}
                 >
-                  <div className="flex justify-between items-center gap-3">
-                    <div>
-                      <p className="font-semibold text-[11px] text-black leading-snug">{exercise.name}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[10.5px] font-semibold leading-snug text-black sm:text-[11px]">{exercise.name}</p>
                       <p className="mt-0.5 text-[9px] text-black/40 font-bold uppercase tracking-wider">{exercise.equipment}</p>
                     </div>
-                    <Badge className="bg-black/5 border-transparent text-black/60 text-[9px] font-bold px-2 py-0.5 uppercase shrink-0">
+                    <Badge className="max-w-[92px] shrink-0 truncate border-transparent bg-black/5 px-2 py-0.5 text-[8px] font-bold uppercase text-black/60 sm:max-w-none sm:text-[9px]">
                       {exercise.category}
                     </Badge>
                   </div>
@@ -158,32 +159,34 @@ export function ExercisesPage() {
           {/* Pagination controls */}
           {pageCount > 1 && (
             <div className="mt-3 flex items-center justify-between gap-2">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setPage(p => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="rounded-xl px-3 py-1.5 text-[10px] font-bold border border-black/5 bg-white/40 hover:bg-white disabled:opacity-30 transition"
+                className="h-8 rounded-lg border border-black/5 bg-white/40 px-2.5 py-0 text-[10px] font-bold transition hover:bg-white disabled:opacity-30"
               >
                 ← Prev
-              </button>
+              </Button>
               <span className="text-[10px] text-black/40 font-semibold">{page + 1} of {pageCount}</span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}
                 disabled={page >= pageCount - 1}
-                className="rounded-xl px-3 py-1.5 text-[10px] font-bold border border-black/5 bg-white/40 hover:bg-white disabled:opacity-30 transition"
+                className="h-8 rounded-lg border border-black/5 bg-white/40 px-2.5 py-0 text-[10px] font-bold transition hover:bg-white disabled:opacity-30"
               >
                 Next →
-              </button>
+              </Button>
             </div>
           )}
         </Card>
 
         {/* RIGHT COLUMN: Biomechanics Inspector Map & Setup */}
         {selected ? (
-          <div className="space-y-6">
+          <div className={cn("min-w-0 space-y-3 md:space-y-6", query.trim() ? "block" : "hidden sm:block")}>
             
-            <div className="hidden sm:block">
+            <div>
             <MuscleMap 
               intensities={exerciseIntensities} 
               profile={data.profile} 
@@ -191,11 +194,11 @@ export function ExercisesPage() {
             />
             </div>
 
-            <Card className="p-4 md:p-8 border-transparent bg-white/70 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-2xl md:rounded-[32px] space-y-4 md:space-y-6">
+            <Card className="space-y-3 rounded-xl border-transparent bg-white/70 p-3 shadow-[0_15px_50px_rgba(0,0,0,0.05)] backdrop-blur md:space-y-6 md:rounded-[32px] md:p-8">
               
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 pb-3 md:gap-4 md:pb-4">
                 <div>
-                  <h3 className="text-base font-bold text-black tracking-tight md:text-xl">{selected.name}</h3>
+                  <h3 className="text-sm font-semibold tracking-tight text-black md:text-xl">{selected.name}</h3>
                   <p className="text-[11px] text-black/45 mt-1 leading-snug font-medium md:text-xs">
                     {selected.category} • {selected.equipment}
                   </p>
@@ -222,8 +225,8 @@ export function ExercisesPage() {
               )}
 
               {/* Target muscle details */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="p-3 border border-black/5 bg-white/45 rounded-xl">
+              <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
+                <div className="rounded-lg border border-black/5 bg-white/45 p-2.5 sm:rounded-xl sm:p-3">
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-black/40 mb-2">
                     Primary
                   </p>
@@ -241,7 +244,7 @@ export function ExercisesPage() {
                   </div>
                 </div>
                 
-                <div className="p-3 border border-black/5 bg-white/45 rounded-xl">
+                <div className="rounded-lg border border-black/5 bg-white/45 p-2.5 sm:rounded-xl sm:p-3">
                   <p className="text-[10px] font-extrabold uppercase tracking-wider text-black/40 mb-2">
                     Secondary
                   </p>
@@ -261,7 +264,7 @@ export function ExercisesPage() {
               </div>
 
               {/* Setup list instructions */}
-              <div className="p-4 border border-black/5 bg-white/50 rounded-2xl space-y-3 md:p-5">
+              <div className="space-y-3 rounded-xl border border-black/5 bg-white/50 p-3 md:rounded-2xl md:p-5">
                 <div className="flex items-center gap-2 border-b border-black/5 pb-2 text-black/50">
                   <BookOpen className="h-4 w-4 text-indigo-500" />
                   <span className="text-[10px] font-extrabold uppercase tracking-wider">Setup cues</span>

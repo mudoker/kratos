@@ -115,16 +115,16 @@ export function CoachPage() {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr] xl:gap-6 items-start">
+    <div className="grid gap-3 pb-14 xl:grid-cols-[1.2fr_0.8fr] xl:gap-6 xl:pb-0 items-start">
       
       {/* LEFT COLUMN: Chat Interface */}
-      <Card className="flex h-[calc(100dvh-156px)] min-h-[460px] lg:h-[780px] flex-col p-3.5 sm:p-5 md:p-8 border-transparent bg-white/80 backdrop-blur shadow-[0_15px_50px_rgba(0,0,0,0.05)] rounded-2xl md:rounded-[32px]">
-        <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-3 sm:pb-5">
+      <Card className="flex h-[calc(100dvh-112px)] min-h-[390px] flex-col rounded-xl border-transparent bg-white/80 p-3 shadow-[0_15px_50px_rgba(0,0,0,0.05)] backdrop-blur sm:p-5 md:rounded-[32px] md:p-8 lg:h-[780px]">
+        <div className="flex items-center justify-between gap-3 border-b border-black/5 pb-2.5 sm:pb-5">
           <div className="space-y-1">
             <div className="hidden items-center gap-2 sm:flex">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-black/45">Coach</span>
             </div>
-            <h2 className="text-base font-bold tracking-tight text-black sm:mt-2 sm:text-2xl">Kratos Coach</h2>
+            <h2 className="text-sm font-semibold tracking-tight text-black sm:mt-2 sm:text-2xl">Kratos Coach</h2>
           </div>
 
           {/* Model selection & settings button */}
@@ -136,7 +136,7 @@ export function CoachPage() {
             <Button
               type="button"
               onClick={() => setShowConfigModal(true)}
-              className="h-10 w-10 p-0 bg-black/5 hover:bg-black/10 border-none rounded-xl text-black/60 transition shadow-sm flex items-center justify-center sm:h-11 sm:w-11"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border-none bg-black/5 p-0 text-black/60 shadow-sm transition hover:bg-black/10 sm:h-11 sm:w-11 sm:rounded-xl"
               title="Configure Coach API"
             >
               <Settings className="h-4 w-4" />
@@ -146,8 +146,8 @@ export function CoachPage() {
 
         {/* Messages view thread */}
         <div className="flex-1 min-h-0 relative">
-          <ScrollArea ref={scrollContainerRef} className="h-full w-full pr-1 mt-3 sm:pr-2 sm:mt-4">
-            <div className="space-y-3.5 pb-6 sm:space-y-5 sm:pb-8">
+          <ScrollArea ref={scrollContainerRef} className="mt-2.5 h-full w-full pr-1 sm:mt-4 sm:pr-2">
+            <div className="space-y-3 pb-4 sm:space-y-5 sm:pb-8">
               {messages.length ? (
                 messages.map((msg, index) => {
                   const isUser = msg.role === "user";
@@ -174,17 +174,17 @@ export function CoachPage() {
                   );
                 })
               ) : (
-                <div className="flex flex-col items-center justify-center py-14 text-center max-w-xs mx-auto sm:max-w-sm sm:py-20">
-                  <div className="p-3 bg-black/5 text-black rounded-2xl mb-3 sm:p-4 sm:mb-4">
-                    <Bot className="h-6 w-6 sm:h-8 sm:w-8" />
+                <div className="mx-auto flex max-w-[260px] flex-col items-center justify-center py-8 text-center sm:max-w-sm sm:py-20">
+                  <div className="mb-2.5 rounded-xl bg-black/5 p-2.5 text-black sm:mb-4 sm:p-4 sm:rounded-2xl">
+                    <Bot className="h-5 w-5 sm:h-8 sm:w-8" />
                   </div>
-                  <h4 className="font-bold text-sm text-black">Start your coaching thread</h4>
-                  <p className="text-[11px] text-black/50 mt-2 leading-relaxed sm:text-xs">
+                  <h4 className="text-xs font-semibold text-black sm:text-sm">Start your coaching thread</h4>
+                  <p className="mt-1.5 text-[10.5px] leading-relaxed text-black/50 sm:mt-2 sm:text-xs">
                     Ask about your plan, load choices, or recent session.
                   </p>
                   {!hasApiKey && (
-                    <Button onClick={() => setShowConfigModal(true)} className="mt-5 text-xs font-semibold h-11 px-5 bg-black hover:bg-black/90 text-white rounded-xl shadow-md border-none">
-                      Configure Gemini Key to Chat
+                    <Button onClick={() => setShowConfigModal(true)} className="mt-4 h-8 rounded-lg border-none bg-black px-3 text-[11px] font-semibold text-white shadow-md hover:bg-black/90 sm:h-11 sm:rounded-xl sm:px-5 sm:text-xs">
+                      Configure key
                     </Button>
                   )}
                 </div>
@@ -206,8 +206,8 @@ export function CoachPage() {
         </div>
 
         {/* Input Text Box area */}
-        <div className="border-t border-black/5 pt-3 mt-2 sm:pt-4">
-          <div className="relative flex items-end bg-black/5 rounded-2xl p-2 border border-black/5 focus-within:border-black/20 focus-within:bg-white transition duration-300">
+        <div className="mt-2 border-t border-black/5 pt-2.5 sm:pt-4">
+          <div className="relative flex items-end rounded-xl border border-black/5 bg-black/5 p-1.5 transition duration-300 focus-within:border-black/20 focus-within:bg-white sm:rounded-2xl sm:p-2">
             <Textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -218,14 +218,14 @@ export function CoachPage() {
                 }
               }}
               placeholder={hasApiKey ? "Ask the coach..." : "Configure API key first..."}
-              className="bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[46px] max-h-[110px] resize-none pr-12 text-[16px] sm:text-xs py-2 text-black placeholder-black/30"
+              className="min-h-[38px] max-h-[90px] resize-none border-none bg-transparent py-1.5 pr-10 text-xs text-black placeholder-black/30 focus-visible:ring-0 focus-visible:ring-offset-0 sm:min-h-[46px] sm:max-h-[110px] sm:pr-12"
               disabled={!hasApiKey || pending}
             />
             <Button 
               type="button" 
               onClick={send} 
               disabled={pending || !input.trim() || !hasApiKey}
-              className="absolute right-3 bottom-3 h-9 w-9 p-0 rounded-xl bg-black text-white hover:bg-black/90 transition shadow-sm disabled:opacity-30"
+              className="absolute bottom-2 right-2 h-8 w-8 rounded-lg bg-black p-0 text-white shadow-sm transition hover:bg-black/90 disabled:opacity-30 sm:bottom-3 sm:right-3 sm:h-9 sm:w-9 sm:rounded-xl"
             >
               <SendHorizonal className="h-4 w-4" />
             </Button>
