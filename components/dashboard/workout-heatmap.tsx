@@ -1,15 +1,23 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef, cloneElement } from "react";
+import { useMemo, useState, useEffect, useRef, cloneElement, type MouseEvent } from "react";
 import { ActivityCalendar, ThemeInput } from "react-activity-calendar";
+import type { Activity } from "react-activity-calendar";
 import type { WorkoutSession } from "@/lib/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+
+type HeatmapHover = {
+  date: string;
+  count: number;
+  x: number;
+  y: number;
+  showBelow: boolean;
+};
 
 export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
-  const [hovered, setHovered] = useState<{ date: string; count: number; x: number; y: number } | null>(null);
+  const [hovered, setHovered] = useState<HeatmapHover | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -31,7 +39,7 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
       const exerciseCount = session.items.length;
       const resultPoints = session.items.reduce((acc, item) => {
         if (Array.isArray(item.sets)) return acc + item.sets.length;
-        return acc + ((item as any).result?.trim() ? 1 : 0);
+        return acc;
       }, 0);
       
       const score = exerciseCount + resultPoints;
@@ -72,11 +80,11 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
     dark: ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0.40)', 'rgba(0,0,0,0.65)', 'rgba(0,0,0,0.92)'],
   };
 
-  // Calculate dynamic block size. Cap it at a minimum of 9px for mobile usability/readability.
-  const blockMargin = 4;
+  const isCompact = containerWidth < 520;
+  const blockMargin = isCompact ? 2 : 4;
   const weeks = 53;
   const calculatedBlockSize = containerWidth > 0 
-    ? Math.max(Math.floor((containerWidth - (weeks - 1) * blockMargin) / weeks), 9)
+    ? Math.max(Math.floor((containerWidth - (weeks - 1) * blockMargin) / weeks), isCompact ? 5 : 9)
     : 12;
 
   const minHeatmapWidth = weeks * (calculatedBlockSize + blockMargin) - blockMargin + 10;
@@ -93,7 +101,10 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
               blockSize={calculatedBlockSize}
               blockMargin={blockMargin}
               blockRadius={2}
-              fontSize={10}
+              fontSize={isCompact ? 8 : 10}
+              showColorLegend={!isCompact}
+              showMonthLabels={!isCompact}
+              showWeekdayLabels={!isCompact}
               labels={{
                 legend: {
                   less: 'Less',
@@ -101,11 +112,11 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
                 },
                 totalCount: '{{count}} exercises/sets in {{year}}',
               }}
-              renderBlock={(block, activity) => {
+              renderBlock={(block, activity: Activity) => {
                 return cloneElement(block, {
-                  onMouseEnter: (e: any) => {
+                  onMouseEnter: (event: MouseEvent<Element>) => {
                     if (!containerRef.current) return;
-                    const rect = e.currentTarget.getBoundingClientRect();
+                    const rect = event.currentTarget.getBoundingClientRect();
                     const containerRect = containerRef.current.getBoundingClientRect();
                     
                     const x = rect.left - containerRect.left + rect.width / 2;
@@ -121,7 +132,7 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
                       x,
                       y,
                       showBelow
-                    } as any);
+                    });
                   },
                   onMouseLeave: () => {
                     setHovered(null);
@@ -136,14 +147,14 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
       <AnimatePresence>
         {hovered && (
           <motion.div
-            initial={{ opacity: 0, y: (hovered as any).showBelow ? -4 : 4, scale: 0.95 }}
+            initial={{ opacity: 0, y: hovered.showBelow ? -4 : 4, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: (hovered as any).showBelow ? -4 : 4, scale: 0.95 }}
+            exit={{ opacity: 0, y: hovered.showBelow ? -4 : 4, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="pointer-events-none absolute z-50 flex flex-col gap-1 rounded-xl border border-[color:var(--border)] bg-[linear-gradient(180deg,#1a1a1a,#242424)] px-3 py-2 text-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-xl whitespace-nowrap"
             style={{
               left: hovered.x,
-              top: (hovered as any).showBelow ? hovered.y + calculatedBlockSize : hovered.y - 8,
+              top: hovered.showBelow ? hovered.y + calculatedBlockSize : hovered.y - 8,
               // Keep the tooltip anchored to the block but shift it horizontally to stay in bounds
               // We use 100px as a safe half-width estimate
               x: `calc(-50% + ${
@@ -153,7 +164,7 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
                     ? (containerWidth - 100) - hovered.x 
                     : 0
               }px)`,
-              y: (hovered as any).showBelow ? "8px" : "-100%",
+              y: hovered.showBelow ? "8px" : "-100%",
             }}
           >
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">

@@ -96,13 +96,13 @@ export function ProgressCharts({ data }: { data: DashboardData }) {
               <p className="font-[family:var(--font-display)] text-sm font-semibold text-[color:var(--support)]">{stats?.growth}</p>
             </div>
           </div>
-          <div className="mt-2.5 h-[145px] min-w-0 w-full sm:h-[300px] sm:mt-4">
+          <div className="mt-2 h-[128px] min-w-0 w-full sm:h-[300px] sm:mt-4">
             <ResponsiveContainer
               width="100%"
               height="100%"
               minWidth={0}
-              minHeight={145}
-              initialDimension={{ width: 390, height: 145 }}
+              minHeight={128}
+              initialDimension={{ width: 390, height: 128 }}
             >
               <AreaChart data={chartData} margin={{ top: 10, right: 6, left: -28, bottom: 0 }}>
                 <defs>

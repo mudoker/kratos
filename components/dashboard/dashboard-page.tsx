@@ -25,9 +25,9 @@ export function DashboardPage() {
   const recentSession = data.sessions[0];
 
   return (
-    <div className="space-y-4 lg:space-y-6">
-      <Card className="overflow-hidden p-4 md:p-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-3 pb-12 lg:space-y-6 lg:pb-0">
+      <Card className="overflow-hidden rounded-xl p-3 md:rounded-2xl md:p-8">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex-1">
             <PageHeader
               eyebrow="Summary"
@@ -37,11 +37,11 @@ export function DashboardPage() {
           </div>
           
           {/* Apple Segmented Control Navigation */}
-          <div className="bg-neutral-100 p-0.5 rounded-xl flex w-full md:w-auto md:min-w-[280px]">
+          <div className="flex w-full rounded-lg bg-neutral-100 p-0.5 md:w-auto md:min-w-[280px]">
             <button
               type="button"
               onClick={() => setTab("overview")}
-              className={`flex-1 rounded-[10px] py-2 text-[10px] sm:text-[11px] font-bold tracking-tight transition-all ${
+              className={`flex-1 rounded-md py-1.5 text-[10px] font-semibold tracking-tight transition-all sm:rounded-[10px] sm:py-2 sm:text-[11px] ${
                 tab === "overview"
                   ? "bg-white text-black shadow-sm"
                   : "text-neutral-400 hover:text-neutral-700"
@@ -52,7 +52,7 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => setTab("analytics")}
-              className={`flex-1 rounded-[10px] py-2 text-[10px] sm:text-[11px] font-bold tracking-tight transition-all ${
+              className={`flex-1 rounded-md py-1.5 text-[10px] font-semibold tracking-tight transition-all sm:rounded-[10px] sm:py-2 sm:text-[11px] ${
                 tab === "analytics"
                   ? "bg-white text-black shadow-sm"
                   : "text-neutral-400 hover:text-neutral-700"
@@ -63,7 +63,7 @@ export function DashboardPage() {
             <button
               type="button"
               onClick={() => setTab("history")}
-              className={`flex-1 rounded-[10px] py-2 text-[10px] sm:text-[11px] font-bold tracking-tight transition-all ${
+              className={`flex-1 rounded-md py-1.5 text-[10px] font-semibold tracking-tight transition-all sm:rounded-[10px] sm:py-2 sm:text-[11px] ${
                 tab === "history"
                   ? "bg-white text-black shadow-sm"
                   : "text-neutral-400 hover:text-neutral-700"
@@ -76,7 +76,7 @@ export function DashboardPage() {
       </Card>
 
       {tab === "overview" && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="grid gap-3 grid-cols-2">
             <MetricTile
               label="Weekly target"
@@ -92,15 +92,15 @@ export function DashboardPage() {
             />
           </div>
 
-          <Card className="p-4 md:p-6">
+          <Card className="rounded-xl p-3 md:rounded-2xl md:p-6">
             <div className="flex items-center gap-2 text-neutral-900">
-              <Flame className="h-4 w-4 text-black" />
-              <CardTitle className="text-sm font-semibold">Consistency</CardTitle>
+              <Flame className="h-3.5 w-3.5 text-black" />
+              <CardTitle className="text-xs font-semibold sm:text-sm">Consistency</CardTitle>
             </div>
             <CardDescription className="mt-1 hidden text-xs sm:block">
               Logged training sessions over the past 365 days.
             </CardDescription>
-            <div className="mt-4">
+            <div className="mt-3">
               <WorkoutHeatmap sessions={data.sessions} />
             </div>
           </Card>

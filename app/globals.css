@@ -28,6 +28,12 @@ html {
   overscroll-behavior: none;
 }
 
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
 body {
   min-height: 100vh;
   margin: 0;
