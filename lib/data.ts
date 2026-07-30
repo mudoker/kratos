@@ -30,6 +30,28 @@ type UpsertSessionInput = Omit<WorkoutSession, "id" | "userId" | "startedAt"> & 
 };
 type UpsertRecordInput = Omit<PersonalRecord, "id" | "userId"> & { id?: string };
 
+const bulkInsert = async (
+  client: any,
+  table: string,
+  columns: string[],
+  rows: any[]
+) => {
+  if (rows.length === 0) return;
+  const placeholders: string[] = [];
+  const flatValues: any[] = [];
+  let index = 1;
+  for (const row of rows) {
+    const rowPlaceholders: string[] = [];
+    for (const col of columns) {
+      rowPlaceholders.push(`$${index++}`);
+      flatValues.push(row[col]);
+    }
+    placeholders.push(`(${rowPlaceholders.join(", ")})`);
+  }
+  const query = `INSERT INTO ${table} (${columns.map(c => `"${c}"`).join(", ")}) VALUES ${placeholders.join(", ")}`;
+  await client.query(query, flatValues);
+};
+
 let dataReady: Promise<void> | null = null;
 
 export const ensureDataReady = async () => {
@@ -188,48 +210,69 @@ export const savePlan = async (userId: string, planInput: UpsertPlanInput) => {
 
     await client.query("DELETE FROM weekly_plan_days WHERE plan_id = $1", [planId]);
 
-    for (const day of days) {
-      await client.query(
-        `INSERT INTO weekly_plan_days
-          (id, plan_id, day_index, title, focus, warmup, session_goal, target_muscles, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9)`,
-        [
-          day.id,
-          planId,
-          day.day,
-          day.title.trim(),
-          day.focus.trim(),
-          day.warmup.trim(),
-          day.sessionGoal.trim(),
-          JSON.stringify(day.targetMuscles),
-          day.notes.trim(),
-        ]
-      );
+    const dayRows = days.map((day) => ({
+      id: day.id,
+      plan_id: planId,
+      day_index: day.day,
+      title: day.title.trim(),
+      focus: day.focus.trim(),
+      warmup: day.warmup.trim(),
+      session_goal: day.sessionGoal.trim(),
+      target_muscles: JSON.stringify(day.targetMuscles),
+      notes: day.notes.trim(),
+    }));
 
-      for (const item of day.items) {
-        await client.query(
-          `INSERT INTO weekly_plan_items
-            (id, day_id, exercise_id, sets, reps, rest_seconds, target_load, target_rpe, pr_goal, notes, order_index)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-          [
-            item.id,
-            day.id,
-            item.exerciseId,
-            item.sets,
-            item.reps.trim(),
-            item.restSeconds,
-            item.targetLoad.trim(),
-            item.targetRpe.trim(),
-            item.prGoal.trim(),
-            item.notes.trim(),
-            item.order,
-          ]
-        );
-      }
+    const itemRows = days.flatMap((day) =>
+      day.items.map((item) => ({
+        id: item.id,
+        day_id: day.id,
+        exercise_id: item.exerciseId,
+        sets: item.sets,
+        reps: item.reps.trim(),
+        rest_seconds: item.restSeconds,
+        target_load: item.targetLoad.trim(),
+        target_rpe: item.targetRpe.trim(),
+        pr_goal: item.prGoal.trim(),
+        notes: item.notes.trim(),
+        order_index: item.order,
+      }))
+    );
+
+    if (dayRows.length) {
+      await bulkInsert(
+        client,
+        "weekly_plan_days",
+        ["id", "plan_id", "day_index", "title", "focus", "warmup", "session_goal", "target_muscles", "notes"],
+        dayRows
+      );
+    }
+
+    if (itemRows.length) {
+      await bulkInsert(
+        client,
+        "weekly_plan_items",
+        ["id", "day_id", "exercise_id", "sets", "reps", "rest_seconds", "target_load", "target_rpe", "pr_goal", "notes", "order_index"],
+        itemRows
+      );
     }
   });
 
-  return (await getPlans(userId)).find((plan) => plan.id === planId) ?? null;
+  const planRows = await queryRows(pool, "SELECT * FROM weekly_plans WHERE id = $1", [planId]);
+  if (!planRows.length) return null;
+  const dayRows = await queryRows(
+    pool,
+    "SELECT * FROM weekly_plan_days WHERE plan_id = $1 ORDER BY day_index ASC",
+    [planId]
+  );
+  const dayIds = dayRows.map((row) => String(row.id));
+  const itemRows = dayIds.length
+    ? await queryRows(
+        pool,
+        "SELECT * FROM weekly_plan_items WHERE day_id = ANY($1::text[]) ORDER BY order_index ASC",
+        [dayIds]
+      )
+    : [];
+  return hydratePlans(planRows, dayRows, itemRows)[0] ?? null;
 };
 
 export const deletePlan = async (userId: string, planId: string) => {
@@ -281,7 +324,8 @@ export const saveRecord = async (userId: string, record: UpsertRecordInput) => {
     [id, userId, record.exerciseId, record.value, record.unit, record.reps, record.achievedAt, record.notes]
   );
 
-  return (await getRecords(userId)).find((entry) => entry.id === id) ?? null;
+  const rows = await queryRows(pool, "SELECT * FROM personal_records WHERE id = $1", [id]);
+  return rows[0] ? mapRecordRow(rows[0]) : null;
 };
 
 export const getSessions = async (userId: string): Promise<WorkoutSession[]> => {
@@ -346,58 +390,83 @@ export const saveSession = async (userId: string, sessionInput: UpsertSessionInp
 
     await client.query("DELETE FROM workout_session_items WHERE session_id = $1", [id]);
 
+    const prRows: any[] = [];
     const existingRecords = await getRecords(userId);
 
-    for (const [order, item] of sessionInput.items.entries()) {
-      // Auto-extract PRs from the sets
+    for (const item of sessionInput.items) {
       if (item.sets && item.sets.length > 0) {
         for (const set of item.sets) {
           const weightNum = parseFloat(set.weight);
           const repsNum = parseInt(set.reps);
           
           if (!isNaN(weightNum) && !isNaN(repsNum) && weightNum > 0 && repsNum > 0) {
-            const currentBest = existingRecords
+            const currentBest = [...existingRecords, ...prRows.map(pr => ({
+              exerciseId: pr.exercise_id,
+              value: pr.value,
+              reps: pr.reps,
+            }))]
               .filter(r => r.exerciseId === item.exerciseId)
               .sort((a, b) => b.value - a.value || b.reps - a.reps)[0];
 
             if (!currentBest || weightNum > currentBest.value || (weightNum === currentBest.value && repsNum > currentBest.reps)) {
-              // Create a new record
-              await client.query(
-                `INSERT INTO personal_records (id, user_id, exercise_id, value, unit, reps, achieved_at, notes)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                 ON CONFLICT (id) DO NOTHING`,
-                [createId("pr"), userId, item.exerciseId, weightNum, "kg", repsNum, startedAt, `Auto-logged from session: ${sessionInput.title}`]
-              );
-              // Refresh existingRecords for the next set/item in this loop
-              existingRecords.push({ id: "temp", userId, exerciseId: item.exerciseId, value: weightNum, unit: "kg", reps: repsNum, achievedAt: startedAt, notes: "" });
+              prRows.push({
+                id: createId("pr"),
+                user_id: userId,
+                exercise_id: item.exerciseId,
+                value: weightNum,
+                unit: "kg",
+                reps: repsNum,
+                achieved_at: startedAt,
+                notes: `Auto-logged from session: ${sessionInput.title}`,
+              });
             }
           }
         }
       }
+    }
 
-      await client.query(
-        `INSERT INTO workout_session_items
-          (id, session_id, exercise_id, exercise_name, planned_sets, reps, rest_seconds, target_load, target_rpe, result, notes, order_index)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-        [
-          item.id || createId("session_item"),
-          id,
-          item.exerciseId,
-          item.exerciseName,
-          item.plannedSets,
-          item.reps.trim(),
-          item.restSeconds,
-          item.targetLoad.trim(),
-          item.targetRpe.trim(),
-          JSON.stringify(item.sets || []),
-          item.notes.trim(),
-          order,
-        ]
+    if (prRows.length) {
+      await bulkInsert(
+        client,
+        "personal_records",
+        ["id", "user_id", "exercise_id", "value", "unit", "reps", "achieved_at", "notes"],
+        prRows
+      );
+    }
+
+    const itemRows = sessionInput.items.map((item, order) => ({
+      id: item.id || createId("session_item"),
+      session_id: id,
+      exercise_id: item.exerciseId,
+      exercise_name: item.exerciseName,
+      planned_sets: item.plannedSets,
+      reps: item.reps.trim(),
+      rest_seconds: item.restSeconds,
+      target_load: item.targetLoad.trim(),
+      target_rpe: item.targetRpe.trim(),
+      result: JSON.stringify(item.sets || []),
+      notes: item.notes.trim(),
+      order_index: order,
+    }));
+
+    if (itemRows.length) {
+      await bulkInsert(
+        client,
+        "workout_session_items",
+        ["id", "session_id", "exercise_id", "exercise_name", "planned_sets", "reps", "rest_seconds", "target_load", "target_rpe", "result", "notes", "order_index"],
+        itemRows
       );
     }
   });
 
-  return (await getSessions(userId)).find((session) => session.id === id) ?? null;
+  const sessionRows = await queryRows(pool, "SELECT * FROM workout_sessions WHERE id = $1", [id]);
+  if (!sessionRows.length) return null;
+  const itemRows = await queryRows(
+    pool,
+    "SELECT * FROM workout_session_items WHERE session_id = $1 ORDER BY order_index ASC",
+    [id]
+  );
+  return hydrateSessions(sessionRows, itemRows)[0] ?? null;
 };
 
 export const getCoachMessages = async (userId: string): Promise<CoachMessage[]> => {
@@ -417,14 +486,24 @@ export const appendCoachExchange = async (
   await ensureDataReady();
   const createdAt = new Date().toISOString();
 
-  await transaction(async (client) => {
-    for (const entry of entries) {
-      await client.query(
-        "INSERT INTO coach_messages (id, user_id, role, content, created_at) VALUES ($1, $2, $3, $4, $5)",
-        [createId("msg"), userId, entry.role, entry.content.trim(), createdAt]
+  const messageRows = entries.map((entry) => ({
+    id: createId("msg"),
+    user_id: userId,
+    role: entry.role,
+    content: entry.content.trim(),
+    created_at: createdAt,
+  }));
+
+  if (messageRows.length) {
+    await transaction(async (client) => {
+      await bulkInsert(
+        client,
+        "coach_messages",
+        ["id", "user_id", "role", "content", "created_at"],
+        messageRows
       );
-    }
-  });
+    });
+  }
 };
 
 export const saveExercise = async (exercise: Omit<Exercise, "createdAt" | "updatedAt">) => {
