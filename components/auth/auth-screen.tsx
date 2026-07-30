@@ -118,7 +118,8 @@ export function AuthScreen() {
           <div className="mt-3.5 space-y-2.5">
             <Button
               asChild
-              className="h-8 w-full rounded-lg border border-white/10 bg-white text-xs font-semibold text-[#090A0B] shadow-[0_14px_34px_rgba(0,0,0,0.2)] hover:bg-emerald-100"
+              variant="secondary"
+              className="h-8 w-full rounded-lg border border-white/10 !bg-white text-xs font-semibold !text-neutral-950 shadow-[0_14px_34px_rgba(0,0,0,0.2)] hover:!bg-neutral-100 [&>span]:!text-neutral-950"
             >
               <a href="/api/auth/google">
                 <GoogleIcon />
