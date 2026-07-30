@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
 import { saveExercise } from "@/lib/data";
 import type { Exercise } from "@/lib/types";
 

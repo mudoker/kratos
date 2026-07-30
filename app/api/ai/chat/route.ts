@@ -1,7 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
 import { appendCoachExchange, getCoachMessages, getPlans, getProfile, getRecords, getSessions } from "@/lib/data";
 
 export const dynamic = "force-dynamic";

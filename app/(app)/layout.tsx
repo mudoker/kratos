@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/shell/app-shell";
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
 import { getUserData } from "@/lib/server-data";
 import { DataProvider } from "@/components/shared/data-provider";
 

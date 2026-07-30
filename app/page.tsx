@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";

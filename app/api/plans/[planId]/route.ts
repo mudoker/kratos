@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
 import { deletePlan } from "@/lib/data";
 
 export async function DELETE(_: Request, context: { params: Promise<{ planId: string }> }) {

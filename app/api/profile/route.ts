@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
 import { saveProfile } from "@/lib/data";
 
 export async function PUT(request: Request) {

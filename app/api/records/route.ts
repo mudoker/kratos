@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
 import { deleteRecord, getRecords, saveRecord } from "@/lib/data";
 import type { PersonalRecord } from "@/lib/types";
 

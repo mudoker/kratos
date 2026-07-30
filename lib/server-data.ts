@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth-server";
 import { getCoachMessages, getExercises, getPlans, getProfile, getRecords, getSessions } from "@/lib/data";
 
 export const getUserData = cache(async () => {
