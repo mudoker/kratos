@@ -40,8 +40,29 @@ body {
   margin: 0;
   color: var(--foreground);
   font-family: var(--font-body);
-  background-color: var(--background);
+  background: var(--background);
   overscroll-behavior: none;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: var(--safe-area-background, var(--background));
+}
+
+body::before {
+  top: 0;
+  height: env(safe-area-inset-top);
+}
+
+body::after {
+  bottom: 0;
+  height: env(safe-area-inset-bottom);
 }
 
 a {
