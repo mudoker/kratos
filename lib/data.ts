@@ -14,6 +14,7 @@ import {
   queryRows,
   transaction,
 } from "@/lib/db";
+import type { PoolClient } from "pg";
 import type {
   CoachMessage,
   Exercise,
@@ -29,16 +30,18 @@ type UpsertSessionInput = Omit<WorkoutSession, "id" | "userId" | "startedAt"> & 
   startedAt?: string;
 };
 type UpsertRecordInput = Omit<PersonalRecord, "id" | "userId"> & { id?: string };
+type InsertRow = Record<string, unknown>;
+type RecordCandidate = Pick<PersonalRecord, "exerciseId" | "value" | "reps">;
 
 const bulkInsert = async (
-  client: any,
+  client: Pick<PoolClient, "query">,
   table: string,
   columns: string[],
-  rows: any[]
+  rows: InsertRow[]
 ) => {
   if (rows.length === 0) return;
   const placeholders: string[] = [];
-  const flatValues: any[] = [];
+  const flatValues: unknown[] = [];
   let index = 1;
   for (const row of rows) {
     const rowPlaceholders: string[] = [];
@@ -48,7 +51,7 @@ const bulkInsert = async (
     }
     placeholders.push(`(${rowPlaceholders.join(", ")})`);
   }
-  const query = `INSERT INTO ${table} (${columns.map(c => `"${c}"`).join(", ")}) VALUES ${placeholders.join(", ")}`;
+  const query = `INSERT INTO ${table} (${columns.map((column) => `"${column}"`).join(", ")}) VALUES ${placeholders.join(", ")}`;
   await client.query(query, flatValues);
 };
 
@@ -61,7 +64,12 @@ export const ensureDataReady = async () => {
     })();
   }
 
-  await dataReady;
+  try {
+    await dataReady;
+  } catch (error) {
+    dataReady = null;
+    throw error;
+  }
 };
 
 export const getExercises = async (): Promise<Exercise[]> => {
@@ -390,7 +398,7 @@ export const saveSession = async (userId: string, sessionInput: UpsertSessionInp
 
     await client.query("DELETE FROM workout_session_items WHERE session_id = $1", [id]);
 
-    const prRows: any[] = [];
+    const prRows: InsertRow[] = [];
     const existingRecords = await getRecords(userId);
 
     for (const item of sessionInput.items) {
@@ -400,10 +408,10 @@ export const saveSession = async (userId: string, sessionInput: UpsertSessionInp
           const repsNum = parseInt(set.reps);
           
           if (!isNaN(weightNum) && !isNaN(repsNum) && weightNum > 0 && repsNum > 0) {
-            const currentBest = [...existingRecords, ...prRows.map(pr => ({
-              exerciseId: pr.exercise_id,
-              value: pr.value,
-              reps: pr.reps,
+            const currentBest = [...existingRecords, ...prRows.map((pr): RecordCandidate => ({
+              exerciseId: String(pr.exercise_id),
+              value: Number(pr.value),
+              reps: Number(pr.reps),
             }))]
               .filter(r => r.exerciseId === item.exerciseId)
               .sort((a, b) => b.value - a.value || b.reps - a.reps)[0];
