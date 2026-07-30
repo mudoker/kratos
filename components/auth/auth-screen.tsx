@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Dumbbell, KeyRound, Mail } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -9,12 +9,43 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+function GoogleIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
+      <path
+        fill="#4285F4"
+        d="M21.6 12.23c0-.78-.07-1.53-.2-2.23H12v4.22h5.38a4.6 4.6 0 0 1-2 3.02v2.47h3.24c1.9-1.75 2.98-4.32 2.98-7.48Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 22c2.7 0 4.97-.9 6.62-2.29l-3.24-2.47c-.9.6-2.04.96-3.38.96-2.6 0-4.8-1.76-5.59-4.12H3.07v2.55A10 10 0 0 0 12 22Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M6.41 14.08a6 6 0 0 1 0-3.82V7.71H3.07a10 10 0 0 0 0 8.92l3.34-2.55Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.96c1.47 0 2.78.5 3.82 1.5l2.87-2.87C16.96 2.97 14.7 2 12 2a10 10 0 0 0-8.93 5.71l3.34 2.55C7.2 7.9 9.4 5.96 12 5.96Z"
+      />
+    </svg>
+  );
+}
+
 export function AuthScreen() {
   const [form, setForm] = useState({ email: "", otp: "" });
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [googlePending, setGooglePending] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    document.body.style.setProperty("--safe-area-background", "#08090A");
+    return () => {
+      document.body.style.removeProperty("--safe-area-background");
+    };
+  }, []);
 
   const requestCode = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -56,6 +87,22 @@ export function AuthScreen() {
     router.refresh();
   };
 
+  const signInWithGoogle = async () => {
+    setGooglePending(true);
+    setError("");
+
+    const result = await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/dashboard",
+      errorCallbackURL: "/login",
+    });
+
+    if (result.error) {
+      setError(result.error.message || "Could not start Google sign-in.");
+      setGooglePending(false);
+    }
+  };
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08090A] px-4 py-8 text-white">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:36px_36px] opacity-30" />
@@ -88,7 +135,25 @@ export function AuthScreen() {
             </div>
           ) : null}
 
-          <form onSubmit={codeSent ? verifyCode : requestCode} className="mt-3.5 space-y-2.5">
+          <div className="mt-3.5 space-y-2.5">
+            <Button
+              type="button"
+              onClick={signInWithGoogle}
+              disabled={googlePending || pending}
+              className="h-8 w-full rounded-lg border border-white/10 bg-white text-xs font-semibold text-[#090A0B] shadow-[0_14px_34px_rgba(0,0,0,0.2)] hover:bg-emerald-100"
+            >
+              <GoogleIcon />
+              {googlePending ? "Opening Google..." : "Continue with Google"}
+            </Button>
+
+            <div className="flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/24">
+              <span className="h-px flex-1 bg-white/10" />
+              <span>Email code</span>
+              <span className="h-px flex-1 bg-white/10" />
+            </div>
+          </div>
+
+          <form onSubmit={codeSent ? verifyCode : requestCode} className="mt-2.5 space-y-2.5">
             <div className="space-y-1">
               <Label htmlFor="email" className="text-[8.5px] font-bold uppercase tracking-[0.18em] text-white/38">
                 Email
@@ -136,8 +201,8 @@ export function AuthScreen() {
 
             <Button
               type="submit"
-              disabled={pending}
-              className="h-8 w-full rounded-lg border border-white/10 bg-white text-xs font-semibold text-[#090A0B] shadow-[0_14px_34px_rgba(0,0,0,0.2)] hover:bg-emerald-100"
+              disabled={pending || googlePending}
+              className="h-8 w-full rounded-lg border border-white/10 bg-white/[0.07] text-xs font-semibold text-white shadow-none hover:bg-white/[0.1]"
             >
               {pending ? (
                 codeSent ? "Verifying..." : "Sending code..."
