@@ -90,11 +90,12 @@ export function AuthScreen() {
   const signInWithGoogle = async () => {
     setGooglePending(true);
     setError("");
+    const origin = window.location.origin;
 
     const result = await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/dashboard",
-      errorCallbackURL: "/login",
+      callbackURL: `${origin}/dashboard`,
+      errorCallbackURL: `${origin}/login`,
     });
 
     if (result.error) {
