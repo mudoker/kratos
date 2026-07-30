@@ -72,12 +72,56 @@ export const defaultProfile = (userId: string): UserProfile => ({
 
 type DbExecutor = Pool | PoolClient;
 
+const transientDbMessages = [
+  "Connection terminated unexpectedly",
+  "Connection terminated",
+  "timeout",
+  "getaddrinfo EAI_AGAIN",
+];
+
+const isTransientDbError = (error: unknown) => {
+  const err = error as { code?: string; message?: string };
+
+  return (
+    err.code === "EAI_AGAIN" ||
+    err.code === "ECONNRESET" ||
+    err.code === "ETIMEDOUT" ||
+    transientDbMessages.some((message) => err.message?.includes(message))
+  );
+};
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const executeQuery = async <T extends QueryResultRow = QueryResultRow>(
+  db: DbExecutor,
+  text: string,
+  params: unknown[] = []
+) => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await db.query<T>(text, params);
+    } catch (error) {
+      lastError = error;
+
+      if (!isTransientDbError(error) || attempt === 2) {
+        break;
+      }
+
+      await wait(250 * (attempt + 1));
+    }
+  }
+
+  throw lastError;
+};
+
 export const queryRows = async <T extends QueryResultRow = QueryResultRow>(
   db: DbExecutor,
   text: string,
   params: unknown[] = []
 ) => {
-  const result = await db.query(text, params);
+  const result = await executeQuery<T>(db, text, params);
   return result.rows as T[];
 };
 
@@ -92,7 +136,8 @@ export const queryRow = async <T extends QueryResultRow = QueryResultRow>(
 
 const seedExerciseCatalog = async (db: DbExecutor) => {
   for (const exercise of exerciseCatalog) {
-    await db.query(
+    await executeQuery(
+      db,
       `INSERT INTO exercises (
         id,
         name,
@@ -132,7 +177,7 @@ const seedExerciseCatalog = async (db: DbExecutor) => {
 export const ensureAppTables = async () => {
   if (appTablesReady) return;
 
-  await pool.query(`
+  await executeQuery(pool, `
     CREATE TABLE IF NOT EXISTS exercises (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -168,6 +213,7 @@ export const ensureAppTables = async () => {
       user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       notes TEXT NOT NULL DEFAULT '',
+      order_index INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -246,24 +292,48 @@ export const ensureAppTables = async () => {
     );
   `);
 
+  await executeQuery(pool, `
+    ALTER TABLE weekly_plans
+    ADD COLUMN IF NOT EXISTS order_index INTEGER NOT NULL DEFAULT 0;
+  `);
+
   await seedExerciseCatalog(pool);
   appTablesReady = true;
 };
 
 export const transaction = async <T>(callback: (client: PoolClient) => Promise<T>): Promise<T> => {
-  const client = await pool.connect();
+  let lastError: unknown;
 
-  try {
-    await client.query("BEGIN");
-    const result = await callback(client);
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const client = await pool.connect();
+
+    try {
+      await executeQuery(client, "BEGIN");
+      const result = await callback(client);
+      await executeQuery(client, "COMMIT");
+      return result;
+    } catch (error) {
+      lastError = error;
+
+      try {
+        await executeQuery(client, "ROLLBACK");
+      } catch (rollbackError) {
+        if (!isTransientDbError(rollbackError)) {
+          throw rollbackError;
+        }
+      }
+
+      if (!isTransientDbError(error) || attempt === 2) {
+        throw error;
+      }
+
+      await wait(250 * (attempt + 1));
+    } finally {
+      client.release();
+    }
   }
+
+  throw lastError;
 };
 
 export const mapExerciseRow = (row: Record<string, unknown>): Exercise => ({

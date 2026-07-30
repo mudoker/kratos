@@ -1,9 +1,8 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getMigrations } from "better-auth/db/migration";
-import { kysely, pool } from "@/lib/db";
+import { executeQuery, kysely, pool } from "@/lib/db";
 import type { AppUser } from "@/lib/types";
 
 export const auth = betterAuth({
@@ -48,7 +47,8 @@ export const getCurrentUser = async (): Promise<AppUser | null> => {
   };
 
   try {
-    await pool.query(
+    await executeQuery(
+      pool,
       `INSERT INTO "user" (id, email, name, "emailVerified", "createdAt", "updatedAt")
        VALUES ($1, $2, $3, true, NOW(), NOW())
        ON CONFLICT (id) DO NOTHING`,
