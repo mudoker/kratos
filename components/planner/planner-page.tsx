@@ -38,12 +38,12 @@ const TEMPLATE_TAGS = [
 const SUPERSET_GROUPS = ["None", "A", "B", "C", "D", "E", "F"];
 
 const SUPERSET_COLORS: Record<string, string> = {
-  A: "bg-card/10 text-background/85 border-white/25",
-  B: "bg-card/[0.075] text-background/75 border-white/20",
-  C: "bg-card/[0.06] text-background/70 border-white/15",
-  D: "bg-brand/20 text-background/80 border-white/20",
-  E: "bg-brand/30 text-background/75 border-white/15",
-  F: "bg-card/[0.045] text-background/65 border-white/10",
+  A: "bg-card/10 text-foreground/85 border-border-strong",
+  B: "bg-card/[0.075] text-foreground/75 border-border",
+  C: "bg-card/[0.06] text-foreground/70 border-border",
+  D: "bg-brand/20 text-foreground/80 border-border",
+  E: "bg-brand/30 text-foreground/75 border-border",
+  F: "bg-card/[0.045] text-foreground/65 border-border",
 };
 
 const EFFORT_OPTIONS = [
@@ -984,8 +984,8 @@ export function PlannerPage() {
 
   if (!isClient) {
     return (
-      <div className="flex h-[50vh] items-center justify-center bg-[#0D0D0D]">
-        <Loader2 className="h-8 w-8 animate-spin text-background/60" />
+      <div className="flex h-[50vh] items-center justify-center bg-[color:var(--background)]">
+        <Loader2 className="h-8 w-8 animate-spin text-foreground/60" />
       </div>
     );
   }
@@ -1019,10 +1019,10 @@ export function PlannerPage() {
       : undefined;
 
     return (
-      <div className="w-full min-h-[calc(100dvh-5rem)] space-y-3.5 bg-[#0D0D0D] px-3 py-3 pb-28 text-background sm:space-y-4 sm:px-4 lg:min-h-[calc(100dvh-2rem)] lg:rounded-[28px] lg:p-5 lg:pb-8">
+      <div className="mx-auto w-full max-w-5xl min-h-[calc(100dvh-5rem)] space-y-3 bg-[color:var(--background)] pb-28 text-foreground sm:space-y-4 lg:min-h-[calc(100dvh-2rem)] lg:pb-8">
         
         {/* Sticky top timer bar */}
-        <div className="sticky top-[47px] z-30 -mx-3 border-b border-[#2B2B2B] bg-[#0D0D0D]/95 px-3 py-2.5 backdrop-blur-md sm:-mx-4 sm:px-4 lg:top-0 lg:mx-0 lg:rounded-2xl lg:border lg:px-4">
+        <div className="sticky top-[47px] z-30 rounded-none border-b border-border bg-card px-3 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.035)] sm:rounded-2xl sm:border lg:top-0 lg:px-4">
           <div className="flex items-center justify-between gap-2.5">
             <div className="flex min-w-0 items-center gap-2">
               <Button
@@ -1034,31 +1034,31 @@ export function PlannerPage() {
                   setActiveTab("session");
                 }}
                 aria-label="Back to training"
-                className="h-8 w-8 shrink-0 rounded-lg p-0 text-[#AAAAAA] hover:bg-card/10 hover:text-background"
+                className="h-8 w-8 shrink-0 rounded-lg p-0 text-muted-foreground hover:bg-card/10 hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div className="min-w-0">
-                <h1 className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[10px]">
+                <h1 className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[10px]">
                   Active workout
                 </h1>
-                <p className="mt-0.5 truncate text-sm font-semibold text-background">
+                <p className="mt-0.5 truncate text-sm font-semibold text-foreground">
                   {draftSession.title}
                 </p>
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <div className="flex items-center gap-1 rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] px-2 py-1.5">
-                <Clock className="h-3.5 w-3.5 text-[#AAAAAA]" />
-                <span className="text-xs font-black font-mono tracking-tight text-background">
+              <div className="flex items-center gap-1 rounded-lg border border-border bg-foreground/[0.035] px-2 py-1.5">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-black font-mono tracking-tight text-foreground">
                   {formatTime(elapsedTime)}
                 </span>
               </div>
 
               <Button
                 onClick={() => setIsFinishingWorkout(true)}
-                className="h-8 rounded-lg bg-card px-3 text-[10px] font-bold text-foreground hover:bg-card/90"
+                className="h-8 rounded-lg px-3 text-[10px] font-bold"
               >
                 Finish
               </Button>
@@ -1066,46 +1066,46 @@ export function PlannerPage() {
           </div>
 
           <div className="mt-2.5 flex items-center gap-2.5">
-            <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#1F1F1F]">
-              <div className="h-full rounded-full bg-card transition-all" style={{ width: `${completionPercent}%` }} />
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-foreground/10">
+              <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${completionPercent}%` }} />
             </div>
-            <span className="text-[10px] font-black text-[#AAAAAA]">{completionPercent}%</span>
+            <span className="text-[10px] font-black text-muted-foreground">{completionPercent}%</span>
           </div>
         </div>
 
-        <Card className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 shadow-[0_14px_44px_rgba(0,0,0,0.16)] sm:p-4">
+        <Card className="rounded-xl p-3 sm:rounded-2xl sm:p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-wider text-background/45">Current set</p>
-              <h2 className="mt-1 truncate text-sm font-semibold text-background sm:text-base">
+              <p className="text-[9px] font-black uppercase tracking-wider text-foreground/45">Current set</p>
+              <h2 className="mt-1 truncate text-sm font-semibold text-foreground sm:text-base">
                 {currentItem ? currentItem.exerciseName : "Workout complete"}
               </h2>
-              <p className="mt-1 text-[11px] font-medium text-[#AAAAAA]">
+              <p className="mt-1 text-[11px] font-medium text-muted-foreground">
                 {currentItem && currentSetIndex >= 0
                   ? `Set ${currentSetIndex + 1} of ${currentItem.sets.length}`
                   : "Review and finish your session."}
               </p>
             </div>
-            <div className="rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] px-2.5 py-2 text-right">
-              <p className="text-[9px] font-bold uppercase text-[#AAAAAA]">Done</p>
-              <p className="text-sm font-black text-background">{totalCompletedSets}/{totalPlannedSets}</p>
+            <div className="rounded-xl border border-border bg-foreground/[0.035] px-2.5 py-2 text-right">
+              <p className="text-[9px] font-bold uppercase text-muted-foreground">Done</p>
+              <p className="text-sm font-black text-foreground">{totalCompletedSets}/{totalPlannedSets}</p>
             </div>
           </div>
           {currentItem && currentSetIndex >= 0 ? (
-            <div className="mt-3 grid grid-cols-3 gap-3 border-t border-[#2B2B2B] pt-3">
+            <div className="mt-3 grid grid-cols-3 gap-3 border-t border-border pt-3">
               <div className="min-w-0">
-                <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Target</p>
-                <p className="mt-1 truncate text-[11px] font-semibold text-background">{currentItem.reps || "8-12"} reps</p>
+                <p className="text-[8px] font-bold uppercase text-muted-foreground">Target</p>
+                <p className="mt-1 truncate text-[11px] font-semibold text-foreground">{currentItem.reps || "8-12"} reps</p>
               </div>
               <div className="min-w-0">
-                <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Previous</p>
-                <p className="mt-1 truncate text-[11px] font-semibold text-background">
+                <p className="text-[8px] font-bold uppercase text-muted-foreground">Previous</p>
+                <p className="mt-1 truncate text-[11px] font-semibold text-foreground">
                   {currentPreviousSet ? `${currentPreviousSet.weight || 0} x ${currentPreviousSet.reps}` : "None"}
                 </p>
               </div>
               <div className="min-w-0">
-                <p className="text-[8px] font-bold uppercase text-[#AAAAAA]">Rest</p>
-                <p className="mt-1 text-[11px] font-semibold text-background">{currentItem.restSeconds || 90}s</p>
+                <p className="text-[8px] font-bold uppercase text-muted-foreground">Rest</p>
+                <p className="mt-1 text-[11px] font-semibold text-foreground">{currentItem.restSeconds || 90}s</p>
               </div>
             </div>
           ) : null}
@@ -1142,8 +1142,8 @@ export function PlannerPage() {
               <Card
                 key={item.id}
                 className={cn(
-                  "rounded-2xl border bg-[#181818] p-3.5 space-y-3 transition sm:p-4",
-                  isCurrentExercise ? "border-white/25 shadow-[0_14px_52px_rgba(255,255,255,0.05)]" : "border-[#2B2B2B]"
+                  "rounded-2xl border bg-card p-3.5 space-y-3 transition sm:p-4",
+                  isCurrentExercise ? "border-border-strong shadow-[0_14px_52px_rgba(255,255,255,0.05)]" : "border-border"
                 )}
               >
                 
@@ -1153,14 +1153,14 @@ export function PlannerPage() {
                 >
                   <div className="min-w-0 space-y-0.5">
                     <div className="flex items-center gap-1.5">
-                      <h3 className="truncate text-sm font-semibold text-background transition-colors group-hover:text-background/75">
+                      <h3 className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-foreground/75">
                         {item.exerciseName}
                       </h3>
                       {isFavorite && <Star className="h-3 w-3 fill-[#FFB547] text-[#FFB547]" />}
                     </div>
                     
                     {!isExpanded && (
-                      <p className="text-[10px] text-[#AAAAAA] font-medium">
+                      <p className="text-[10px] text-muted-foreground font-medium">
                         {item.sets.length} sets • PR: {pr ? `${pr.weight} kg x ${pr.reps}` : "None"}
                       </p>
                     )}
@@ -1168,14 +1168,14 @@ export function PlannerPage() {
                   
                   <div className="flex items-center gap-2">
                     {extras.supersetGroup && (
-                      <Badge className={cn("text-[7.5px] font-black border uppercase px-1.5 py-0.25", SUPERSET_COLORS[extras.supersetGroup] || "bg-[#2B2B2B]")}>
+                      <Badge className={cn("text-[7.5px] font-black border uppercase px-1.5 py-0.25", SUPERSET_COLORS[extras.supersetGroup] || "bg-foreground/10")}>
                         SS {extras.supersetGroup}
                       </Badge>
                     )}
                     {isExpanded ? (
-                      <ChevronUp className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                      <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
                     ) : (
-                      <ChevronDown className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                     )}
                   </div>
                 </div>
@@ -1184,18 +1184,18 @@ export function PlannerPage() {
                   <div className="space-y-3 pt-1">
                     
                     {/* Previous/Best records panel */}
-                    <div className="hidden grid-cols-2 gap-3 text-[10px] bg-[#1F1F1F] p-2.5 rounded-lg border border-[#2B2B2B] sm:grid">
+                    <div className="hidden grid-cols-2 gap-3 text-[10px] bg-foreground/[0.035] p-2.5 rounded-lg border border-border sm:grid">
                       <div className="space-y-0.5">
-                        <span className="text-[8px] font-bold uppercase text-[#AAAAAA]">Personal Record</span>
-                        <p className="font-bold text-background">
+                        <span className="text-[8px] font-bold uppercase text-muted-foreground">Personal Record</span>
+                        <p className="font-bold text-foreground">
                           {pr ? `${pr.weight} kg x ${pr.reps}` : "No logged record"}
                         </p>
                       </div>
                       <div className="space-y-0.5">
-                        <span className="text-[8px] font-bold uppercase text-[#AAAAAA]">
+                        <span className="text-[8px] font-bold uppercase text-muted-foreground">
                           Last Session {prevPerf ? `(${prevPerf.date})` : ""}
                         </span>
-                        <p className="font-bold text-background truncate">
+                        <p className="font-bold text-foreground truncate">
                           {prevPerf 
                             ? prevPerf.sets.map((s) => `${s.weight}x${s.reps}`).join(", ")
                             : "No logged history"}
@@ -1205,7 +1205,7 @@ export function PlannerPage() {
 
                     {/* Sets Logger Table */}
                     <div className="space-y-2">
-                      <div className="grid grid-cols-[26px_1fr_1fr_40px] gap-2 text-[8px] font-bold text-[#AAAAAA] uppercase tracking-wider text-center sm:grid-cols-[32px_1fr_1fr_44px]">
+                      <div className="grid grid-cols-[26px_1fr_1fr_40px] gap-2 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-center sm:grid-cols-[32px_1fr_1fr_44px]">
                         <span>Set</span>
                         <span>Kg</span>
                         <span>Reps</span>
@@ -1226,7 +1226,7 @@ export function PlannerPage() {
                               "grid grid-cols-[26px_1fr_1fr_40px] gap-2 items-center rounded-xl border p-1 text-center transition-all sm:grid-cols-[32px_1fr_1fr_44px]",
                               isDone 
                                 ? "bg-[#34C759]/5 text-[#34C759] border-[#34C759]/20" 
-                                : "bg-[#1F1F1F]/40 border-transparent"
+                                : "bg-foreground/[0.03] border-transparent"
                             )}
                           >
                             <span className="text-[10px] font-black">{setIdx + 1}</span>
@@ -1237,7 +1237,7 @@ export function PlannerPage() {
                               placeholder={prevSet?.weight || "0"}
                               value={set.weight}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "weight", e.target.value)}
-                              className="h-10 rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-center text-sm font-semibold text-background focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-9"
+                              className="h-10 rounded-xl border border-border bg-foreground/[0.035] text-center text-sm font-semibold text-foreground focus-visible:ring-0 focus-visible:bg-foreground/10 sm:h-9"
                             />
                             
                             <Input
@@ -1246,7 +1246,7 @@ export function PlannerPage() {
                               placeholder={prevSet?.reps || "8"}
                               value={set.reps}
                               onChange={(e) => handleUpdateActiveSetField(itemIdx, setIdx, "reps", e.target.value)}
-                              className="h-10 rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] text-center text-sm font-semibold text-background focus-visible:ring-0 focus-visible:bg-[#2B2B2B] sm:h-9"
+                              className="h-10 rounded-xl border border-border bg-foreground/[0.035] text-center text-sm font-semibold text-foreground focus-visible:ring-0 focus-visible:bg-foreground/10 sm:h-9"
                             />
 
                             <Button
@@ -1256,8 +1256,8 @@ export function PlannerPage() {
                               className={cn(
                                 "mx-auto flex h-8 w-8 items-center justify-center rounded-full border p-0 transition-all active:scale-95 sm:h-9 sm:w-9",
                                 isDone
-                                  ? "bg-[#34C759] border-[#34C759] text-background"
-                                  : "border-[#2B2B2B] text-transparent hover:border-[#AAAAAA]"
+                                  ? "bg-[#34C759] border-[#34C759] text-foreground"
+                                  : "border-border text-transparent hover:border-[#AAAAAA]"
                               )}
                             >
                               <Check className="h-3.5 w-3.5 stroke-[3.5]" />
@@ -1279,7 +1279,7 @@ export function PlannerPage() {
                         size="sm"
                         onClick={() => handleRemoveSetActiveSession(itemIdx, item.sets.length - 1)}
                         disabled={item.sets.length <= 1}
-                        className="h-7 rounded-lg text-[9px] font-bold text-[#AAAAAA] hover:text-background hover:bg-card/10 gap-1"
+                        className="h-7 rounded-lg text-[9px] font-bold text-muted-foreground hover:text-foreground hover:bg-card/10 gap-1"
                       >
                         <Minus className="h-3 w-3" /> Remove
                       </Button>
@@ -1287,7 +1287,7 @@ export function PlannerPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleAddSetActiveSession(itemIdx)}
-                        className="h-7 rounded-lg text-[9px] font-bold text-background/70 hover:bg-card/10 hover:text-background gap-1"
+                        className="h-7 rounded-lg text-[9px] font-bold text-foreground/70 hover:bg-card/10 hover:text-foreground gap-1"
                       >
                         <Plus className="h-3 w-3" /> Add
                       </Button>
@@ -1300,8 +1300,8 @@ export function PlannerPage() {
           })}
         </div>
 
-        <Card className="p-3.5 border border-[#2B2B2B] bg-[#181818] rounded-xl space-y-3 sm:p-4">
-          <span className="hidden text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider sm:block">
+        <Card className="rounded-xl p-3 sm:p-4">
+          <span className="hidden text-[9px] font-bold text-muted-foreground uppercase tracking-wider sm:block">
             Add exercise
           </span>
           <Button
@@ -1310,7 +1310,8 @@ export function PlannerPage() {
               setIsExercisePickerOpen(true);
               setPickerSearchQuery("");
             }}
-            className="w-full h-8.5 rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-background hover:bg-[#2B2B2B] text-xs font-semibold gap-1"
+            variant="outline"
+            className="w-full h-8.5 rounded-lg text-xs font-semibold gap-1"
           >
             <Plus className="h-4 w-4" /> Add Exercise
           </Button>
@@ -1321,19 +1322,19 @@ export function PlannerPage() {
           {restSecondsLeft !== null ? (
             <motion.div
               layoutId="restTimerWidget"
-              className="bg-[#181818] border border-[#2B2B2B] text-background p-2.5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex items-center gap-2 select-none sm:p-3 sm:gap-3"
+              className="bg-card border border-border text-foreground p-2.5 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.12)] flex items-center gap-2 select-none sm:p-3 sm:gap-3"
             >
               <div 
                 onClick={() => setIsRestTimerExpanded(!isRestTimerExpanded)}
                 className="flex flex-col items-center cursor-pointer min-w-[40px]"
               >
-                <span className="text-[7.5px] font-bold uppercase text-[#AAAAAA] tracking-wider">Rest</span>
+                <span className="text-[7.5px] font-bold uppercase text-muted-foreground tracking-wider">Rest</span>
                 <span className="text-sm font-black font-mono mt-0.5 leading-none">
                   {restSecondsLeft}s
                 </span>
               </div>
               
-              <div className="h-6 w-px bg-[#2B2B2B]" />
+              <div className="h-6 w-px bg-foreground/10" />
 
               <div className="flex items-center gap-1">
                 <Button
@@ -1341,12 +1342,12 @@ export function PlannerPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setRestTimerIsPaused(!restTimerIsPaused)}
-                  className="h-7 w-7 rounded-lg p-0 text-background hover:bg-card/10"
+                  className="h-7 w-7 rounded-lg p-0 text-foreground hover:bg-card/10"
                 >
                   {restTimerIsPaused ? (
-                    <Play className="h-3.5 w-3.5 fill-current text-background" />
+                    <Play className="h-3.5 w-3.5 fill-current text-foreground" />
                   ) : (
-                    <Pause className="h-3.5 w-3.5 fill-current text-background" />
+                    <Pause className="h-3.5 w-3.5 fill-current text-foreground" />
                   )}
                 </Button>
                 <Button
@@ -1354,7 +1355,7 @@ export function PlannerPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setRestSecondsLeft(restTimerDuration)}
-                  className="h-7 w-7 rounded-lg p-0 text-[#AAAAAA] hover:bg-card/10 hover:text-background"
+                  className="h-7 w-7 rounded-lg p-0 text-muted-foreground hover:bg-card/10 hover:text-foreground"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                 </Button>
@@ -1363,7 +1364,7 @@ export function PlannerPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setRestSecondsLeft((prev) => (prev ? prev + 15 : 15))}
-                  className="h-7 rounded-lg bg-[#2B2B2B] px-2 py-0 text-[8px] font-bold text-background hover:bg-[#2B2B2B]/80"
+                  className="h-7 rounded-lg bg-foreground/10 px-2 py-0 text-[8px] font-bold text-foreground hover:bg-foreground/10"
                 >
                   +15s
                 </Button>
@@ -1372,7 +1373,7 @@ export function PlannerPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setRestSecondsLeft((prev) => (prev && prev > 15 ? prev - 15 : 1))}
-                  className="hidden h-7 rounded-lg bg-[#2B2B2B] px-2 py-0 text-[8px] font-bold text-background hover:bg-[#2B2B2B]/80 sm:inline-flex"
+                  className="hidden h-7 rounded-lg bg-foreground/10 px-2 py-0 text-[8px] font-bold text-foreground hover:bg-foreground/10 sm:inline-flex"
                 >
                   -15s
                 </Button>
@@ -1381,7 +1382,7 @@ export function PlannerPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsAudioEnabled(!isAudioEnabled)}
-                  className="h-7 w-7 rounded-lg p-0 text-[#AAAAAA] hover:bg-card/10 hover:text-background"
+                  className="h-7 w-7 rounded-lg p-0 text-muted-foreground hover:bg-card/10 hover:text-foreground"
                 >
                   {isAudioEnabled ? <Volume2 className="h-3.5 w-3.5 text-[#34C759]" /> : <VolumeX className="h-3.5 w-3.5 text-[#FF5A5F]" />}
                 </Button>
@@ -1405,7 +1406,7 @@ export function PlannerPage() {
                 setRestSecondsLeft(90);
                 setRestTimerIsPaused(false);
               }}
-              className="h-10 w-10 rounded-full bg-card text-foreground hover:bg-card/90 shadow-lg"
+              className="h-10 w-10 rounded-full shadow-lg"
             >
               <Timer className="h-5 w-5" />
             </Button>
@@ -1414,30 +1415,30 @@ export function PlannerPage() {
 
         {/* FINISH WORKOUT SUMMARY MODAL */}
         <Dialog open={isFinishingWorkout} onOpenChange={setIsFinishingWorkout}>
-          <DialogContent className="max-w-md rounded-2xl p-5 border-none bg-[#181818] text-background">
-            <DialogHeader className="pb-3 pr-10 border-b border-[#2B2B2B]">
+          <DialogContent className="max-w-md rounded-2xl p-5 border-none bg-card text-foreground">
+            <DialogHeader className="pb-3 pr-10 border-b border-border">
               <div>
-                <DialogTitle className="text-base font-bold text-background">Finish Workout</DialogTitle>
-                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                <DialogTitle className="text-base font-bold text-foreground">Finish Workout</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
                   Rate fatigue and save historic session log
                 </DialogDescription>
               </div>
             </DialogHeader>
 
             <div className="space-y-5 pt-3">
-              <div className="grid grid-cols-2 gap-3 p-3 bg-[#1F1F1F] border border-[#2B2B2B] rounded-xl text-center">
+              <div className="grid grid-cols-2 gap-3 p-3 bg-foreground/[0.035] border border-border rounded-xl text-center">
                 <div>
-                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase block">Duration</span>
-                  <span className="text-xs font-black text-background font-mono">{formatTime(elapsedTime)}</span>
+                  <span className="text-[8px] font-bold text-muted-foreground uppercase block">Duration</span>
+                  <span className="text-xs font-black text-foreground font-mono">{formatTime(elapsedTime)}</span>
                 </div>
                 <div>
-                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase block">Sets Logged</span>
-                  <span className="text-xs font-black text-background font-mono">{totalCompletedSets} Sets</span>
+                  <span className="text-[8px] font-bold text-muted-foreground uppercase block">Sets Logged</span>
+                  <span className="text-xs font-black text-foreground font-mono">{totalCompletedSets} Sets</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider px-0.5">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-0.5">
                   How did this feel?
                 </span>
                 <div className="grid grid-cols-5 gap-1.5">
@@ -1450,10 +1451,10 @@ export function PlannerPage() {
                         variant="ghost"
                         onClick={() => setSelectedEffort(opt.value)}
                         className={cn(
-                          "h-auto min-w-0 flex-col items-center justify-center rounded-xl border p-2 transition-all active:scale-95 hover:bg-[#2B2B2B]",
+                          "h-auto min-w-0 flex-col items-center justify-center rounded-xl border p-2 transition-all active:scale-95 hover:bg-foreground/10",
                           isSelected
-                            ? "bg-card border-white text-foreground"
-                            : "bg-[#1F1F1F]/40 border-[#2B2B2B] text-[#AAAAAA] hover:bg-[#2B2B2B]"
+                            ? "bg-card border-brand text-foreground"
+                            : "bg-foreground/[0.03] border-border text-muted-foreground hover:bg-foreground/10"
                         )}
                       >
                         <span className="text-base">{opt.emoji}</span>
@@ -1467,7 +1468,7 @@ export function PlannerPage() {
               </div>
 
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider px-0.5">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider px-0.5">
                   Session Notes
                 </span>
                 <Textarea
@@ -1475,7 +1476,7 @@ export function PlannerPage() {
                   onChange={(e) => setFeedbackNotes(e.target.value)}
                   placeholder="Notes about specific weights, minor fatigue levels..."
                   rows={2}
-                  className="rounded-xl border border-[#2B2B2B] bg-[#1F1F1F] p-3 text-xs font-medium focus-visible:ring-0 resize-none text-background placeholder-[#AAAAAA]"
+                  className="rounded-xl border border-border bg-foreground/[0.035] p-3 text-xs font-medium focus-visible:ring-0 resize-none text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
@@ -1483,7 +1484,7 @@ export function PlannerPage() {
                 <Button
                   onClick={handleSaveWorkoutSession}
                   disabled={saving}
-                  className="h-11 rounded-xl bg-card text-xs font-bold text-foreground hover:bg-card/90"
+                  className="h-11 rounded-xl text-xs font-bold"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
                   Save workout
@@ -1508,11 +1509,11 @@ export function PlannerPage() {
 
         {/* EXERCISE PICKER DIALOG */}
         <Dialog open={isExercisePickerOpen} onOpenChange={setIsExercisePickerOpen}>
-          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-4 border-none bg-[#181818] text-background">
-            <DialogHeader className="pb-3 pr-10 border-b border-[#2B2B2B]">
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-4 border-none bg-card text-foreground">
+            <DialogHeader className="pb-3 pr-10 border-b border-border">
               <div>
-                <DialogTitle className="text-base font-bold text-background">Add Exercise</DialogTitle>
-                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                <DialogTitle className="text-base font-bold text-foreground">Add Exercise</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
                   Search catalog for ad-hoc additions
                 </DialogDescription>
               </div>
@@ -1520,12 +1521,12 @@ export function PlannerPage() {
 
             <div className="space-y-4 pt-3">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={pickerSearchQuery}
                   onChange={(e) => setPickerSearchQuery(e.target.value)}
                   placeholder="Fuzzy search movement..."
-                  className="pl-9 h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-background placeholder-[#AAAAAA] text-xs font-semibold focus-visible:ring-1 focus-visible:ring-brand"
+                  className="pl-9 h-9 rounded-lg border-border bg-foreground/[0.035] text-foreground placeholder:text-muted-foreground text-xs font-semibold focus-visible:ring-1 focus-visible:ring-brand"
                   autoFocus
                 />
               </div>
@@ -1538,10 +1539,10 @@ export function PlannerPage() {
                       addExerciseToActiveSession(ex.id);
                       setIsExercisePickerOpen(false);
                     }}
-                    className="p-2.5 bg-[#1F1F1F] hover:bg-[#2B2B2B]/40 rounded-lg border border-[#2B2B2B]/60 cursor-pointer transition-colors"
+                    className="p-2.5 bg-foreground/[0.035] hover:bg-foreground/10 rounded-lg border border-border cursor-pointer transition-colors"
                   >
-                    <h4 className="text-xs font-bold text-background">{ex.name}</h4>
-                    <span className="text-[9.5px] text-[#AAAAAA] font-semibold mt-0.5 block">
+                    <h4 className="text-xs font-bold text-foreground">{ex.name}</h4>
+                    <span className="text-[9.5px] text-muted-foreground font-semibold mt-0.5 block">
                       {ex.category} • {ex.equipment}
                     </span>
                   </div>
@@ -1560,7 +1561,7 @@ export function PlannerPage() {
   // ==========================================
   if (isEditingSplit && activeDraftPlan) {
     return (
-      <div className="mx-auto max-w-xl pb-32 space-y-3.5 bg-[#0D0D0D] text-background sm:space-y-4 lg:pb-16">
+      <div className="mx-auto max-w-xl pb-32 space-y-3.5 bg-[color:var(--background)] text-foreground sm:space-y-4 lg:pb-16">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -1569,37 +1570,37 @@ export function PlannerPage() {
               setIsEditingSplit(false);
               setActiveDraftPlan(null);
             }}
-            className="rounded-lg px-2 text-[#AAAAAA] hover:text-background"
+            className="rounded-lg px-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4.5 w-4.5" />
           </Button>
           <div>
-            <h1 className="text-base font-semibold tracking-tight text-background">Edit plan</h1>
-            <p className="text-[10px] text-[#AAAAAA]">Configure targets and set schema</p>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">Edit plan</h1>
+            <p className="text-[10px] text-muted-foreground">Configure targets and set schema</p>
           </div>
         </div>
 
         {/* Global info cards */}
-        <Card className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 space-y-3 sm:p-4">
+        <Card className="rounded-2xl border border-border bg-card p-3.5 space-y-3 sm:p-4">
           <div className="space-y-1">
-            <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Plan Name</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Plan Name</span>
             <Input
               value={activeDraftPlan.name}
               maxLength={100}
               onChange={(e) => updateDraftPlanName(e.target.value)}
               placeholder="e.g. Upper Body Hypertrophy"
-              className="h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-background px-3 text-xs font-semibold focus-visible:ring-1 focus-visible:ring-brand"
+              className="h-9 rounded-lg border-border bg-foreground/[0.035] text-foreground px-3 text-xs font-semibold focus-visible:ring-1 focus-visible:ring-brand"
             />
           </div>
           <div className="space-y-1">
-            <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Description</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Description</span>
             <Textarea
               value={activeDraftPlan.notes}
               maxLength={500}
               onChange={(e) => updateDraftPlanNotes(e.target.value)}
               placeholder="Primary hypertrophy targets, tempos..."
               rows={2}
-              className="rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-background p-3 text-xs font-medium focus-visible:ring-0 focus-visible:ring-brand resize-none"
+              className="rounded-lg border-border bg-foreground/[0.035] text-foreground p-3 text-xs font-medium focus-visible:ring-0 focus-visible:ring-brand resize-none"
             />
           </div>
         </Card>
@@ -1607,10 +1608,10 @@ export function PlannerPage() {
         {/* Days List */}
         <div className="space-y-3">
           {activeDraftPlan.days.map((day, dayIndex) => (
-            <Card key={day.id} className="rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 space-y-3 sm:p-4">
-              <div className="flex justify-between items-center pb-2.5 border-b border-[#2B2B2B]">
+            <Card key={day.id} className="rounded-2xl border border-border bg-card p-3.5 space-y-3 sm:p-4">
+              <div className="flex justify-between items-center pb-2.5 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <span className="h-5 w-5 bg-[#1F1F1F] border border-[#2B2B2B] text-background rounded flex items-center justify-center text-[10px] font-black">
+                  <span className="h-5 w-5 bg-foreground/[0.035] border border-border text-foreground rounded flex items-center justify-center text-[10px] font-black">
                     {dayIndex + 1}
                   </span>
                   <Input
@@ -1626,7 +1627,7 @@ export function PlannerPage() {
                   size="icon"
                   onClick={() => removeWorkoutDay(day.id)}
                   disabled={activeDraftPlan.days.length <= 1}
-                  className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F] disabled:opacity-30"
+                  className="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F] disabled:opacity-30"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -1635,28 +1636,28 @@ export function PlannerPage() {
               {/* Day settings grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Focus Area</span>
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Focus Area</span>
                   <Input
                     value={day.focus}
                     onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, focus: e.target.value }))}
                     placeholder="e.g. Chest & Shoulders"
-                    className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2.5 text-[11px] font-semibold focus-visible:ring-0"
+                    className="h-8 rounded-lg border-border bg-foreground/[0.035] px-2.5 text-[11px] font-semibold focus-visible:ring-0"
                   />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Warmup description</span>
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Warmup description</span>
                   <Input
                     value={day.warmup}
                     onChange={(e) => updateDraftDay(day.id, (d) => ({ ...d, warmup: e.target.value }))}
                     placeholder="Incline walks, bands..."
-                    className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2.5 text-[11px] font-medium focus-visible:ring-0"
+                    className="h-8 rounded-lg border-border bg-foreground/[0.035] px-2.5 text-[11px] font-medium focus-visible:ring-0"
                   />
                 </div>
               </div>
 
               {/* Target muscles list toggles */}
               <div className="space-y-1.5">
-                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Target Muscles</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Target Muscles</span>
                 <div className="flex flex-wrap gap-1">
                   {AVAILABLE_MUSCLES.map((muscle) => {
                     const isSelected = (day.targetMuscles || []).includes(muscle);
@@ -1670,8 +1671,8 @@ export function PlannerPage() {
                         className={cn(
                           "h-6 rounded-full px-2 py-0 text-[9px] font-bold transition-all",
                           isSelected
-                            ? "bg-card/10 text-background border-white/20"
-                            : "bg-[#1F1F1F] text-[#AAAAAA] border-[#2B2B2B] hover:text-background"
+                            ? "bg-card/10 text-foreground border-border"
+                            : "bg-foreground/[0.035] text-muted-foreground border-border hover:text-foreground"
                         )}
                       >
                         {muscle}
@@ -1682,9 +1683,9 @@ export function PlannerPage() {
               </div>
 
               {/* Exercises within the day */}
-              <div className="space-y-3 pt-3 border-t border-[#2B2B2B]">
+              <div className="space-y-3 pt-3 border-t border-border">
                 <div className="flex justify-between items-center">
-                  <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Exercise templates</span>
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Exercise templates</span>
                 </div>
 
                 {day.items.length > 0 ? (
@@ -1699,42 +1700,42 @@ export function PlannerPage() {
                       const setList = deserializeSetArray(item.sets, item.reps, item.targetLoad);
 
                       return (
-                        <div key={item.id} className="border border-[#2B2B2B] bg-[#1F1F1F] rounded-xl overflow-hidden">
+                        <div key={item.id} className="border border-border bg-foreground/[0.035] rounded-xl overflow-hidden">
                           
                           {/* COLLAPSED HEADER */}
                           <div 
                             onClick={() => setExpandedExerciseId(isExpanded ? null : item.id)}
-                            className="p-3 flex items-center justify-between cursor-pointer hover:bg-[#2B2B2B]/20 transition-colors"
+                            className="p-3 flex items-center justify-between cursor-pointer hover:bg-foreground/5 transition-colors"
                           >
                             <div className="flex items-center gap-2">
                               {extras.supersetGroup && (
-                                <Badge className={cn("text-[8px] font-extrabold px-1 border", SUPERSET_COLORS[extras.supersetGroup] || "bg-[#2B2B2B]")}>
+                                <Badge className={cn("text-[8px] font-extrabold px-1 border", SUPERSET_COLORS[extras.supersetGroup] || "bg-foreground/10")}>
                                   SS {extras.supersetGroup}
                                 </Badge>
                               )}
-                              <span className="text-xs font-bold text-background leading-none">{exerciseName}</span>
+                              <span className="text-xs font-bold text-foreground leading-none">{exerciseName}</span>
                               {isFavorite && <Star className="h-3 w-3 fill-[#FFB547] text-[#FFB547] shrink-0" />}
                             </div>
                             
                             <div className="flex items-center gap-3">
-                              <span className="text-[10px] font-bold text-[#AAAAAA]">
+                              <span className="text-[10px] font-bold text-muted-foreground">
                                 {item.sets} {item.sets === 1 ? "set" : "sets"} • {item.restSeconds}s rest
                               </span>
                               {isExpanded ? (
-                                <ChevronUp className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                                <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
                               ) : (
-                                <ChevronDown className="h-3.5 w-3.5 text-[#AAAAAA]" />
+                                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                               )}
                             </div>
                           </div>
 
                           {/* EXPANDED DETAILS */}
                           {isExpanded && (
-                            <div className="p-3 border-t border-[#2B2B2B] space-y-3.5 bg-[#181818]">
+                            <div className="p-3 border-t border-border space-y-3.5 bg-card">
                               
                               {/* Exercise actions */}
-                              <div className="flex justify-between items-center pb-2 border-b border-[#2B2B2B]">
-                                <span className="text-[9.5px] font-bold text-[#AAAAAA]">
+                              <div className="flex justify-between items-center pb-2 border-b border-border">
+                                <span className="text-[9.5px] font-bold text-muted-foreground">
                                   Muscle: {exercise?.category || "Other"} • {exercise?.equipment || "Barbell"}
                                 </span>
                                 
@@ -1744,7 +1745,7 @@ export function PlannerPage() {
                                     variant="outline"
                                     size="icon"
                                     onClick={() => moveExerciseInDay(day.id, item.id, "up")}
-                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#2B2B2B] hover:text-background"
+                                    className="h-7 w-7 rounded-lg border-border bg-foreground/[0.035] p-0 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                                   >
                                     <ChevronUp className="h-3.5 w-3.5" />
                                   </Button>
@@ -1753,7 +1754,7 @@ export function PlannerPage() {
                                     variant="outline"
                                     size="icon"
                                     onClick={() => moveExerciseInDay(day.id, item.id, "down")}
-                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#2B2B2B] hover:text-background"
+                                    className="h-7 w-7 rounded-lg border-border bg-foreground/[0.035] p-0 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                                   >
                                     <ChevronDown className="h-3.5 w-3.5" />
                                   </Button>
@@ -1762,7 +1763,7 @@ export function PlannerPage() {
                                     variant="outline"
                                     size="icon"
                                     onClick={() => duplicateExerciseInDay(day.id, item)}
-                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-card/10 hover:text-background"
+                                    className="h-7 w-7 rounded-lg border-border bg-foreground/[0.035] p-0 text-muted-foreground hover:bg-card/10 hover:text-foreground"
                                   >
                                     <Copy className="h-3.5 w-3.5" />
                                   </Button>
@@ -1771,7 +1772,7 @@ export function PlannerPage() {
                                     variant="outline"
                                     size="icon"
                                     onClick={() => removeExerciseFromDay(day.id, item.id)}
-                                    className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
+                                    className="h-7 w-7 rounded-lg border-border bg-foreground/[0.035] p-0 text-muted-foreground hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
@@ -1781,12 +1782,12 @@ export function PlannerPage() {
                               {/* Rest & superset options */}
                               <div className="grid grid-cols-2 gap-3.5">
                                 <div className="space-y-1">
-                                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Rest Time</span>
+                                  <span className="text-[8px] font-bold text-muted-foreground uppercase">Rest Time</span>
                                   <Select
                                     value={String(item.restSeconds)}
                                     onValueChange={(value) => updateExerciseField(day.id, item.id, "restSeconds", parseInt(value))}
                                   >
-                                    <SelectTrigger className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-[10px] text-background focus:ring-0">
+                                    <SelectTrigger className="h-8 rounded-lg border-border bg-foreground/[0.035] px-2 text-[10px] text-foreground focus:ring-0">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1799,7 +1800,7 @@ export function PlannerPage() {
                                   </Select>
                                 </div>
                                 <div className="space-y-1">
-                                  <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Superset Link</span>
+                                  <span className="text-[8px] font-bold text-muted-foreground uppercase">Superset Link</span>
                                   <Select
                                     value={extras.supersetGroup || "None"}
                                     onValueChange={(value) => {
@@ -1807,7 +1808,7 @@ export function PlannerPage() {
                                       updateExerciseField(day.id, item.id, "prGoal", serializeExtraFields(extras.tags, groupVal));
                                     }}
                                   >
-                                    <SelectTrigger className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-[10px] text-background focus:ring-0">
+                                    <SelectTrigger className="h-8 rounded-lg border-border bg-foreground/[0.035] px-2 text-[10px] text-foreground focus:ring-0">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1823,7 +1824,7 @@ export function PlannerPage() {
 
                               {/* Tags selection */}
                               <div className="space-y-1.5">
-                                <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Exercise Tags</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase">Exercise Tags</span>
                                 <div className="flex flex-wrap gap-1">
                                   {TEMPLATE_TAGS.map((tag) => {
                                     const isTagged = extras.tags.includes(tag);
@@ -1842,8 +1843,8 @@ export function PlannerPage() {
                                         className={cn(
                                           "h-6 rounded-lg px-2 py-0 text-[8px] font-bold transition-all",
                                           isTagged
-                                            ? "bg-card/10 text-background border-white/20"
-                                            : "bg-[#1F1F1F] text-[#AAAAAA] border-[#2B2B2B]"
+                                            ? "bg-card/10 text-foreground border-border"
+                                            : "bg-foreground/[0.035] text-muted-foreground border-border"
                                         )}
                                       >
                                         {tag}
@@ -1855,20 +1856,20 @@ export function PlannerPage() {
 
                               {/* Exercise notes */}
                               <div className="space-y-1">
-                                <span className="text-[8px] font-bold text-[#AAAAAA] uppercase">Instructions / Notes</span>
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase">Instructions / Notes</span>
                                 <Input
                                   value={item.notes}
                                   onChange={(e) => updateExerciseField(day.id, item.id, "notes", e.target.value)}
                                   placeholder="e.g. Focus on deep stretch at bottom of range"
-                                  className="h-7 text-[10.5px] rounded bg-[#1F1F1F] border-[#2B2B2B] text-background px-2 focus-visible:ring-0"
+                                  className="h-7 text-[10.5px] rounded bg-foreground/[0.035] border-border text-foreground px-2 focus-visible:ring-0"
                                 />
                               </div>
 
                               {/* Sets Table */}
                               <div className="space-y-1.5 pt-2">
-                                <span className="text-[8.5px] font-bold text-[#AAAAAA] uppercase">Set Schema</span>
+                                <span className="text-[8.5px] font-bold text-muted-foreground uppercase">Set Schema</span>
                                 <div className="space-y-1.5">
-                                  <div className="grid grid-cols-[30px_1fr_1fr_45px] gap-2 text-[8px] font-black text-[#AAAAAA] uppercase text-center">
+                                  <div className="grid grid-cols-[30px_1fr_1fr_45px] gap-2 text-[8px] font-black text-muted-foreground uppercase text-center">
                                     <span>Set</span>
                                     <span>Weight (kg)</span>
                                     <span>Reps Target</span>
@@ -1877,19 +1878,19 @@ export function PlannerPage() {
                                   
                                   {setList.map((set, setIdx) => (
                                     <div key={setIdx} className="grid grid-cols-[30px_1fr_1fr_45px] gap-2 items-center text-center">
-                                      <span className="text-[10px] font-bold text-[#AAAAAA]">{setIdx + 1}</span>
+                                      <span className="text-[10px] font-bold text-muted-foreground">{setIdx + 1}</span>
                                       <Input
                                         type="number"
                                         placeholder="Load"
                                         value={set.weight}
                                         onChange={(e) => handleUpdateTemplateSet(day.id, item.id, setIdx, "weight", e.target.value, item)}
-                                        className="h-7 text-center rounded bg-[#1F1F1F] border-[#2B2B2B] text-[10px] font-bold"
+                                        className="h-7 text-center rounded bg-foreground/[0.035] border-border text-[10px] font-bold"
                                       />
                                       <Input
                                         placeholder="Target reps"
                                         value={set.reps}
                                         onChange={(e) => handleUpdateTemplateSet(day.id, item.id, setIdx, "reps", e.target.value, item)}
-                                        className="h-7 text-center rounded bg-[#1F1F1F] border-[#2B2B2B] text-[10px] font-bold"
+                                        className="h-7 text-center rounded bg-foreground/[0.035] border-border text-[10px] font-bold"
                                       />
                                       <div className="flex items-center gap-1">
                                         <Button
@@ -1897,7 +1898,7 @@ export function PlannerPage() {
                                           variant="outline"
                                           size="icon"
                                           onClick={() => handleDuplicateTemplateSet(day.id, item.id, setIdx, item)}
-                                          className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#2B2B2B] hover:text-background"
+                                          className="h-7 w-7 rounded-lg border-border bg-foreground/[0.035] p-0 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
                                         >
                                           <Copy className="h-3 w-3" />
                                         </Button>
@@ -1907,7 +1908,7 @@ export function PlannerPage() {
                                           size="icon"
                                           onClick={() => handleRemoveTemplateSet(day.id, item.id, setIdx, item)}
                                           disabled={setList.length <= 1}
-                                          className="h-7 w-7 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F] disabled:opacity-20"
+                                          className="h-7 w-7 rounded-lg border-border bg-foreground/[0.035] p-0 text-muted-foreground hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F] disabled:opacity-20"
                                         >
                                           <Trash2 className="h-3 w-3" />
                                         </Button>
@@ -1920,7 +1921,7 @@ export function PlannerPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleAddTemplateSet(day.id, item.id, item)}
-                                  className="h-7 w-full text-[9px] font-bold text-background/75 hover:bg-card/10 hover:text-background rounded mt-1.5 gap-1"
+                                  className="h-7 w-full text-[9px] font-bold text-foreground/75 hover:bg-card/10 hover:text-foreground rounded mt-1.5 gap-1"
                                 >
                                   <Plus className="h-3 w-3" /> Add Set Schema
                                 </Button>
@@ -1933,7 +1934,7 @@ export function PlannerPage() {
                     })}
                   </div>
                 ) : (
-                  <p className="text-[10px] text-[#AAAAAA] italic">No exercises templates added.</p>
+                  <p className="text-[10px] text-muted-foreground italic">No exercises templates added.</p>
                 )}
 
                 <div className="pt-2">
@@ -1943,7 +1944,7 @@ export function PlannerPage() {
                       setIsExercisePickerOpen(true);
                       setPickerSearchQuery("");
                     }}
-                    className="w-full h-8.5 rounded-lg border border-[#2B2B2B] bg-[#1F1F1F] text-background hover:bg-[#2B2B2B] text-xs font-semibold gap-1.5"
+                    className="w-full h-8.5 rounded-lg border border-border bg-foreground/[0.035] text-foreground hover:bg-foreground/10 text-xs font-semibold gap-1.5"
                   >
                     <Plus className="h-4 w-4" /> Add Exercise Template
                   </Button>
@@ -1954,11 +1955,11 @@ export function PlannerPage() {
         </div>
 
         {/* Action row at bottom */}
-        <div className="flex gap-2 sticky bottom-20 bg-[#0D0D0D] py-2 z-30 border-t border-[#2B2B2B] lg:bottom-0">
+        <div className="flex gap-2 sticky bottom-20 bg-[color:var(--background)] py-2 z-30 border-t border-border lg:bottom-0">
           <Button
             onClick={addWorkoutDay}
             variant="outline"
-            className="flex-1 rounded-lg h-10.5 text-xs font-bold border-[#2B2B2B] bg-[#181818]"
+            className="flex-1 rounded-lg h-10.5 text-xs font-bold border-border bg-card"
           >
             <Plus className="h-4 w-4 mr-1" /> Add split day
           </Button>
@@ -1974,11 +1975,11 @@ export function PlannerPage() {
 
         {/* EXERCISE PICKER DIALOG */}
         <Dialog open={isExercisePickerOpen} onOpenChange={setIsExercisePickerOpen}>
-          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-4 border-none bg-[#181818] text-background">
-            <DialogHeader className="pb-3 pr-10 border-b border-[#2B2B2B]">
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-4 border-none bg-card text-foreground">
+            <DialogHeader className="pb-3 pr-10 border-b border-border">
               <div>
-                <DialogTitle className="text-base font-bold text-background">Pick Exercise</DialogTitle>
-                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                <DialogTitle className="text-base font-bold text-foreground">Pick Exercise</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
                   Choose exercise templates to add to split
                 </DialogDescription>
               </div>
@@ -1986,17 +1987,17 @@ export function PlannerPage() {
 
             <div className="space-y-4 pt-3">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={pickerSearchQuery}
                   onChange={(e) => setPickerSearchQuery(e.target.value)}
                   placeholder="Fuzzy search movement..."
-                  className="pl-9 h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-background placeholder-[#AAAAAA] text-xs font-semibold focus-visible:ring-1 focus-visible:ring-brand"
+                  className="pl-9 h-9 rounded-lg border-border bg-foreground/[0.035] text-foreground placeholder:text-muted-foreground text-xs font-semibold focus-visible:ring-1 focus-visible:ring-brand"
                   autoFocus
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-1 bg-[#1F1F1F] p-0.5 rounded-lg border border-[#2B2B2B]">
+              <div className="grid grid-cols-3 gap-1 bg-foreground/[0.035] p-0.5 rounded-lg border border-border">
                 {([
                   { id: "all", label: "All Movements" },
                   { id: "favorites", label: "Favorites" },
@@ -2008,10 +2009,10 @@ export function PlannerPage() {
                     variant="ghost"
                     onClick={() => setPickerFilter(flt.id)}
                     className={cn(
-                      "h-8 rounded-lg px-2 text-[10px] font-bold transition-all hover:bg-[#2B2B2B] hover:text-background",
+                      "h-8 rounded-lg px-2 text-[10px] font-bold transition-all hover:bg-foreground/10 hover:text-foreground",
                       pickerFilter === flt.id
-                        ? "bg-[#2B2B2B] text-background"
-                        : "text-[#AAAAAA] hover:text-background"
+                        ? "bg-foreground/10 text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {flt.label}
@@ -2026,7 +2027,7 @@ export function PlannerPage() {
                     return (
                       <div
                         key={ex.id}
-                        className="flex items-center justify-between p-2.5 bg-[#1F1F1F] hover:bg-[#2B2B2B]/40 rounded-lg border border-[#2B2B2B]/60 transition-colors"
+                        className="flex items-center justify-between p-2.5 bg-foreground/[0.035] hover:bg-foreground/10 rounded-lg border border-border transition-colors"
                       >
                         <div 
                           onClick={() => {
@@ -2037,8 +2038,8 @@ export function PlannerPage() {
                           }}
                           className="flex-1 cursor-pointer"
                         >
-                          <h4 className="text-xs font-bold text-background">{ex.name}</h4>
-                          <span className="text-[9.5px] text-[#AAAAAA] font-semibold mt-0.5 block">
+                          <h4 className="text-xs font-bold text-foreground">{ex.name}</h4>
+                          <span className="text-[9.5px] text-muted-foreground font-semibold mt-0.5 block">
                             {ex.category} • {ex.equipment}
                           </span>
                         </div>
@@ -2048,16 +2049,16 @@ export function PlannerPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => toggleFavoriteExercise(ex.id)}
-                          className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-card/5"
+                          className="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-card/5"
                         >
-                          <Star className={cn("h-4 w-4", isFavorite ? "fill-[#FFB547] text-[#FFB547]" : "text-[#AAAAAA]")} />
+                          <Star className={cn("h-4 w-4", isFavorite ? "fill-[#FFB547] text-[#FFB547]" : "text-muted-foreground")} />
                         </Button>
                       </div>
                     );
                   })
                 ) : (
                   <div className="text-center py-6 space-y-3">
-                    <p className="text-[11px] text-[#AAAAAA] italic">No matching movement found.</p>
+                    <p className="text-[11px] text-muted-foreground italic">No matching movement found.</p>
                     <Button
                       onClick={() => {
                         setNewExerciseName(pickerSearchQuery);
@@ -2076,26 +2077,26 @@ export function PlannerPage() {
 
         {/* CUSTOM EXERCISE CREATION MODAL */}
         <Dialog open={isCreateExerciseOpen} onOpenChange={setIsCreateExerciseOpen}>
-          <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-[#181818] text-background">
-            <DialogHeader className="pb-2 border-b border-[#2B2B2B]">
-              <DialogTitle className="text-sm font-bold text-background">Create Custom Exercise</DialogTitle>
+          <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-card text-foreground">
+            <DialogHeader className="pb-2 border-b border-border">
+              <DialogTitle className="text-sm font-bold text-foreground">Create Custom Exercise</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 pt-3.5">
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Exercise Name</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Exercise Name</span>
                 <Input
                   value={newExerciseName}
                   onChange={(e) => setNewExerciseName(e.target.value)}
                   placeholder="e.g. Incline DB Press"
-                  className="h-8.5 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-background px-2.5 text-xs focus-visible:ring-1"
+                  className="h-8.5 rounded-lg border-border bg-foreground/[0.035] text-foreground px-2.5 text-xs focus-visible:ring-1"
                 />
               </div>
 
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Primary Muscle</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Primary Muscle</span>
                 <Select value={newExerciseMuscle} onValueChange={setNewExerciseMuscle}>
-                  <SelectTrigger className="h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-xs text-background focus:ring-0">
+                  <SelectTrigger className="h-9 rounded-lg border-border bg-foreground/[0.035] px-2 text-xs text-foreground focus:ring-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -2107,9 +2108,9 @@ export function PlannerPage() {
               </div>
 
               <div className="space-y-1">
-                <span className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Equipment</span>
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Equipment</span>
                 <Select value={newExerciseEquipment} onValueChange={setNewExerciseEquipment}>
-                  <SelectTrigger className="h-9 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] px-2 text-xs text-background focus:ring-0">
+                  <SelectTrigger className="h-9 rounded-lg border-border bg-foreground/[0.035] px-2 text-xs text-foreground focus:ring-0">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -2125,7 +2126,7 @@ export function PlannerPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsCreateExerciseOpen(false)}
-                  className="flex-1 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F]"
+                  className="flex-1 rounded-lg text-[10px] font-bold border-border bg-foreground/[0.035]"
                 >
                   Cancel
                 </Button>
@@ -2163,21 +2164,22 @@ export function PlannerPage() {
     }))
   );
   const mobileTemplateLimit = 1;
+  const desktopTemplateLimit = 8;
 
   return (
-      <div className="mx-auto max-w-md px-0 pb-14 space-y-3 sm:px-2 md:max-w-5xl md:space-y-6">
+      <div className="mx-auto max-w-5xl pb-14 space-y-3 md:space-y-5">
       
-      <div className="rounded-xl border border-[#2B2B2B] bg-[#151515] p-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.1)] sm:rounded-2xl sm:p-5 md:rounded-[24px]">
+      <Card className="rounded-xl p-3 sm:rounded-2xl sm:p-5">
         <div className="flex items-center justify-between gap-3 md:items-end">
           <div className="min-w-0 space-y-1">
-            <div className="hidden items-center gap-2 text-background/70 sm:flex">
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-card/10">
+            <div className="hidden items-center gap-2 text-foreground/70 sm:flex">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-foreground/5">
                 <Dumbbell className="h-3.5 w-3.5" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider">Training hub</span>
             </div>
-            <h1 className="truncate text-base font-semibold tracking-tight text-background sm:text-2xl">Training</h1>
-            <p className="hidden max-w-xl text-xs font-medium leading-relaxed text-[#AAAAAA] md:block">
+            <h1 className="truncate text-base font-semibold tracking-tight text-foreground sm:text-2xl">Training</h1>
+            <p className="hidden max-w-xl text-xs font-medium leading-relaxed text-muted-foreground md:block">
               Build reusable gym plans, start today&apos;s session, and keep your logged sets connected to progress.
             </p>
           </div>
@@ -2189,14 +2191,14 @@ export function PlannerPage() {
               setIsEditingSplit(true);
             }}
             aria-label="New plan"
-            className="h-7 shrink-0 rounded-lg bg-card px-2.5 text-[11px] font-semibold text-foreground hover:bg-card/90 sm:h-10 sm:rounded-xl sm:px-4 sm:text-xs"
+            className="h-7 shrink-0 rounded-lg px-2.5 text-[11px] font-semibold sm:h-10 sm:rounded-xl sm:px-4 sm:text-xs"
           >
             <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">New plan</span>
           </Button>
         </div>
 
-        <div className="mt-4 hidden grid-cols-4 gap-x-3 border-t border-[#2B2B2B] pt-3 sm:grid">
+        <div className="mt-4 hidden grid-cols-4 gap-x-3 border-t border-border pt-3 sm:grid">
           {[
             { label: "Plans", value: plans.length },
             { label: "Days", value: totalPlanDays },
@@ -2204,14 +2206,14 @@ export function PlannerPage() {
             { label: "Logged", value: sessions.length },
           ].map((item) => (
             <div key={item.label} className="min-w-0">
-              <p className="truncate text-[8px] font-bold uppercase tracking-wider text-[#AAAAAA] sm:text-[9px]">{item.label}</p>
-              <p className="mt-0.5 truncate text-sm font-semibold text-background sm:text-base">{item.value}</p>
+              <p className="truncate text-[8px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[9px]">{item.label}</p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-foreground sm:text-base">{item.value}</p>
             </div>
           ))}
         </div>
 
         {/* Tab switcher: Plans, Session, History */}
-        <div className="mt-2.5 grid grid-cols-3 gap-1 rounded-lg border border-[#2B2B2B] bg-[#0D0D0D] p-1 sm:mt-3 sm:rounded-xl">
+        <div className="mt-2.5 grid grid-cols-3 gap-1 rounded-lg border border-border bg-[color:var(--background)] p-1 sm:mt-3 sm:rounded-xl">
           {([
             { id: "plans", label: "Plans", icon: ClipboardList },
             { id: "session", label: "Session", icon: Play },
@@ -2226,10 +2228,10 @@ export function PlannerPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "h-7 rounded-md px-2 text-[10px] font-medium transition-all select-none hover:bg-card/5 hover:text-background sm:h-9 sm:rounded-lg sm:text-xs",
+                  "h-7 rounded-md px-2 text-[10px] font-medium transition-all select-none hover:bg-card/5 hover:text-foreground sm:h-9 sm:rounded-lg sm:text-xs",
                   isActive 
                     ? "bg-card text-foreground shadow-sm"
-                    : "text-[#AAAAAA] hover:text-background hover:bg-card/5"
+                    : "text-muted-foreground hover:text-foreground hover:bg-card/5"
                 )}
               >
                 <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -2238,7 +2240,7 @@ export function PlannerPage() {
             );
           })}
         </div>
-      </div>
+      </Card>
 
       <AnimatePresence mode="wait">
         
@@ -2252,17 +2254,17 @@ export function PlannerPage() {
             transition={{ duration: 0.2 }}
             className="space-y-3"
           >
-            <div className="grid gap-2.5 rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3 sm:grid-cols-[1fr_auto]">
+            <div className="grid gap-2.5 rounded-2xl border border-border bg-card p-3 sm:grid-cols-[1fr_auto]">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#AAAAAA]" />
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search plans..."
-                  className="h-9 rounded-xl border-[#2B2B2B] bg-[#181818] pl-9 text-xs font-medium text-background placeholder-[#AAAAAA] focus-visible:ring-1 focus-visible:ring-brand"
+                  className="h-9 rounded-xl border-border bg-card pl-9 text-xs font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-brand"
                 />
               </div>
-              <div className="grid grid-cols-3 gap-1 rounded-xl bg-[#0D0D0D] p-1">
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-[color:var(--background)] p-1">
                 {([
                   ["edited", "Recent"],
                   ["alphabetical", "A-Z"],
@@ -2274,8 +2276,8 @@ export function PlannerPage() {
                     variant="ghost"
                     onClick={() => setSortBy(value)}
                     className={cn(
-                      "h-8 rounded-lg px-3 text-[10px] font-bold transition hover:bg-card/5 hover:text-background",
-                      sortBy === value ? "bg-card text-foreground" : "text-[#AAAAAA] hover:text-background"
+                      "h-8 rounded-lg px-3 text-[10px] font-bold transition hover:bg-card/5 hover:text-foreground",
+                      sortBy === value ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {label}
@@ -2286,7 +2288,7 @@ export function PlannerPage() {
 
             {/* Create new plan button */}
             <div className="flex justify-between items-center px-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Manage plans ({filteredPlans.length})
               </span>
               <Button
@@ -2297,7 +2299,7 @@ export function PlannerPage() {
                   setIsEditingSplit(true);
                 }}
                 size="sm"
-                className="h-8 rounded-lg bg-card px-3 text-[10px] font-semibold text-foreground hover:bg-card/90"
+                className="h-8 rounded-lg px-3 text-[10px] font-semibold"
               >
                 <Plus className="h-3.5 w-3.5" /> Create
               </Button>
@@ -2313,20 +2315,20 @@ export function PlannerPage() {
                   return (
                     <Card
                       key={plan.id}
-                      className="flex flex-col justify-between rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 shadow-[0_12px_42px_rgba(0,0,0,0.1)] sm:p-4"
+                      className="flex flex-col justify-between rounded-2xl border border-border bg-card p-3.5 shadow-[0_12px_42px_rgba(0,0,0,0.1)] sm:p-4"
                     >
                       <div>
                         <div className="flex justify-between items-start">
                           <div>
                             <div className="flex min-w-0 items-center gap-1.5">
-                              <h3 className="truncate text-sm font-semibold text-background">{plan.name}</h3>
+                              <h3 className="truncate text-sm font-semibold text-foreground">{plan.name}</h3>
                               {isDraft && (
                                 <Badge className="bg-[#FFB547]/10 text-[#FFB547] text-[8px] font-bold px-1.5 py-0.25 border-none">
                                   DRAFT
                                 </Badge>
                               )}
                             </div>
-                              <p className="hidden text-[11px] text-[#AAAAAA] mt-1 line-clamp-1 sm:block">
+                              <p className="hidden text-[11px] text-muted-foreground mt-1 line-clamp-1 sm:block">
                                 {plan.notes || "No description."}
                               </p>
                           </div>
@@ -2338,7 +2340,7 @@ export function PlannerPage() {
                               size="icon"
                               onClick={() => handleDuplicatePlan(plan)}
                               title="Duplicate Plan"
-                              className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-card/10 hover:text-background"
+                              className="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                             >
                               <Copy className="h-3.5 w-3.5" />
                             </Button>
@@ -2348,32 +2350,32 @@ export function PlannerPage() {
                               size="icon"
                               onClick={() => setDeletingPlanId(plan.id)}
                               title="Delete Plan"
-                              className="h-8 w-8 rounded-lg p-0 text-[#AAAAAA] hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
+                              className="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </div>
 
-                        <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-medium text-[#AAAAAA]">
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-medium text-muted-foreground">
                           <span className="flex items-center gap-1">
-                            <CalendarDays className="h-3.5 w-3.5 text-[#AAAAAA]/60" />
+                            <CalendarDays className="h-3.5 w-3.5 text-muted-foreground/60" />
                             {daysCount} {daysCount === 1 ? "day" : "days"}
                           </span>
                           <span className="flex items-center gap-1">
-                            <Dumbbell className="h-3.5 w-3.5 text-[#AAAAAA]/60" />
+                            <Dumbbell className="h-3.5 w-3.5 text-muted-foreground/60" />
                             {totalExercises} lifts
                           </span>
                           <span>{Math.round(totalExercises / Math.max(daysCount, 1))} / day</span>
                         </div>
                       </div>
 
-                      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#2B2B2B] pt-3">
+                      <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setViewingPlan(plan)}
-                          className="h-10 rounded-xl text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-background hover:bg-[#2B2B2B]"
+                          className="h-10 rounded-xl text-[10px] font-bold"
                         >
                           Review
                         </Button>
@@ -2384,7 +2386,7 @@ export function PlannerPage() {
                             setActiveDraftPlan(plan);
                             setIsEditingSplit(true);
                           }}
-                          className="h-10 rounded-xl text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F] text-background hover:bg-[#2B2B2B]"
+                          className="h-10 rounded-xl text-[10px] font-bold"
                         >
                           <Edit3 className="h-3 w-3 mr-1" /> Edit
                         </Button>
@@ -2394,10 +2396,10 @@ export function PlannerPage() {
                 })}
               </div>
             ) : (
-              <Card className="p-8 text-center border border-dashed border-[#2B2B2B] bg-[#181818] rounded-xl">
-                <ClipboardList className="h-8 w-8 text-[#AAAAAA]/50 mx-auto stroke-[1.5]" />
-                <h3 className="text-xs font-bold text-background mt-3">No workout plans yet.</h3>
-                <p className="text-[10px] text-[#AAAAAA] max-w-xs mx-auto mt-1">
+              <Card className="p-8 text-center border border-dashed border-border bg-card rounded-xl">
+                <ClipboardList className="h-8 w-8 text-muted-foreground/50 mx-auto stroke-[1.5]" />
+                <h3 className="text-xs font-bold text-foreground mt-3">No workout plans yet.</h3>
+                <p className="text-[10px] text-muted-foreground max-w-xs mx-auto mt-1">
                   Click Create Plan to configure templates and log sessions with minimum swipes.
                 </p>
               </Card>
@@ -2418,56 +2420,56 @@ export function PlannerPage() {
             {draftSession ? (
               <Card
                 onClick={() => setIsWorkoutLoggerOpen(true)}
-                className="cursor-pointer rounded-xl border border-white/20 bg-[#181818] p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all hover:border-white/35 group sm:rounded-2xl sm:p-4"
+                className="cursor-pointer rounded-xl border border-border bg-card p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all hover:border-border-strong group sm:rounded-2xl sm:p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-card text-foreground sm:h-8 sm:w-8">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-foreground sm:h-8 sm:w-8">
                       <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                     <div className="min-w-0">
-                      <CardTitle className="truncate text-xs font-semibold tracking-tight text-background sm:text-sm">
+                      <CardTitle className="truncate text-xs font-semibold tracking-tight text-foreground sm:text-sm">
                         Resume Workout
                       </CardTitle>
-                      <CardDescription className="hidden truncate text-xs text-[#AAAAAA] mt-0.5 sm:block">
+                      <CardDescription className="hidden truncate text-xs text-muted-foreground mt-0.5 sm:block">
                         {draftSession.title || "Active session"} is still in progress.
                       </CardDescription>
                     </div>
                   </div>
-                  <ChevronRight className="h-4.5 w-4.5 shrink-0 text-[#AAAAAA] group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="h-4.5 w-4.5 shrink-0 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </Card>
             ) : null}
 
             <Card
               onClick={startEmptyWorkout}
-              className="cursor-pointer rounded-xl border border-[#2B2B2B] bg-[#181818] p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all hover:border-white/20 group sm:rounded-2xl sm:p-4"
+              className="cursor-pointer rounded-xl border border-border bg-card p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all hover:border-border group sm:rounded-2xl sm:p-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-7 w-7 rounded-lg bg-card text-foreground flex items-center justify-center shrink-0 sm:h-8 sm:w-8">
+                  <div className="h-7 w-7 rounded-lg bg-foreground/5 text-foreground flex items-center justify-center shrink-0 sm:h-8 sm:w-8">
                     <Play className="h-3.5 w-3.5 fill-current ml-0.5 sm:h-4 sm:w-4" />
                   </div>
                   <div>
-                    <CardTitle className="text-xs font-semibold tracking-tight text-background sm:text-sm">
+                    <CardTitle className="text-xs font-semibold tracking-tight text-foreground sm:text-sm">
                       Start Workout
                     </CardTitle>
-                      <CardDescription className="hidden text-xs text-[#AAAAAA] mt-0.5 sm:block">
+                      <CardDescription className="hidden text-xs text-muted-foreground mt-0.5 sm:block">
                         Log a fast session without template constraints.
                       </CardDescription>
                   </div>
                 </div>
-                <ChevronRight className="h-4.5 w-4.5 text-[#AAAAAA] group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="h-4.5 w-4.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
               </div>
             </Card>
 
             {latestSession ? (
-              <div className="hidden rounded-2xl border border-[#2B2B2B] bg-[#181818] p-3.5 sm:block">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA]">Last workout</p>
+              <div className="hidden rounded-2xl border border-border bg-card p-3.5 sm:block">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Last workout</p>
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-background">{latestSession.title}</p>
-                    <p className="mt-1 text-[10px] font-semibold text-[#AAAAAA]">
+                    <p className="truncate text-sm font-semibold text-foreground">{latestSession.title}</p>
+                    <p className="mt-1 text-[10px] font-semibold text-muted-foreground">
                       {latestSession.items.length} exercises • {new Date(latestSession.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                     </p>
                   </div>
@@ -2479,7 +2481,7 @@ export function PlannerPage() {
                       setViewingSession(latestSession);
                       setActiveTab("history");
                     }}
-                    className="h-8 rounded-lg border-[#2B2B2B] bg-[#1F1F1F] text-[10px] font-semibold text-background hover:bg-[#2B2B2B]"
+                    className="h-8 rounded-lg text-[10px] font-semibold"
                   >
                     View
                   </Button>
@@ -2488,7 +2490,7 @@ export function PlannerPage() {
             ) : null}
 
             <div className="space-y-2.5 sm:space-y-3">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground px-1 block">
                 Templates
               </span>
 
@@ -2502,24 +2504,25 @@ export function PlannerPage() {
                           key={`${plan.id}-${day.id}`}
                           onClick={() => startWorkoutFromDay(day, plan)}
                           className={cn(
-                            "group h-auto min-h-12 w-full justify-between rounded-xl border border-[#2B2B2B] bg-[#181818] p-2 text-left transition-all hover:border-white/20 hover:bg-[#181818] sm:min-h-0 sm:rounded-2xl sm:p-4",
-                            index >= mobileTemplateLimit && "hidden sm:flex"
+                            "group h-auto min-h-12 w-full justify-between rounded-xl border border-border bg-card p-2 text-left transition-all hover:border-border hover:bg-card sm:min-h-0 sm:rounded-2xl sm:p-4",
+                            index >= mobileTemplateLimit && "hidden sm:flex",
+                            index >= desktopTemplateLimit && "sm:hidden"
                           )}
                         >
                           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-                            <div className="h-7 w-7 rounded-lg bg-card text-foreground flex items-center justify-center font-bold text-[10px] shrink-0 sm:h-8 sm:w-8 sm:text-xs">
+                            <div className="h-7 w-7 rounded-lg bg-foreground/5 text-foreground flex items-center justify-center font-bold text-[10px] shrink-0 sm:h-8 sm:w-8 sm:text-xs">
                               {day.title.slice(0, 3)}
                             </div>
                             <div className="min-w-0">
-                              <h3 className="line-clamp-1 text-xs font-semibold text-background group-hover:text-background/75 transition-colors">
+                              <h3 className="line-clamp-1 text-xs font-semibold text-foreground group-hover:text-foreground/75 transition-colors">
                                 {plan.name} • {day.title}
                               </h3>
-                              <p className="truncate text-[9px] text-[#AAAAAA] mt-0.5 font-semibold sm:text-[9.5px]">
+                              <p className="truncate text-[9px] text-muted-foreground mt-0.5 font-semibold sm:text-[9.5px]">
                                 {day.focus || "Routine"} • {exerciseCount} exercises
                               </p>
                             </div>
                           </div>
-                          <Play className="h-3.5 w-3.5 text-[#AAAAAA] fill-current group-hover:text-background transition-colors" />
+                          <Play className="h-3.5 w-3.5 text-muted-foreground fill-current group-hover:text-foreground transition-colors" />
                         </Button>
                       );
                     })}
@@ -2528,17 +2531,27 @@ export function PlannerPage() {
                       type="button"
                       variant="ghost"
                       onClick={() => setActiveTab("plans")}
-                      className="h-8 rounded-xl border border-[#2B2B2B] bg-[#181818] text-[11px] font-semibold text-[#AAAAAA] hover:bg-[#1F1F1F] hover:text-background sm:hidden"
+                      className="h-8 rounded-xl border border-border bg-card text-[11px] font-semibold text-muted-foreground hover:bg-foreground/[0.035] hover:text-foreground sm:hidden"
                     >
                       View all templates
                     </Button>
                   ) : null}
+                  {templateEntries.length > desktopTemplateLimit ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("plans")}
+                      className="hidden h-10 rounded-xl text-[11px] font-semibold sm:flex md:col-span-2"
+                    >
+                      Manage all {templateEntries.length} templates
+                    </Button>
+                  ) : null}
                 </div>
               ) : (
-                <Card className="p-8 text-center border border-dashed border-[#2B2B2B] bg-[#181818] rounded-xl">
-                  <Dumbbell className="h-8 w-8 text-[#AAAAAA]/50 mx-auto stroke-[1.5]" />
-                  <h3 className="text-xs font-bold text-background mt-3">No splits ready</h3>
-                  <p className="text-[10px] text-[#AAAAAA] max-w-xs mx-auto mt-1">
+                <Card className="p-8 text-center border border-dashed border-border bg-card rounded-xl">
+                  <Dumbbell className="h-8 w-8 text-muted-foreground/50 mx-auto stroke-[1.5]" />
+                  <h3 className="text-xs font-bold text-foreground mt-3">No splits ready</h3>
+                  <p className="text-[10px] text-muted-foreground max-w-xs mx-auto mt-1">
                     Templates created in Plans will appear here to start logging sessions with prefilled weights.
                   </p>
                 </Card>
@@ -2557,7 +2570,7 @@ export function PlannerPage() {
             transition={{ duration: 0.2 }}
             className="space-y-4"
           >
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1 block">
               Workout history
             </span>
 
@@ -2579,46 +2592,46 @@ export function PlannerPage() {
                     <div
                       key={session.id}
                       onClick={() => setViewingSession(session)}
-                      className="flex items-center justify-between p-3.5 bg-[#181818] border border-[#2B2B2B] hover:border-white/20 rounded-xl transition-all cursor-pointer group"
+                      className="flex items-center justify-between p-3.5 bg-card border border-border hover:border-border rounded-xl transition-all cursor-pointer group"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-xs font-bold text-background group-hover:text-background/75 transition-colors">
+                          <h3 className="text-xs font-bold text-foreground group-hover:text-foreground/75 transition-colors">
                             {session.title}
                           </h3>
                           {session.effort && (
-                            <Badge className="bg-card/10 text-background/75 border-none font-bold text-[8px] px-1.5 py-0.25">
+                            <Badge className="bg-card/10 text-foreground/75 border-none font-bold text-[8px] px-1.5 py-0.25">
                               {session.effort}
                             </Badge>
                           )}
                         </div>
                         
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-[#AAAAAA] font-bold sm:gap-3.5">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-muted-foreground font-bold sm:gap-3.5">
                           <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-[#AAAAAA]/60" />
+                            <Calendar className="h-3 w-3 text-muted-foreground/60" />
                             {dateFormatted}
                           </span>
                           <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-[#AAAAAA]/60" />
+                            <Clock className="h-3 w-3 text-muted-foreground/60" />
                             {durationMins} min
                           </span>
                           <span className="flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3 text-[#AAAAAA]/60" />
+                            <CheckCircle2 className="h-3 w-3 text-muted-foreground/60" />
                             {session.items.length} exercises
                           </span>
                         </div>
                       </div>
 
-                      <ChevronRight className="h-4 w-4 text-[#AAAAAA] group-hover:translate-x-0.5 transition-transform" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <Card className="p-8 text-center border border-dashed border-[#2B2B2B] bg-[#181818] rounded-xl">
-                <History className="h-8 w-8 text-[#AAAAAA]/50 mx-auto stroke-[1.5]" />
-                <h3 className="text-xs font-bold text-background mt-3">No history logs found</h3>
-                <p className="text-[10px] text-[#AAAAAA] max-w-xs mx-auto mt-1">
+              <Card className="p-8 text-center border border-dashed border-border bg-card rounded-xl">
+                <History className="h-8 w-8 text-muted-foreground/50 mx-auto stroke-[1.5]" />
+                <h3 className="text-xs font-bold text-foreground mt-3">No history logs found</h3>
+                <p className="text-[10px] text-muted-foreground max-w-xs mx-auto mt-1">
                   Finished logs will populate here to view historic volume metrics and target RPE achievements.
                 </p>
               </Card>
@@ -2630,11 +2643,11 @@ export function PlannerPage() {
       {/* DETAIL MODAL: VIEW PLAN & STIMULUS MAP */}
       <Dialog open={Boolean(viewingPlan)} onOpenChange={(open) => !open && setViewingPlan(null)}>
         {viewingPlan && (
-          <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl p-5 border-none bg-[#181818] text-background">
-            <DialogHeader className="pb-3 pr-10 border-b border-[#2B2B2B]">
+          <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl p-5 border-none bg-card text-foreground">
+            <DialogHeader className="pb-3 pr-10 border-b border-border">
               <div>
-                <DialogTitle className="text-base font-bold text-background">{viewingPlan.name}</DialogTitle>
-                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                <DialogTitle className="text-base font-bold text-foreground">{viewingPlan.name}</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
                   Stimulus audit per muscle group
                 </DialogDescription>
               </div>
@@ -2643,9 +2656,9 @@ export function PlannerPage() {
             <div className="space-y-6 pt-4">
               {viewingPlan.days.map((day) => (
                 <div key={day.id} className="space-y-2">
-                  <div className="flex items-center justify-between bg-[#1F1F1F] p-2 rounded-lg">
-                    <span className="text-xs font-bold text-background">{day.title}</span>
-                    <Badge className="bg-card/10 text-background/75 text-[8px] font-bold uppercase border-none">
+                  <div className="flex items-center justify-between bg-foreground/[0.035] p-2 rounded-lg">
+                    <span className="text-xs font-bold text-foreground">{day.title}</span>
+                    <Badge className="bg-card/10 text-foreground/75 text-[8px] font-bold uppercase border-none">
                       {day.focus || "Focus"}
                     </Badge>
                   </div>
@@ -2654,9 +2667,9 @@ export function PlannerPage() {
                       {day.items.map((item, idx) => {
                         const exerciseName = data.exercises.find((e) => e.id === item.exerciseId)?.name || item.exerciseId;
                         return (
-                          <div key={idx} className="flex justify-between items-center text-[10px] text-[#AAAAAA]">
+                          <div key={idx} className="flex justify-between items-center text-[10px] text-muted-foreground">
                             <span className="font-semibold">{exerciseName}</span>
-                            <span className="font-bold text-[#AAAAAA]">
+                            <span className="font-bold text-muted-foreground">
                               {item.sets} x {item.reps} sets
                             </span>
                           </div>
@@ -2664,13 +2677,13 @@ export function PlannerPage() {
                       })}
                     </div>
                   ) : (
-                    <p className="pl-2 text-[9px] text-[#AAAAAA] italic">No exercises added to this day.</p>
+                    <p className="pl-2 text-[9px] text-muted-foreground italic">No exercises added to this day.</p>
                   )}
                 </div>
               ))}
 
-              <div className="pt-4 border-t border-[#2B2B2B]">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] mb-3">
+              <div className="pt-4 border-t border-border">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
                   Stimulus Audit
                 </h4>
                 <PlanAnalysis plan={viewingPlan} data={data} />
@@ -2683,11 +2696,11 @@ export function PlannerPage() {
       {/* DETAIL MODAL: VIEW COMPLETED WORKOUT */}
       <Dialog open={Boolean(viewingSession)} onOpenChange={(open) => !open && setViewingSession(null)}>
         {viewingSession && (
-          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-5 border-none bg-[#181818] text-background">
-            <DialogHeader className="pb-3 pr-10 border-b border-[#2B2B2B]">
+          <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto rounded-2xl p-5 border-none bg-card text-foreground">
+            <DialogHeader className="pb-3 pr-10 border-b border-border">
               <div>
-                <DialogTitle className="text-base font-bold text-background">{viewingSession.title}</DialogTitle>
-                <DialogDescription className="text-xs text-[#AAAAAA] mt-1">
+                <DialogTitle className="text-base font-bold text-foreground">{viewingSession.title}</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground mt-1">
                   Completed on {new Date(viewingSession.startedAt).toLocaleDateString()}
                 </DialogDescription>
               </div>
@@ -2695,31 +2708,31 @@ export function PlannerPage() {
 
             <div className="space-y-5 pt-3">
               {viewingSession.effort && (
-                <div className="flex items-center gap-2 p-2.5 bg-[#1F1F1F] rounded-lg">
-                  <Award className="h-4 w-4 text-background/70" />
-                  <span className="text-[10px] font-bold text-background/70 uppercase tracking-wider">
+                <div className="flex items-center gap-2 p-2.5 bg-foreground/[0.035] rounded-lg">
+                  <Award className="h-4 w-4 text-foreground/70" />
+                  <span className="text-[10px] font-bold text-foreground/70 uppercase tracking-wider">
                     Effort / Feeling: {viewingSession.effort}
                   </span>
                 </div>
               )}
 
               {viewingSession.notes && (
-                <div className="p-3 bg-[#1F1F1F] rounded-lg">
-                  <h4 className="text-[9px] font-bold text-[#AAAAAA] uppercase tracking-wider">Notes</h4>
-                  <p className="text-[10px] text-[#AAAAAA] mt-1 italic">{viewingSession.notes}</p>
+                <div className="p-3 bg-foreground/[0.035] rounded-lg">
+                  <h4 className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Notes</h4>
+                  <p className="text-[10px] text-muted-foreground mt-1 italic">{viewingSession.notes}</p>
                 </div>
               )}
 
               <div className="space-y-3.5">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#AAAAAA] px-1">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
                   Logged Sets
                 </h4>
                 {viewingSession.items.map((item, idx) => (
-                  <div key={item.id || idx} className="p-3 bg-[#1F1F1F] border border-[#2B2B2B] rounded-xl">
-                    <h5 className="text-[11px] font-bold text-background">{item.exerciseName}</h5>
+                  <div key={item.id || idx} className="p-3 bg-foreground/[0.035] border border-border rounded-xl">
+                    <h5 className="text-[11px] font-bold text-foreground">{item.exerciseName}</h5>
                     <div className="mt-2 space-y-1">
                       {item.sets.map((set, setIdx) => (
-                        <div key={setIdx} className="flex justify-between items-center text-[10px] text-[#AAAAAA] font-semibold">
+                        <div key={setIdx} className="flex justify-between items-center text-[10px] text-muted-foreground font-semibold">
                           <span>Set {setIdx + 1}</span>
                           <span className="font-bold">
                             {set.weight ? `${set.weight} kg` : "Bodyweight"} • {set.reps} reps
@@ -2731,7 +2744,7 @@ export function PlannerPage() {
                 ))}
               </div>
 
-              <div className="pt-4 border-t border-[#2B2B2B] flex justify-end">
+              <div className="pt-4 border-t border-border flex justify-end">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -2748,13 +2761,13 @@ export function PlannerPage() {
 
       {/* CONFIRM DELETE PLANS */}
       <Dialog open={Boolean(deletingPlanId)} onOpenChange={(open) => !open && setDeletingPlanId(null)}>
-        <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-[#181818] text-background">
+        <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-card text-foreground">
           <div className="text-center space-y-3">
             <div className="h-10 w-10 bg-[#FF5A5F]/10 text-[#FF5A5F] rounded-full flex items-center justify-center mx-auto">
               <AlertCircle className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-background">Delete Workout Split?</h3>
-            <p className="text-[10px] text-[#AAAAAA]">
+            <h3 className="text-sm font-bold text-foreground">Delete Workout Split?</h3>
+            <p className="text-[10px] text-muted-foreground">
               This action cannot be undone. Any custom configurations will be deleted.
             </p>
             <div className="flex gap-2 pt-2">
@@ -2762,7 +2775,7 @@ export function PlannerPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingPlanId(null)}
-                className="flex-1 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F]"
+                className="flex-1 rounded-lg text-[10px] font-bold border-border bg-foreground/[0.035]"
               >
                 Cancel
               </Button>
@@ -2770,7 +2783,7 @@ export function PlannerPage() {
                 size="sm"
                 onClick={() => deletingPlanId && handleDeletePlan(deletingPlanId)}
                 disabled={saving}
-                className="flex-1 rounded-lg bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-background text-[10px] font-bold"
+                className="flex-1 rounded-lg bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-foreground text-[10px] font-bold"
               >
                 {saving ? "Deleting..." : "Yes, Delete"}
               </Button>
@@ -2781,13 +2794,13 @@ export function PlannerPage() {
 
       {/* CONFIRM DELETE LOGS */}
       <Dialog open={Boolean(deletingSessionId)} onOpenChange={(open) => !open && setDeletingSessionId(null)}>
-        <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-[#181818] text-background">
+        <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-card text-foreground">
           <div className="text-center space-y-3">
             <div className="h-10 w-10 bg-[#FF5A5F]/10 text-[#FF5A5F] rounded-full flex items-center justify-center mx-auto">
               <AlertCircle className="h-5 w-5" />
             </div>
-            <h3 className="text-sm font-bold text-background">Delete Workout Log?</h3>
-            <p className="text-[10px] text-[#AAAAAA]">
+            <h3 className="text-sm font-bold text-foreground">Delete Workout Log?</h3>
+            <p className="text-[10px] text-muted-foreground">
               This will permanently delete this logged workout session.
             </p>
             <div className="flex gap-2 pt-2">
@@ -2795,7 +2808,7 @@ export function PlannerPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setDeletingSessionId(null)}
-                className="flex-1 rounded-lg text-[10px] font-bold border-[#2B2B2B] bg-[#1F1F1F]"
+                className="flex-1 rounded-lg text-[10px] font-bold border-border bg-foreground/[0.035]"
               >
                 Cancel
               </Button>
@@ -2803,7 +2816,7 @@ export function PlannerPage() {
                 size="sm"
                 onClick={() => deletingSessionId && handleDeleteSession(deletingSessionId)}
                 disabled={saving}
-                className="flex-1 rounded-lg bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-background text-[10px] font-bold"
+                className="flex-1 rounded-lg bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-foreground text-[10px] font-bold"
               >
                 {saving ? "Deleting..." : "Yes, Delete"}
               </Button>

@@ -17,6 +17,7 @@ type HeatmapHover = {
 export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [hovered, setHovered] = useState<HeatmapHover | null>(null);
 
   useEffect(() => {
@@ -30,8 +31,20 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const updateTheme = () => {
+      setIsDarkTheme(document.documentElement.classList.contains("theme-dark"));
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const isCompact = containerWidth < 520;
+
   const heatmapData = useMemo(() => {
-    const daysToShow = 365; // A full year
+    const daysToShow = isCompact ? 112 : 365;
     const data: Record<string, number> = {};
     
     sessions.forEach(session => {
@@ -73,16 +86,15 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
     }
 
     return calendarData;
-  }, [sessions]);
+  }, [sessions, isCompact]);
 
   const explicitTheme: ThemeInput = {
     light: ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0.40)', 'rgba(0,0,0,0.65)', 'rgba(0,0,0,0.92)'],
-    dark: ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0.40)', 'rgba(0,0,0,0.65)', 'rgba(0,0,0,0.92)'],
+    dark: ['rgba(255,255,255,0.07)', 'rgba(255,255,255,0.24)', 'rgba(255,255,255,0.44)', 'rgba(255,255,255,0.68)', 'rgba(255,255,255,0.92)'],
   };
 
-  const isCompact = containerWidth < 520;
   const blockMargin = isCompact ? 2 : 4;
-  const weeks = 53;
+  const weeks = isCompact ? 17 : 53;
   const calculatedBlockSize = containerWidth > 0 
     ? Math.max(Math.floor((containerWidth - (weeks - 1) * blockMargin) / weeks), isCompact ? 5 : 9)
     : 12;
@@ -97,7 +109,7 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
             <ActivityCalendar
               data={heatmapData}
               theme={explicitTheme}
-              colorScheme="light"
+              colorScheme={isDarkTheme ? "dark" : "light"}
               blockSize={calculatedBlockSize}
               blockMargin={blockMargin}
               blockRadius={2}
@@ -151,7 +163,7 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: hovered.showBelow ? -4 : 4, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="pointer-events-none absolute z-50 flex flex-col gap-1 rounded-xl border border-[color:var(--border)] bg-[linear-gradient(180deg,#1a1a1a,#242424)] px-3 py-2 text-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-xl whitespace-nowrap"
+            className="pointer-events-none absolute z-50 flex flex-col gap-1 rounded-xl border border-border bg-card px-3 py-2 text-foreground shadow-[0_12px_30px_rgba(0,0,0,0.15)] whitespace-nowrap"
             style={{
               left: hovered.x,
               top: hovered.showBelow ? hovered.y + calculatedBlockSize : hovered.y - 8,
@@ -167,7 +179,7 @@ export function WorkoutHeatmap({ sessions }: { sessions: WorkoutSession[] }) {
               y: hovered.showBelow ? "8px" : "-100%",
             }}
           >
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               {new Date(hovered.date).toLocaleDateString(undefined, { 
                 month: 'short', 
                 day: 'numeric', 

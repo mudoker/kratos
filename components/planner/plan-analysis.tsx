@@ -66,7 +66,7 @@ export function PlanAnalysis({ plan, data }: { plan: WeeklyPlan; data: Dashboard
                     <span className="text-[color:var(--foreground)]">{cat}</span>
                     <span className="text-[color:var(--muted-foreground)]">{count} sets</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-black/5">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-foreground/5">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${percentage}%` }}
@@ -89,7 +89,7 @@ export function PlanAnalysis({ plan, data }: { plan: WeeklyPlan; data: Dashboard
             {Object.entries(stats.muscleSets)
               .sort((a, b) => b[1] - a[1])
               .map(([slug, count]) => (
-                <div key={slug} className="rounded-2xl border border-[color:var(--border)] bg-black/[0.02] p-3">
+                <div key={slug} className="rounded-2xl border border-border bg-foreground/[0.025] p-3">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)] opacity-60">
                     {slug.replaceAll("-", " ")}
                   </p>

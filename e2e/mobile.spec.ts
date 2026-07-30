@@ -64,7 +64,7 @@ test.describe('Kratos Mobile Flow E2E Tests', () => {
     // 3. Switch to 'History'
     await historyTabBtn.click();
     await expect(page.getByText('Recent sessions')).toBeVisible();
-    await expect(page.getByText('Personal Records (PRs)')).toBeVisible();
+    await expect(page.getByText('Personal Records')).toBeVisible();
 
     // 4. Switch back to 'Overview'
     await overviewTabBtn.click();

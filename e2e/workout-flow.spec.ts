@@ -117,7 +117,7 @@ test.describe('Kratos E2E Gym Plan & Workout Flow (Mobile View)', () => {
     await feedbackNotesTextarea.fill('Felt solid, hit 100kg for E2E validation!');
 
     // Save/log the session
-    const logWorkoutBtn = page.getByRole('button', { name: 'Log workout session' });
+    const logWorkoutBtn = page.getByRole('button', { name: 'Save workout' });
     await logWorkoutBtn.click();
     await expect(page.getByRole('dialog', { name: 'Finish Workout' })).not.toBeVisible({ timeout: 60000 });
 

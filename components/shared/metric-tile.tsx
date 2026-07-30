@@ -19,13 +19,13 @@ export function MetricTile({
           <p className="truncate text-[8px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)] sm:text-xs sm:tracking-[0.18em]">
             {label}
           </p>
-          <p className="truncate font-[family:var(--font-display)] text-sm font-semibold leading-tight text-[color:var(--foreground)] sm:text-3xl">
+          <p className="truncate font-[family:var(--font-display)] text-sm font-semibold leading-tight text-[color:var(--foreground)] sm:text-xl">
             {value}
           </p>
         </div>
         <div className="hidden sm:block">{icon}</div>
       </div>
-      <p className="mt-1.5 line-clamp-1 text-[9px] text-[color:var(--muted-foreground)] sm:mt-4 sm:text-sm">{detail}</p>
+      <p className="mt-1.5 line-clamp-1 text-[9px] text-[color:var(--muted-foreground)] sm:mt-3 sm:text-xs">{detail}</p>
     </Card>
   );
 }
