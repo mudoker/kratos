@@ -15,8 +15,10 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ActionDialog } from "@/components/shared/action-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ContextActionMenu } from "@/components/ui/context-action-menu";
 import { PlanAnalysis } from "./plan-analysis";
 import { useData } from "@/components/shared/data-provider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +27,7 @@ import { cn } from "@/lib/utils";
 const randomId = () => Math.random().toString(36).substring(2, 15);
 const createDraftId = () => `draft_${randomId()}`;
 const isPersistedId = (id: string) => Boolean(id) && !id.startsWith("draft_");
+const isDraftPlan = (plan: WeeklyPlan) => !isPersistedId(plan.id);
 
 const AVAILABLE_MUSCLES = [
   "Chest", "Upper Back", "Lats", "Shoulders", "Triceps", "Biceps", 
@@ -157,6 +160,7 @@ export function PlannerPage() {
   const [viewingSession, setViewingSession] = useState<WorkoutSession | null>(null);
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+  const [draftPlanPrompt, setDraftPlanPrompt] = useState<WeeklyPlan | null>(null);
 
   // States for active operations
   const [isEditingSplit, setIsEditingSplit] = useState(false);
@@ -475,6 +479,8 @@ export function PlannerPage() {
       })),
     };
     setPlans((prev) => [duplicated, ...prev]);
+    setActiveDraftPlan(duplicated);
+    setIsEditingSplit(true);
   };
 
   const handleDeletePlan = async (id: string) => {
@@ -620,6 +626,11 @@ export function PlannerPage() {
   };
 
   const startWorkoutFromDay = (day: WeeklyPlanDay, plan: WeeklyPlan) => {
+    if (isDraftPlan(plan)) {
+      setDraftPlanPrompt(plan);
+      return;
+    }
+
     const session: Partial<WorkoutSession> = {
       id: createDraftId(),
       planId: plan.id,
@@ -2310,16 +2321,42 @@ export function PlannerPage() {
                 {filteredPlans.map((plan) => {
                   const daysCount = plan.days.length;
                   const totalExercises = plan.days.reduce((acc: number, d: WeeklyPlanDay) => acc + d.items.length, 0);
-                  const isDraft = !isPersistedId(plan.id);
+                  const isDraft = isDraftPlan(plan);
 
                   return (
-                    <Card
+                    <ContextActionMenu
                       key={plan.id}
-                      className="flex flex-col justify-between rounded-2xl border border-border bg-card p-3.5 shadow-[0_12px_42px_rgba(0,0,0,0.1)] sm:p-4"
+                      actions={[
+                        {
+                          label: "Review",
+                          icon: <ClipboardList className="h-3.5 w-3.5" />,
+                          onSelect: () => setViewingPlan(plan),
+                        },
+                        {
+                          label: "Edit",
+                          icon: <Edit3 className="h-3.5 w-3.5" />,
+                          onSelect: () => {
+                            setActiveDraftPlan(plan);
+                            setIsEditingSplit(true);
+                          },
+                        },
+                        {
+                          label: "Duplicate",
+                          icon: <Copy className="h-3.5 w-3.5" />,
+                          onSelect: () => handleDuplicatePlan(plan),
+                        },
+                        {
+                          label: "Remove",
+                          icon: <Trash2 className="h-3.5 w-3.5" />,
+                          destructive: true,
+                          onSelect: () => setDeletingPlanId(plan.id),
+                        },
+                      ]}
                     >
-                      <div>
+                      <Card className="flex flex-col justify-between rounded-2xl border border-border bg-card p-3.5 pr-12 shadow-[0_12px_42px_rgba(0,0,0,0.1)] sm:p-4 sm:pr-12">
+                        <div>
                         <div className="flex justify-between items-start">
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex min-w-0 items-center gap-1.5">
                               <h3 className="truncate text-sm font-semibold text-foreground">{plan.name}</h3>
                               {isDraft && (
@@ -2331,29 +2368,6 @@ export function PlannerPage() {
                               <p className="hidden text-[11px] text-muted-foreground mt-1 line-clamp-1 sm:block">
                                 {plan.notes || "No description."}
                               </p>
-                          </div>
-                          
-                          <div className="flex shrink-0 items-center gap-0.5">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDuplicatePlan(plan)}
-                              title="Duplicate Plan"
-                              className="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeletingPlanId(plan.id)}
-                              title="Delete Plan"
-                              className="h-8 w-8 rounded-lg p-0 text-muted-foreground hover:bg-[#FF5A5F]/10 hover:text-[#FF5A5F]"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
                           </div>
                         </div>
 
@@ -2391,7 +2405,8 @@ export function PlannerPage() {
                           <Edit3 className="h-3 w-3 mr-1" /> Edit
                         </Button>
                       </div>
-                    </Card>
+                      </Card>
+                    </ContextActionMenu>
                   );
                 })}
               </div>
@@ -2497,6 +2512,7 @@ export function PlannerPage() {
               {templateEntries.length > 0 ? (
                 <div className="grid gap-2.5 md:grid-cols-2">
                   {templateEntries.map(({ plan, day, exerciseCount }, index) => {
+                      const isDraft = isDraftPlan(plan);
                       return (
                         <Button
                           type="button"
@@ -2514,9 +2530,16 @@ export function PlannerPage() {
                               {day.title.slice(0, 3)}
                             </div>
                             <div className="min-w-0">
-                              <h3 className="line-clamp-1 text-xs font-semibold text-foreground group-hover:text-foreground/75 transition-colors">
-                                {plan.name} • {day.title}
-                              </h3>
+                              <div className="flex min-w-0 items-center gap-1.5">
+                                <h3 className="line-clamp-1 text-xs font-semibold text-foreground transition-colors group-hover:text-foreground/75">
+                                  {plan.name} • {day.title}
+                                </h3>
+                                {isDraft ? (
+                                  <Badge className="shrink-0 border-none bg-[#FFB547]/10 px-1.5 py-0.25 text-[7.5px] font-bold text-[#FFB547]">
+                                    Draft
+                                  </Badge>
+                                ) : null}
+                              </div>
                               <p className="truncate text-[9px] text-muted-foreground mt-0.5 font-semibold sm:text-[9.5px]">
                                 {day.focus || "Routine"} • {exerciseCount} exercises
                               </p>
@@ -2759,71 +2782,49 @@ export function PlannerPage() {
         )}
       </Dialog>
 
-      {/* CONFIRM DELETE PLANS */}
-      <Dialog open={Boolean(deletingPlanId)} onOpenChange={(open) => !open && setDeletingPlanId(null)}>
-        <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-card text-foreground">
-          <div className="text-center space-y-3">
-            <div className="h-10 w-10 bg-[#FF5A5F]/10 text-[#FF5A5F] rounded-full flex items-center justify-center mx-auto">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-bold text-foreground">Delete Workout Split?</h3>
-            <p className="text-[10px] text-muted-foreground">
-              This action cannot be undone. Any custom configurations will be deleted.
-            </p>
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDeletingPlanId(null)}
-                className="flex-1 rounded-lg text-[10px] font-bold border-border bg-foreground/[0.035]"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => deletingPlanId && handleDeletePlan(deletingPlanId)}
-                disabled={saving}
-                className="flex-1 rounded-lg bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-foreground text-[10px] font-bold"
-              >
-                {saving ? "Deleting..." : "Yes, Delete"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ActionDialog
+        open={Boolean(draftPlanPrompt)}
+        onOpenChange={(open) => !open && setDraftPlanPrompt(null)}
+        variant="warning"
+        icon={<AlertCircle className="h-5 w-5" />}
+        title="Save Plan First"
+        description="This plan is still a draft. Save it before starting a workout from this template."
+        cancelLabel="Not now"
+        actionLabel="Edit draft"
+        onAction={() => {
+          if (!draftPlanPrompt) return;
+          setActiveDraftPlan(draftPlanPrompt);
+          setDraftPlanPrompt(null);
+          setActiveTab("plans");
+          setIsEditingSplit(true);
+        }}
+      />
 
-      {/* CONFIRM DELETE LOGS */}
-      <Dialog open={Boolean(deletingSessionId)} onOpenChange={(open) => !open && setDeletingSessionId(null)}>
-        <DialogContent className="max-w-xs rounded-xl p-5 border-none bg-card text-foreground">
-          <div className="text-center space-y-3">
-            <div className="h-10 w-10 bg-[#FF5A5F]/10 text-[#FF5A5F] rounded-full flex items-center justify-center mx-auto">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-bold text-foreground">Delete Workout Log?</h3>
-            <p className="text-[10px] text-muted-foreground">
-              This will permanently delete this logged workout session.
-            </p>
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDeletingSessionId(null)}
-                className="flex-1 rounded-lg text-[10px] font-bold border-border bg-foreground/[0.035]"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => deletingSessionId && handleDeleteSession(deletingSessionId)}
-                disabled={saving}
-                className="flex-1 rounded-lg bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-foreground text-[10px] font-bold"
-              >
-                {saving ? "Deleting..." : "Yes, Delete"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ActionDialog
+        open={Boolean(deletingPlanId)}
+        onOpenChange={(open) => !open && setDeletingPlanId(null)}
+        variant="danger"
+        icon={<AlertCircle className="h-5 w-5" />}
+        title="Delete Workout Split?"
+        description="This action cannot be undone. Any custom configurations will be deleted."
+        actionLabel="Yes, Delete"
+        actionBusyLabel="Deleting..."
+        busy={saving}
+        onAction={() => deletingPlanId && handleDeletePlan(deletingPlanId)}
+      />
+
+      <ActionDialog
+        open={Boolean(deletingSessionId)}
+        onOpenChange={(open) => !open && setDeletingSessionId(null)}
+        variant="danger"
+        icon={<AlertCircle className="h-5 w-5" />}
+        title="Delete Workout Log?"
+        description="This will permanently delete this logged workout session."
+        actionLabel="Yes, Delete"
+        actionBusyLabel="Deleting..."
+        busy={saving}
+        onAction={() => deletingSessionId && handleDeleteSession(deletingSessionId)}
+      />
 
     </div>
   );

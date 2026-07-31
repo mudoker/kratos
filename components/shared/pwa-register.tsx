@@ -16,6 +16,11 @@ import {
 const VERSION_FALLBACK = "latest";
 const SEEN_VERSION_KEY = "kratos_pwa_seen_version";
 
+const isStandalonePwa = () => {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(display-mode: standalone)").matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
+};
+
 const readServiceWorkerVersion = async () => {
   try {
     const response = await fetch(`/sw.js?update-check=${Date.now()}`, {
@@ -102,6 +107,7 @@ export function PwaRegister() {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || navigator.webdriver) return;
 
     let interval: ReturnType<typeof setInterval> | undefined;
+    let resumeTimeout: ReturnType<typeof setTimeout> | undefined;
     let registration: ServiceWorkerRegistration | null = null;
     let reloading = false;
 
@@ -145,9 +151,19 @@ export function PwaRegister() {
       if (!sw) return;
       sw.addEventListener("statechange", () => {
         if (sw.state === "installed") {
-          void showUpdate(sw);
+          if (navigator.serviceWorker.controller) {
+            void showUpdate(reg.waiting || sw);
+          }
         }
       });
+    };
+
+    const showWaitingWorker = async () => {
+      if (registration?.waiting) {
+        await showUpdate(registration.waiting);
+        return true;
+      }
+      return false;
     };
 
     const pollForUpdate = async () => {
@@ -156,8 +172,8 @@ export function PwaRegister() {
         if (reg) {
           await reg.update();
         }
-        if (reg?.waiting) {
-          await showUpdate(reg.waiting);
+        if (await showWaitingWorker()) {
+          return;
         }
         await checkVersionMismatch();
       } catch {
@@ -167,6 +183,22 @@ export function PwaRegister() {
 
     const onVisible = () => {
       if (document.visibilityState === "visible") void pollForUpdate();
+    };
+
+    const onPageShow = () => {
+      void pollForUpdate();
+    };
+
+    const onStandaloneResume = () => {
+      if (!isStandalonePwa()) return;
+      if (resumeTimeout) clearTimeout(resumeTimeout);
+      resumeTimeout = setTimeout(() => void pollForUpdate(), 250);
+    };
+
+    const onServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === "SW_UPDATE_READY") {
+        void showUpdate(registration?.waiting || null, event.data.version);
+      }
     };
 
     const onControllerChange = () => {
@@ -180,9 +212,7 @@ export function PwaRegister() {
     navigator.serviceWorker.register("/sw.js").then(async (reg) => {
       registration = reg;
 
-      if (reg.waiting) {
-        await showUpdate(reg.waiting);
-      }
+      await showWaitingWorker();
 
       reg.addEventListener("updatefound", () => watchInstalling(reg));
       await pollForUpdate();
@@ -190,16 +220,23 @@ export function PwaRegister() {
       interval = setInterval(pollForUpdate, 30_000);
       window.addEventListener("focus", pollForUpdate);
       window.addEventListener("online", pollForUpdate);
+      window.addEventListener("pageshow", onPageShow);
+      window.addEventListener("touchstart", onStandaloneResume, { passive: true });
       document.addEventListener("visibilitychange", onVisible);
     }).catch((err) => console.error("PWA: SW registration failed:", err));
 
+    navigator.serviceWorker.addEventListener("message", onServiceWorkerMessage);
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
     return () => {
       if (interval) clearInterval(interval);
+      if (resumeTimeout) clearTimeout(resumeTimeout);
       window.removeEventListener("focus", pollForUpdate);
       window.removeEventListener("online", pollForUpdate);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("touchstart", onStandaloneResume);
       document.removeEventListener("visibilitychange", onVisible);
+      navigator.serviceWorker.removeEventListener("message", onServiceWorkerMessage);
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
     };
   }, [showUpdate]);

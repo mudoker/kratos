@@ -121,7 +121,7 @@ export function DashboardPage() {
                     Keep the next workout one tap away.
                   </CardDescription>
                 </div>
-                <Button asChild size="sm" className="h-8 rounded-lg px-3 text-[10px]">
+                <Button asChild size="sm" className="h-8 rounded-lg px-3 text-[10px] text-white dark:text-zinc-950">
                   <Link href="/train">Open</Link>
                 </Button>
               </div>
@@ -160,34 +160,32 @@ export function DashboardPage() {
               )}
             </Card>
 
-            <div className="space-y-3 lg:space-y-5">
-              <Card className="rounded-xl p-3 sm:rounded-2xl sm:p-5">
-                <div className="flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-foreground" />
-                  <CardTitle className="text-xs font-semibold sm:text-sm">Consistency</CardTitle>
+            <Card className="hidden rounded-xl p-3 sm:block sm:rounded-2xl sm:p-5">
+              <div className="flex h-full items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Latest workout</p>
+                  <p className="mt-1 truncate text-xs font-semibold text-foreground">
+                    {recentSession ? recentSession.title : "No session logged"}
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    {recentSession ? formatDate(recentSession.startedAt) : "Finish a workout to populate stats."}
+                  </p>
                 </div>
-                <div className="mt-3">
-                  <WorkoutHeatmap sessions={data.sessions} />
-                </div>
-              </Card>
+                <Badge className="border-none bg-foreground/5 px-2 py-1 text-[9px] font-bold text-muted-foreground">
+                  {recentSession ? `${recentSession.items.length} lifts` : "Idle"}
+                </Badge>
+              </div>
+            </Card>
 
-              <Card className="hidden rounded-xl p-3 sm:block sm:rounded-2xl sm:p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Latest workout</p>
-                    <p className="mt-1 truncate text-xs font-semibold text-foreground">
-                      {recentSession ? recentSession.title : "No session logged"}
-                    </p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      {recentSession ? formatDate(recentSession.startedAt) : "Finish a workout to populate stats."}
-                    </p>
-                  </div>
-                  <Badge className="border-none bg-foreground/5 px-2 py-1 text-[9px] font-bold text-muted-foreground">
-                    {recentSession ? `${recentSession.items.length} lifts` : "Idle"}
-                  </Badge>
-                </div>
-              </Card>
-            </div>
+            <Card className="rounded-xl p-3 sm:rounded-2xl sm:p-5 lg:col-span-2">
+              <div className="flex items-center gap-2 border-b border-border pb-3">
+                <Flame className="h-4 w-4 text-foreground" />
+                <CardTitle className="text-xs font-semibold sm:text-sm">Consistency</CardTitle>
+              </div>
+              <div className="mt-3">
+                <WorkoutHeatmap sessions={data.sessions} />
+              </div>
+            </Card>
           </div>
 
           <div className="hidden gap-5 lg:grid lg:grid-cols-2">

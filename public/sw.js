@@ -1,4 +1,4 @@
-const SW_VERSION = "5.1.36";
+const SW_VERSION = "5.1.38";
 const CACHE_NAME = `kratos-v${SW_VERSION}`;
 const STATIC_ASSETS = [
   "/logo.png",
@@ -10,6 +10,13 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch(err => console.warn("PWA: Pre-caching failed", err));
+    }).then(() => {
+      if (!self.registration.active) return;
+      return self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: "SW_UPDATE_READY", version: SW_VERSION });
+        });
+      });
     })
   );
   // Do NOT call self.skipWaiting() here — we want the update banner to control this
