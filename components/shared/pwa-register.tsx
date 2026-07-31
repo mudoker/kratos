@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import { RefreshCw, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,8 +38,6 @@ const readServiceWorkerVersion = async () => {
 };
 
 export function PwaRegister() {
-  const pathname = usePathname();
-  const isAuthPath = pathname === "/login" || pathname.startsWith("/api/auth");
   const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(null);
   const [version, setVersion] = useState(VERSION_FALLBACK);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -48,42 +45,20 @@ export function PwaRegister() {
   const dismissedVersionRef = useRef<string | null>(null);
   const isApplyingRef = useRef(false);
   const versionRef = useRef(version);
-  const isAuthPathRef = useRef(false);
 
   useEffect(() => {
     versionRef.current = version;
   }, [version]);
 
-  useEffect(() => {
-    isAuthPathRef.current = isAuthPath;
-  }, [isAuthPath]);
-
-  const activateUpdate = useCallback((sw: ServiceWorker | null, nextVersion: string) => {
-    if (isApplyingRef.current) return;
-    isApplyingRef.current = true;
-    localStorage.setItem(SEEN_VERSION_KEY, nextVersion);
-
-    if (sw) {
-      sw.postMessage({ type: "SKIP_WAITING" });
-      return;
-    }
-
-    window.location.reload();
-  }, []);
-
   const showUpdate = useCallback(async (sw: ServiceWorker | null, nextVersion?: string) => {
     if (isApplyingRef.current) return;
     const detectedVersion = nextVersion || await readServiceWorkerVersion();
-    if (isAuthPathRef.current) {
-      activateUpdate(sw, detectedVersion);
-      return;
-    }
     if (dismissedVersionRef.current === detectedVersion) return;
 
     setWaitingSW(sw);
     setVersion(detectedVersion);
     setShowUpdateModal(true);
-  }, [activateUpdate]);
+  }, []);
 
   const applyUpdate = useCallback(() => {
     isApplyingRef.current = true;
@@ -209,7 +184,7 @@ export function PwaRegister() {
       }
     };
 
-    navigator.serviceWorker.register("/sw.js").then(async (reg) => {
+    navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).then(async (reg) => {
       registration = reg;
 
       await showWaitingWorker();
@@ -243,7 +218,7 @@ export function PwaRegister() {
 
   return (
     <Dialog
-      open={showUpdateModal && !isAuthPath}
+      open={showUpdateModal}
       onOpenChange={(open) => {
         if (open) {
           setShowUpdateModal(true);
