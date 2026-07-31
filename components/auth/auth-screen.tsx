@@ -31,6 +31,17 @@ function GoogleIcon() {
   );
 }
 
+const clearPwaCaches = async () => {
+  if (typeof window === "undefined" || !("caches" in window)) return;
+
+  try {
+    const keys = await window.caches.keys();
+    await Promise.all(keys.filter((key) => key.startsWith("kratos-v")).map((key) => window.caches.delete(key)));
+  } catch {
+    // Cache cleanup is best-effort; auth navigation should still continue.
+  }
+};
+
 export function AuthScreen() {
   const [form, setForm] = useState({ email: "", otp: "" });
   const [codeSent, setCodeSent] = useState(false);
@@ -80,7 +91,8 @@ export function AuthScreen() {
       return;
     }
 
-    window.location.assign("/dashboard");
+    await clearPwaCaches();
+    window.location.replace("/dashboard");
   };
 
   return (
@@ -121,7 +133,12 @@ export function AuthScreen() {
               variant="secondary"
               className="h-8 w-full rounded-lg border border-white/10 !bg-white text-xs font-semibold !text-neutral-950 shadow-[0_14px_34px_rgba(0,0,0,0.2)] hover:!bg-neutral-100 [&>span]:!text-neutral-950"
             >
-              <a href="/api/auth/google">
+              <a
+                href="/api/auth/google"
+                onClick={() => {
+                  void clearPwaCaches();
+                }}
+              >
                 <GoogleIcon />
                 <span>Continue with Google</span>
               </a>

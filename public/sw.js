@@ -1,4 +1,4 @@
-const SW_VERSION = "5.1.38";
+const SW_VERSION = "5.1.40";
 const CACHE_NAME = `kratos-v${SW_VERSION}`;
 const STATIC_ASSETS = [
   "/logo.png",
@@ -54,8 +54,26 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests or APIs/Auth requests
-  if (request.method !== "GET" || url.pathname.startsWith("/api") || url.pathname.includes("/_next/webpack-hmr")) {
+  const isAuthSensitivePath =
+    url.pathname === "/login" ||
+    url.pathname.startsWith("/api") ||
+    url.pathname.startsWith("/dashboard") ||
+    url.pathname.startsWith("/train") ||
+    url.pathname.startsWith("/planner") ||
+    url.pathname.startsWith("/workouts") ||
+    url.pathname.startsWith("/progress") ||
+    url.pathname.startsWith("/settings") ||
+    url.pathname.startsWith("/coach") ||
+    url.pathname.startsWith("/exercises");
+
+  // Skip non-GET, API/auth, HMR, and app document navigations. Dynamic pages
+  // depend on fresh auth cookies; caching them can strand installed PWAs on /login.
+  if (
+    request.method !== "GET" ||
+    isAuthSensitivePath ||
+    request.mode === "navigate" ||
+    url.pathname.includes("/_next/webpack-hmr")
+  ) {
     return;
   }
 
@@ -85,7 +103,7 @@ self.addEventListener("fetch", (event) => {
       })
     );
   } else {
-    // Network-First for pages/documents
+    // Network-First for non-auth documents.
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
