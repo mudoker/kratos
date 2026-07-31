@@ -15,6 +15,30 @@ import {
 const VERSION_FALLBACK = "latest";
 const SEEN_VERSION_KEY = "kratos_pwa_seen_version";
 
+const clearKratosCaches = async () => {
+  if (typeof window === "undefined" || !("caches" in window)) return;
+
+  const keys = await window.caches.keys();
+  await Promise.all(keys.filter((key) => key.startsWith("kratos-v")).map((key) => window.caches.delete(key)));
+};
+
+const reloadWithUpdateToken = () => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("pwa-update", String(Date.now()));
+  window.location.replace(url.toString());
+};
+
+const forceServiceWorkerRefresh = async () => {
+  await clearKratosCaches();
+
+  if ("serviceWorker" in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+  }
+
+  reloadWithUpdateToken();
+};
+
 const isStandalonePwa = () => {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(display-mode: standalone)").matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
@@ -45,6 +69,7 @@ export function PwaRegister() {
   const dismissedVersionRef = useRef<string | null>(null);
   const isApplyingRef = useRef(false);
   const versionRef = useRef(version);
+  const fallbackReloadRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     versionRef.current = version;
@@ -60,23 +85,52 @@ export function PwaRegister() {
     setShowUpdateModal(true);
   }, []);
 
-  const applyUpdate = useCallback(() => {
+  const applyUpdate = useCallback(async () => {
+    if (isApplyingRef.current) return;
     isApplyingRef.current = true;
     setIsApplying(true);
     localStorage.setItem(SEEN_VERSION_KEY, version);
 
-    if (waitingSW) {
-      waitingSW.postMessage({ type: "SKIP_WAITING" });
-      return;
-    }
+    try {
+      const registration = await navigator.serviceWorker.getRegistration("/sw.js");
+      const sw = waitingSW || registration?.waiting;
 
-    window.location.reload();
+      if (sw) {
+        fallbackReloadRef.current = setTimeout(() => {
+          void forceServiceWorkerRefresh();
+        }, 2500);
+        sw.postMessage({ type: "SKIP_WAITING" });
+        return;
+      }
+
+      await forceServiceWorkerRefresh();
+    } catch {
+      reloadWithUpdateToken();
+    }
   }, [version, waitingSW]);
 
   const dismissUpdate = useCallback(() => {
     dismissedVersionRef.current = version;
     setShowUpdateModal(false);
   }, [version]);
+
+  useEffect(() => {
+    return () => {
+      if (fallbackReloadRef.current) {
+        clearTimeout(fallbackReloadRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isApplying) return;
+
+    const controller = navigator.serviceWorker?.controller;
+    if (!controller) {
+      void forceServiceWorkerRefresh();
+      return;
+    }
+  }, [isApplying]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || navigator.webdriver) return;
@@ -179,8 +233,11 @@ export function PwaRegister() {
     const onControllerChange = () => {
       if (!reloading) {
         reloading = true;
+        if (fallbackReloadRef.current) {
+          clearTimeout(fallbackReloadRef.current);
+        }
         localStorage.setItem(SEEN_VERSION_KEY, versionRef.current);
-        window.location.reload();
+        reloadWithUpdateToken();
       }
     };
 
