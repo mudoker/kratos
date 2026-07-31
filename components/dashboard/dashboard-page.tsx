@@ -121,7 +121,7 @@ export function DashboardPage() {
                     Keep the next workout one tap away.
                   </CardDescription>
                 </div>
-                <Button asChild size="sm" className="h-8 rounded-lg px-3 text-[10px] text-white dark:text-zinc-950">
+                <Button asChild size="sm" className="h-8 rounded-lg px-3 text-[10px] !text-white [&_*]:!text-white">
                   <Link href="/train">Open</Link>
                 </Button>
               </div>
