@@ -2,6 +2,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { requireUser } from "@/lib/auth-server";
 import { getUserData } from "@/lib/server-data";
 import { DataProvider } from "@/components/shared/data-provider";
+import { PwaRegister } from "@/components/shared/pwa-register";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <DataProvider data={data}>
+      <PwaRegister />
       <AppShell user={user}>{children}</AppShell>
     </DataProvider>
   );

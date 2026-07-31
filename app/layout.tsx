@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { PwaRegister } from "@/components/shared/pwa-register";
 
 export const metadata: Metadata = {
   title: "Kratos",
@@ -48,7 +47,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="antialiased">
-        <PwaRegister />
         {children}
       </body>
     </html>

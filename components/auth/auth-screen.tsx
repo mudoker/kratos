@@ -32,11 +32,15 @@ function GoogleIcon() {
 }
 
 const resetPwaShell = async () => {
-  if (typeof window === "undefined" || !("caches" in window)) return;
+  if (typeof window === "undefined") return;
 
   try {
-    const keys = await window.caches.keys();
-    await Promise.all(keys.filter((key) => key.startsWith("kratos-v")).map((key) => window.caches.delete(key)));
+    localStorage.removeItem("kratos_pwa_seen_version");
+
+    if ("caches" in window) {
+      const keys = await window.caches.keys();
+      await Promise.all(keys.filter((key) => key.startsWith("kratos-v")).map((key) => window.caches.delete(key)));
+    }
 
     if ("serviceWorker" in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
