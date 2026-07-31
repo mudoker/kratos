@@ -49,6 +49,18 @@ const resetPwaShell = async () => {
 
 const dashboardUrl = () => `/dashboard?pwa-auth=${Date.now()}`;
 
+const readServerSession = async () => {
+  const response = await fetch(`/api/session?check=${Date.now()}`, {
+    cache: "no-store",
+    credentials: "include",
+    headers: { "Cache-Control": "no-cache" },
+  });
+
+  if (!response.ok) return null;
+  const payload = (await response.json()) as { user?: { id: string } | null };
+  return payload.user ?? null;
+};
+
 export function AuthScreen() {
   const [form, setForm] = useState({ email: "", otp: "" });
   const [codeSent, setCodeSent] = useState(false);
@@ -67,12 +79,8 @@ export function AuthScreen() {
 
     const redirectAuthenticatedPwa = async () => {
       try {
-        const result = await authClient.getSession({
-          query: { disableCookieCache: true },
-          fetchOptions: { cache: "no-store" },
-        });
-
-        if (!cancelled && result.data?.user) {
+        const user = await readServerSession();
+        if (!cancelled && user) {
           await resetPwaShell();
           window.location.replace(dashboardUrl());
         }
@@ -83,8 +91,15 @@ export function AuthScreen() {
 
     void redirectAuthenticatedPwa();
 
+    const checks = [750, 1500, 3000, 5000].map((delay) =>
+      window.setTimeout(() => {
+        void redirectAuthenticatedPwa();
+      }, delay)
+    );
+
     return () => {
       cancelled = true;
+      checks.forEach((check) => window.clearTimeout(check));
     };
   }, []);
 

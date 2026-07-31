@@ -8,12 +8,15 @@ const neonAuthBaseUrl =
 
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin;
+  const callbackUrl = new URL("/dashboard", origin);
+  callbackUrl.searchParams.set("pwa-oauth", String(Date.now()));
+
   const response = await fetch(`${neonAuthBaseUrl}/sign-in/social`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Origin: origin },
     body: JSON.stringify({
       provider: "google",
-      callbackURL: "/dashboard",
+      callbackURL: `${callbackUrl.pathname}${callbackUrl.search}`,
       errorCallbackURL: "/login",
       requestSignUp: true,
       disableRedirect: true,
