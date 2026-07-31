@@ -31,16 +31,23 @@ function GoogleIcon() {
   );
 }
 
-const clearPwaCaches = async () => {
+const resetPwaShell = async () => {
   if (typeof window === "undefined" || !("caches" in window)) return;
 
   try {
     const keys = await window.caches.keys();
     await Promise.all(keys.filter((key) => key.startsWith("kratos-v")).map((key) => window.caches.delete(key)));
+
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((registration) => registration.unregister()));
+    }
   } catch {
-    // Cache cleanup is best-effort; auth navigation should still continue.
+    // PWA cleanup is best-effort; auth navigation should still continue.
   }
 };
+
+const dashboardUrl = () => `/dashboard?pwa-auth=${Date.now()}`;
 
 export function AuthScreen() {
   const [form, setForm] = useState({ email: "", otp: "" });
@@ -52,6 +59,32 @@ export function AuthScreen() {
     document.body.style.setProperty("--safe-area-background", "#08090A");
     return () => {
       document.body.style.removeProperty("--safe-area-background");
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const redirectAuthenticatedPwa = async () => {
+      try {
+        const result = await authClient.getSession({
+          query: { disableCookieCache: true },
+          fetchOptions: { cache: "no-store" },
+        });
+
+        if (!cancelled && result.data?.user) {
+          await resetPwaShell();
+          window.location.replace(dashboardUrl());
+        }
+      } catch {
+        // If session probing fails, keep the normal login form available.
+      }
+    };
+
+    void redirectAuthenticatedPwa();
+
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -91,8 +124,8 @@ export function AuthScreen() {
       return;
     }
 
-    await clearPwaCaches();
-    window.location.replace("/dashboard");
+    await resetPwaShell();
+    window.location.replace(dashboardUrl());
   };
 
   return (
@@ -135,8 +168,11 @@ export function AuthScreen() {
             >
               <a
                 href="/api/auth/google"
-                onClick={() => {
-                  void clearPwaCaches();
+                onClick={(event) => {
+                  event.preventDefault();
+                  void resetPwaShell().finally(() => {
+                    window.location.href = "/api/auth/google";
+                  });
                 }}
               >
                 <GoogleIcon />
