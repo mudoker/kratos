@@ -106,34 +106,6 @@ textarea {
   background: rgba(16, 16, 16, 0.14);
 }
 
-.training-plan-open-button {
-  background: #09090b !important;
-  color: #ffffff !important;
-}
-
-.training-plan-open-button:hover {
-  background: #18181b !important;
-}
-
-.training-plan-open-button,
-.training-plan-open-button * {
-  color: #ffffff !important;
-}
-
-.theme-dark .training-plan-open-button {
-  background: #ffffff !important;
-  color: #09090b !important;
-}
-
-.theme-dark .training-plan-open-button:hover {
-  background: #e4e4e7 !important;
-}
-
-.theme-dark .training-plan-open-button,
-.theme-dark .training-plan-open-button * {
-  color: #09090b !important;
-}
-
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }

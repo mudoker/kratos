@@ -124,7 +124,7 @@ export function DashboardPage() {
                 <Button
                   asChild
                   size="sm"
-                  className="training-plan-open-button h-8 rounded-lg px-3 text-[10px]"
+                  className="h-8 rounded-lg !bg-black px-3 text-[10px] !text-white hover:!bg-neutral-900 [&_*]:!text-white [.theme-dark_&]:!bg-white [.theme-dark_&]:!text-black [.theme-dark_&]:hover:!bg-neutral-200 [.theme-dark_&_*]:!text-black"
                 >
                   <Link href="/train">Open</Link>
                 </Button>
