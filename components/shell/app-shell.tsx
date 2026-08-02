@@ -256,7 +256,9 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               href={item.href}
               className={cn(
                 "flex h-10 min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-1 transition-colors duration-150 active:scale-98 select-none",
-                isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                isActive
+                  ? "bg-[color:var(--foreground)] text-[color:var(--background)] [&_svg]:text-[color:var(--background)]"
+                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.3 : 1.8} />
