@@ -1317,11 +1317,14 @@ export function PlannerPage() {
                               className={cn(
                                 "mx-auto flex h-8 w-8 items-center justify-center rounded-full border p-0 transition-all active:scale-95 sm:h-9 sm:w-9",
                                 isDone
-                                  ? "bg-[#34C759] border-[#34C759] text-foreground"
+                                  ? "border-[#34C759] bg-[#34C759] text-white"
                                   : "border-border text-transparent hover:border-[#AAAAAA]"
                               )}
                             >
-                              <Check className="h-3.5 w-3.5 stroke-[3.5]" />
+                              <Check
+                                className="h-3.5 w-3.5 stroke-[3.5]"
+                                style={isDone ? { color: "#ffffff", stroke: "#ffffff" } : undefined}
+                              />
                             </Button>
                             
                             {isDone && isNewPR && (
@@ -1379,7 +1382,7 @@ export function PlannerPage() {
         </Card>
 
         {/* FLOATING REST TIMER PILL WIDGET */}
-        <div className="fixed bottom-24 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
+        <div className="fixed bottom-36 right-4 z-40 flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
           {restSecondsLeft !== null ? (
             <motion.div
               layoutId="restTimerWidget"

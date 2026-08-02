@@ -13,6 +13,7 @@ import {
 import type { DashboardData } from "@/lib/types";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChartTooltip } from "@/components/shared/chart-tooltip";
 
 export function ProgressCharts({ data }: { data: DashboardData }) {
   const exerciseOptions = useMemo(() => {
@@ -124,14 +125,18 @@ export function ProgressCharts({ data }: { data: DashboardData }) {
                   tickLine={false} 
                   tick={{ fontSize: 10, fontWeight: 600, fill: "var(--muted-foreground)" }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '8px', 
-                    border: '1px solid rgba(0,0,0,0.06)', 
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
-                    fontSize: '11px',
-                    fontWeight: '600'
-                  }} 
+                <Tooltip
+                  cursor={{ stroke: "var(--foreground)", strokeOpacity: 0.12 }}
+                  content={
+                    <ChartTooltip
+                      valueLabel=""
+                      valueFormatter={(value, item) => `${value}${String(item?.payload?.unit || "")}`}
+                      labelFormatter={(label, item) => {
+                        const reps = item?.payload?.reps;
+                        return reps ? `${label} • ${reps} reps` : label;
+                      }}
+                    />
+                  }
                 />
                 <Area 
                   type="monotone" 

@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import type { DashboardData } from "@/lib/types";
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
+import { ChartTooltip } from "@/components/shared/chart-tooltip";
 
 export function DashboardCharts({ data }: { data: DashboardData }) {
   const weeklyVolume = useMemo(() => {
@@ -64,45 +65,49 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
       .slice(0, 5);
   }, [data.sessions, data.exercises]);
 
+  const hasWeeklyVolume = weeklyVolume.some((week) => week.volume > 0);
   return (
     <div className="grid gap-4 md:grid-cols-2 md:gap-6">
       <Card className="p-3.5 sm:p-6">
         <CardTitle className="text-base">Weekly Volume</CardTitle>
         <CardDescription className="mt-1 hidden sm:block">Total sets performed per week.</CardDescription>
         <div className="h-[220px] w-full mt-4 sm:h-[280px] sm:mt-6">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weeklyVolume} margin={{ top: 10, right: 4, left: -28, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 10, fontWeight: 600, fill: "var(--muted-foreground)" }}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 10, fontWeight: 600, fill: "var(--muted-foreground)" }}
-              />
-              <Tooltip 
-                cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                contentStyle={{ 
-                  borderRadius: '8px', 
-                  border: '1px solid rgba(0,0,0,0.06)', 
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
-                  fontSize: '11px',
-                  fontWeight: '600'
-                }} 
-              />
-              <Bar 
-                dataKey="volume" 
-                fill="var(--brand)" 
-                radius={[6, 6, 0, 0]} 
-                barSize={40}
-                animationDuration={1500}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {hasWeeklyVolume ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyVolume} margin={{ top: 10, right: 4, left: -28, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fontWeight: 600, fill: "var(--muted-foreground)" }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 10, fontWeight: 600, fill: "var(--muted-foreground)" }}
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--foreground)", opacity: 0.04 }}
+                  content={<ChartTooltip valueLabel="sets" />}
+                />
+                <Bar
+                  dataKey="volume"
+                  fill="var(--brand)"
+                  radius={[6, 6, 0, 0]}
+                  barSize={40}
+                  animationDuration={1500}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background p-6 text-center">
+              <p className="text-sm font-semibold text-foreground">No weekly volume yet.</p>
+              <p className="mt-1 text-[10px] font-medium text-muted-foreground">
+                Finish a workout to populate this chart.
+              </p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -117,7 +122,7 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                 layout="vertical" 
                 margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
                 <XAxis type="number" hide />
                 <YAxis 
                   dataKey="name" 
@@ -127,15 +132,9 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
                   tick={{ fontSize: 10, fontWeight: 700, fill: "var(--foreground)" }}
                   width={80}
                 />
-                <Tooltip 
-                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                  contentStyle={{ 
-                    borderRadius: '8px', 
-                    border: '1px solid rgba(0,0,0,0.06)', 
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
-                    fontSize: '11px',
-                    fontWeight: '600'
-                  }} 
+                <Tooltip
+                  cursor={{ fill: "var(--foreground)", opacity: 0.04 }}
+                  content={<ChartTooltip valueLabel="sets" />}
                 />
                 <Bar 
                   dataKey="value" 
@@ -150,11 +149,11 @@ export function DashboardCharts({ data }: { data: DashboardData }) {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center rounded-[24px] border border-dashed border-[color:var(--border-strong)] bg-black/[0.02] p-6 text-center">
-              <p className="text-sm font-medium text-[color:var(--muted-foreground)]">
+            <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background p-6 text-center">
+              <p className="text-sm font-semibold text-foreground">
                 No session data for the last 30 days.
               </p>
-              <p className="mt-1 text-[10px] text-[color:var(--muted-foreground)] opacity-70">
+              <p className="mt-1 text-[10px] font-medium text-muted-foreground">
                 Log a workout to see your stimulus breakdown.
               </p>
             </div>
