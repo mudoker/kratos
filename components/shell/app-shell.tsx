@@ -216,14 +216,14 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </aside>
 
       {/* Responsive Mobile Top Sticky Navigation Header Bar (Flush edge-to-edge) */}
-      <header className="lg:hidden sticky top-0 z-40 -mx-3 -mt-[calc(env(safe-area-inset-top)+0.75rem)] mb-2 flex items-center justify-between border-b border-border bg-[color:var(--background)] px-4 pb-1.5 pt-[calc(env(safe-area-inset-top)+0.375rem)]">
+      <header className="lg:hidden sticky top-0 z-40 -mx-3 -mt-[calc(env(safe-area-inset-top)+0.75rem)] mb-2 flex items-center justify-between border-b border-border bg-[color:var(--background)] px-4 pb-1.5 pt-[calc(env(safe-area-inset-top)+0.375rem)] relative">
         <div className="flex items-center gap-2">
           <div className="h-5 w-5 rounded-md bg-foreground/5 text-foreground flex items-center justify-center shrink-0">
             <Dumbbell className="h-3 w-3" />
           </div>
           <span className="text-[9px] font-extrabold uppercase tracking-widest text-foreground/40 block leading-none">Kratos</span>
         </div>
-        <span className="max-w-[40vw] truncate text-[10px] font-bold text-foreground/70 tracking-tight">{activeTitle}</span>
+        <span className="pointer-events-none absolute left-1/2 max-w-[48vw] -translate-x-1/2 truncate text-center text-[10px] font-bold text-foreground/70 tracking-tight">{activeTitle}</span>
         <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <DialogTrigger asChild>
             <button
@@ -262,7 +262,14 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               )}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.3 : 1.8} />
-              <span className="mt-0.5 max-w-full truncate text-[7px] font-bold leading-none tracking-tight">{item.label}</span>
+              <span
+                className={cn(
+                  "mt-0.5 max-w-full truncate text-[7px] font-bold leading-none tracking-tight",
+                  isActive ? "text-[color:var(--background)]" : "text-muted-foreground"
+                )}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         })}
