@@ -2751,7 +2751,7 @@ export function PlannerPage() {
       {/* DETAIL MODAL: VIEW PLAN & STIMULUS MAP */}
       <Dialog open={Boolean(viewingPlan)} onOpenChange={(open) => !open && setViewingPlan(null)}>
         {viewingPlan && (
-          <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl p-5 border-none bg-card text-foreground">
+          <DialogContent className="w-[min(94vw,880px)] max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-card p-4 text-foreground sm:p-5">
             <DialogHeader className="pb-3 pr-10 border-b border-border">
               <div>
                 <DialogTitle className="text-base font-bold text-foreground">{viewingPlan.name}</DialogTitle>
@@ -2764,9 +2764,9 @@ export function PlannerPage() {
             <div className="space-y-6 pt-4">
               {viewingPlan.days.map((day) => (
                 <div key={day.id} className="space-y-2">
-                  <div className="flex items-center justify-between bg-foreground/[0.035] p-2 rounded-lg">
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-background p-2">
                     <span className="text-xs font-bold text-foreground">{day.title}</span>
-                    <Badge className="bg-card/10 text-foreground/75 text-[8px] font-bold uppercase border-none">
+                    <Badge className="border-border bg-card px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.08em] text-foreground">
                       {day.focus || "Focus"}
                     </Badge>
                   </div>
@@ -2790,7 +2790,7 @@ export function PlannerPage() {
                 </div>
               ))}
 
-              <div className="pt-4 border-t border-border">
+              <div className="border-t border-border pt-4">
                 <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
                   Stimulus Audit
                 </h4>

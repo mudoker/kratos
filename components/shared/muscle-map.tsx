@@ -6,6 +6,7 @@ import { RotateCcw } from "lucide-react";
 import type { BodyHighlightSlug, UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const bodySlugs = new Set<BodyHighlightSlug>([
   "trapezius", "triceps", "forearm", "adductors", "calves", "neck", "deltoids", "hands", "feet", "head", "ankles", "tibialis", "obliques", "chest", "biceps", "abs", "quadriceps", "knees", "upper-back", "lower-back", "hamstring", "gluteal",
@@ -62,13 +63,13 @@ export function MuscleMap({
   }, [slugs, intensities]);
 
   return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-white/60 p-3.5 sm:rounded-[28px] sm:p-5">
+    <div className="rounded-xl border border-border bg-card p-3.5 text-foreground shadow-none sm:p-5">
       <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--muted-foreground)] sm:text-xs sm:tracking-[0.18em]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-xs sm:tracking-[0.18em]">
             {title || "Target muscles"}
           </p>
-          <p className="mt-0.5 hidden text-sm text-[color:var(--muted-foreground)] sm:block">
+          <p className="mt-0.5 hidden text-sm text-muted-foreground sm:block">
             Hover a region to inspect stimulus.
           </p>
         </div>
@@ -77,14 +78,15 @@ export function MuscleMap({
           size="sm"
           type="button"
           onClick={() => setSide(side === "front" ? "back" : "front")}
+          className="border-border bg-foreground/[0.035] text-foreground hover:bg-foreground/[0.06] [&_svg]:text-foreground"
         >
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="h-4 w-4" style={{ color: "var(--foreground)", stroke: "var(--foreground)" }} />
           {side === "front" ? "Back" : "Front"}
         </Button>
       </div>
 
       <div
-        className="rounded-2xl bg-[radial-gradient(circle_at_top,#ffffff_0%,#e4e4e4_100%)] p-2 sm:rounded-[24px] sm:p-4"
+        className="rounded-xl border border-border bg-background p-2 sm:p-4"
         onMouseMove={(event) => {
           const target = event.target;
           if (!(target instanceof Element)) return;
@@ -94,27 +96,38 @@ export function MuscleMap({
         }}
         onMouseLeave={() => setHoveredSlug(null)}
       >
-        <div className="flex min-h-[320px] items-center justify-center sm:min-h-[480px]">
+        <div className="flex min-h-[320px] items-center justify-center rounded-lg bg-card sm:min-h-[480px]">
           <Body
             data={data}
             gender={profile.bodyGender}
             side={side}
-            border="none"
+            border="var(--border-strong)"
             scale={1.08}
             // 1-4: Base, 5-8: Brighter, 9: Neutral Highlight
             colors={[
-              "#82ca9d", "#ffd36b", "#ff9f0a", "#c81e1e", // 1-4
-              "#a8e6cf", "#ffea8a", "#ffbf69", "#ff4d4d", // 5-8
-              "#d1d5db" // 9 (Grey highlight for non-stimulus)
+              "#22c55e", "#eab308", "#f97316", "#ef4444", // 1-4
+              "#4ade80", "#facc15", "#fb923c", "#f87171", // 5-8
+              "#71717a" // 9 (neutral hover highlight)
             ]}
           />
         </div>
       </div>
 
-      <div className="mt-3 flex max-h-16 flex-wrap gap-1.5 overflow-hidden sm:mt-4 sm:max-h-none sm:gap-2">
+      <div className="mt-3 flex max-h-24 flex-wrap gap-1.5 overflow-y-auto pr-1 sm:mt-4 sm:max-h-none sm:gap-2 sm:overflow-visible">
         {uniqueSlugs.map((slug) => (
-          <button key={slug} type="button" onMouseEnter={() => setHoveredSlug(slug)} onMouseLeave={() => setHoveredSlug(null)}>
-            <Badge className={hoveredSlug === slug ? "border-[color:var(--brand)] bg-[color:var(--brand)] text-white!" : undefined}>
+          <button
+            key={slug}
+            type="button"
+            className="rounded-full"
+            onMouseEnter={() => setHoveredSlug(slug)}
+            onMouseLeave={() => setHoveredSlug(null)}
+          >
+            <Badge
+              className={cn(
+                "border-border bg-foreground/[0.055] px-2.5 py-1 text-[9px] font-bold tracking-[0.08em] text-foreground transition-colors hover:border-border-strong hover:bg-foreground/[0.09] sm:text-[10px]",
+                hoveredSlug === slug && "border-foreground bg-foreground text-background"
+              )}
+            >
               {formatSlug(slug)}
             </Badge>
           </button>
