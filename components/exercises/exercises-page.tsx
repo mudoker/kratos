@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/components/shared/data-provider";
-import { ArrowLeft, ChevronRight, Search, BookOpen, PlayCircle } from "lucide-react";
+import { ArrowLeft, Search, BookOpen, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const categories: Array<ExerciseCategory | "All"> = ["All", "Push", "Pull", "Legs", "Core", "Conditioning", "Mobility"];
@@ -126,7 +126,7 @@ export function ExercisesPage() {
           </div>
 
           {/* Movement List items */}
-          <div className="mt-2.5 h-[calc(100dvh-17rem)] min-h-[360px] space-y-1.5 overflow-y-auto pr-0.5 pb-3 scrollbar-none sm:space-y-2 xl:h-auto xl:min-h-0 xl:overflow-visible xl:pr-0 xl:pb-0">
+          <div className="mt-2.5 space-y-1.5 sm:space-y-2">
             {filtered.map((exercise) => {
               const isChosen = exercise.id === selected?.id;
               return (
@@ -141,15 +141,14 @@ export function ExercisesPage() {
                       : "border-border bg-card/40 hover:bg-card/80"
                   )}
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-[10.5px] font-semibold leading-snug text-foreground sm:text-[11px]">{exercise.name}</p>
                       <p className="mt-0.5 text-[9px] text-foreground/40 font-bold uppercase tracking-wider">{exercise.equipment}</p>
                     </div>
-                    <Badge className="max-w-[92px] shrink-0 truncate border-transparent bg-foreground/5 px-2 py-0.5 text-[8px] font-bold uppercase text-foreground/60 sm:max-w-none sm:text-[9px]">
+                    <Badge className="justify-self-end truncate border-transparent bg-foreground/5 px-2 py-0.5 text-[8px] font-bold uppercase text-foreground/60 sm:text-[9px]">
                       {exercise.category}
                     </Badge>
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-foreground/25 xl:hidden" />
                   </div>
                 </button>
               );
