@@ -30,6 +30,15 @@ const items: Array<{ href: Route; label: string; icon: typeof BarChart3 }> = [
   { href: "/settings", label: "Settings", icon: Settings2 },
 ];
 
+const bottomItems: Array<{ href: Route; label: string; icon: typeof BarChart3 }> = [
+  { href: "/dashboard", label: "Home", icon: BarChart3 },
+  { href: "/train", label: "Train", icon: Dumbbell },
+  { href: "/progress", label: "Progress", icon: Trophy },
+  { href: "/exercises", label: "Library", icon: Library },
+  { href: "/coach", label: "Coach", icon: Bot },
+  { href: "/settings", label: "Settings", icon: Settings2 },
+];
+
 function SidebarContent({
   isMobile = false,
   pathname,
@@ -44,7 +53,7 @@ function SidebarContent({
   onLogout: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full justify-between items-center lg:group-hover:items-stretch">
+    <div className={cn("flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "min-h-full justify-start gap-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]" : "h-full justify-between")}>
       <div className={cn("w-full flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "space-y-3" : "space-y-5")}>
         
         {/* Core Brand Card */}
@@ -138,7 +147,7 @@ function SidebarContent({
       </div>
 
       {/* Logout button & status */}
-      <div className={cn("space-y-3 border-t border-border w-full flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "pt-3 mt-3" : "pt-4 mt-4")}>
+      <div className={cn("space-y-3 border-t border-border w-full flex flex-col items-center lg:group-hover:items-stretch", isMobile ? "pt-3 mt-0" : "pt-4 mt-4")}>
         <div className={cn(
           "border border-border-strong bg-brand/[0.03] text-foreground/60 transition-all duration-200",
           isMobile 
@@ -215,6 +224,20 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
           <span className="text-[9px] font-extrabold uppercase tracking-widest text-foreground/40 block leading-none">Kratos</span>
         </div>
         <span className="max-w-[40vw] truncate text-[10px] font-bold text-foreground/70 tracking-tight">{activeTitle}</span>
+        <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <DialogTrigger asChild>
+            <button
+              type="button"
+              aria-label="Open navigation menu"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition hover:text-foreground"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+          </DialogTrigger>
+          <DialogContent className="fixed top-0 left-0 bottom-0 h-dvh max-h-dvh w-[240px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-card p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] border-r border-border-strong overflow-y-auto max-w-full z-50">
+            <SidebarContent isMobile={true} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
+          </DialogContent>
+        </Dialog>
       </header>
 
       {/* Main Work Area Content */}
@@ -223,12 +246,8 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       </main>
 
       {/* Responsive Mobile Bottom Tab Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-1/2 z-50 w-[min(244px,calc(100vw-56px))] -translate-x-1/2 bg-card border border-border px-2 py-1 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center justify-around">
-        {[
-          { href: "/dashboard" as Route, label: "Home", icon: BarChart3 },
-          { href: "/train" as Route, label: "Train", icon: Dumbbell },
-        ].map((item) => {
-
+      <nav className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-1/2 z-50 w-[min(390px,calc(100vw-20px))] -translate-x-1/2 bg-card/95 border border-border px-1.5 py-1.5 rounded-2xl shadow-[0_14px_34px_rgba(0,0,0,0.12)] backdrop-blur flex items-center justify-around">
+        {bottomItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
           return (
@@ -236,34 +255,15 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center py-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
-                isActive ? "text-foreground" : "text-muted-foreground"
+                "flex h-10 min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-1 transition-colors duration-150 active:scale-98 select-none",
+                isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
               )}
             >
-              <Icon className="h-4.5 w-4.5" strokeWidth={isActive ? 2.25 : 1.8} />
-              <span className="text-[7.5px] font-semibold tracking-tight mt-0.5">{item.label}</span>
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.3 : 1.8} />
+              <span className="mt-0.5 max-w-full truncate text-[7px] font-bold leading-none tracking-tight">{item.label}</span>
             </Link>
           );
         })}
-
-        {/* More Button to trigger sidebar menu */}
-        <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <DialogTrigger asChild>
-            <button
-              type="button"
-              className={cn(
-                "flex flex-col items-center justify-center py-0.5 flex-1 transition-colors duration-150 active:scale-98 select-none",
-                ["/progress", "/exercises", "/coach", "/settings"].includes(pathname) ? "text-foreground" : "text-muted-foreground"
-              )}
-            >
-              <Menu className="h-4.5 w-4.5" strokeWidth={1.8} />
-              <span className="text-[7.5px] font-semibold tracking-tight mt-0.5">More</span>
-            </button>
-          </DialogTrigger>
-          <DialogContent className="fixed top-0 left-0 bottom-0 h-full w-[240px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-card p-4 border-r border-border-strong overflow-y-auto max-w-full z-50">
-            <SidebarContent isMobile={true} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
-          </DialogContent>
-        </Dialog>
       </nav>
       </div>
     </div>

@@ -60,7 +60,7 @@ export function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-3 pb-24 lg:space-y-5 lg:pb-0">
+    <div className="space-y-3 pb-2 lg:space-y-5 lg:pb-0">
       <Card className="rounded-xl p-3 sm:rounded-2xl sm:p-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0">

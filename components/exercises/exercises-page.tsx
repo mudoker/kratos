@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/components/shared/data-provider";
-import { Search, BookOpen, PlayCircle } from "lucide-react";
+import { ArrowLeft, ChevronRight, Search, BookOpen, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const categories: Array<ExerciseCategory | "All"> = ["All", "Push", "Pull", "Legs", "Core", "Conditioning", "Mobility"];
@@ -18,8 +18,7 @@ export function ExercisesPage() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ExerciseCategory | "All">("All");
   const [selectedId, setSelectedId] = useState(data.exercises[0]?.id ?? "");
-  const [page, setPage] = useState(0);
-  const PAGE_SIZE = 6;
+  const [showDetail, setShowDetail] = useState(false);
 
 
   const filtered = useMemo(
@@ -31,11 +30,6 @@ export function ExercisesPage() {
       }),
     [category, data.exercises, query]
   );
-
-  // Reset page on filter change
-  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginatedExercises = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
 
   const selected = filtered.find((exercise) => exercise.id === selectedId) ?? filtered[0] ?? data.exercises[0];
 
@@ -56,15 +50,20 @@ export function ExercisesPage() {
   // Reset page when filter changes
   const handleCategoryChange = (cat: ExerciseCategory | "All") => {
     setCategory(cat);
-    setPage(0);
+    setShowDetail(false);
   };
   const handleQueryChange = (q: string) => {
     setQuery(q);
-    setPage(0);
+    setShowDetail(false);
+  };
+
+  const openExercise = (exerciseId: string) => {
+    setSelectedId(exerciseId);
+    setShowDetail(true);
   };
 
   return (
-    <div className="min-w-0 space-y-3 pb-14 lg:space-y-6 lg:pb-0">
+    <div className="min-w-0 space-y-3 pb-2 lg:space-y-6 lg:pb-0">
       
       <div className="relative overflow-hidden rounded-xl bg-brand p-3 text-background shadow-lg md:rounded-[36px] md:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_40%)]" />
@@ -85,7 +84,7 @@ export function ExercisesPage() {
       <div className="grid min-w-0 items-start gap-3 xl:grid-cols-[0.95fr_1.05fr] xl:gap-6">
         
         {/* LEFT COLUMN: Search & scrolling movements list */}
-        <Card className="flex min-w-0 flex-col rounded-xl border-transparent bg-card/70 p-3 shadow-sm backdrop-blur md:rounded-[24px] md:p-6">
+        <Card className={cn("min-w-0 flex-col rounded-xl border-transparent bg-card/70 p-3 shadow-sm backdrop-blur md:rounded-[24px] md:p-6", showDetail ? "hidden xl:flex" : "flex")}>
 
           <p className="hidden text-[10px] font-bold uppercase tracking-widest text-foreground/40 mb-3 sm:block">Browse</p>
 
@@ -123,18 +122,18 @@ export function ExercisesPage() {
           {/* Catalog count indicators */}
           <div className="mt-2.5 flex items-center justify-between gap-3 text-[9px] font-extrabold uppercase tracking-wider text-foreground/45 sm:text-[10px]">
             <span>{filtered.length} movements</span>
-            <span className="text-foreground/30">{page + 1}/{pageCount || 1}</span>
+            <span className="text-foreground/30">{category}</span>
           </div>
 
-          {/* Movement List items - paginated */}
-          <div className="mt-2.5 space-y-1.5 sm:space-y-2">
-            {paginatedExercises.map((exercise) => {
+          {/* Movement List items */}
+          <div className="mt-2.5 h-[calc(100dvh-17rem)] min-h-[360px] space-y-1.5 overflow-y-auto pr-0.5 pb-3 scrollbar-none sm:space-y-2 xl:h-auto xl:min-h-0 xl:overflow-visible xl:pr-0 xl:pb-0">
+            {filtered.map((exercise) => {
               const isChosen = exercise.id === selected?.id;
               return (
                 <button
                   key={exercise.id}
                   type="button"
-                  onClick={() => setSelectedId(exercise.id)}
+                  onClick={() => openExercise(exercise.id)}
                   className={cn(
                     "group relative w-full rounded-lg border p-2 text-left transition duration-200 sm:rounded-xl sm:p-3",
                     isChosen
@@ -150,41 +149,26 @@ export function ExercisesPage() {
                     <Badge className="max-w-[92px] shrink-0 truncate border-transparent bg-foreground/5 px-2 py-0.5 text-[8px] font-bold uppercase text-foreground/60 sm:max-w-none sm:text-[9px]">
                       {exercise.category}
                     </Badge>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-foreground/25 xl:hidden" />
                   </div>
                 </button>
               );
             })}
           </div>
-
-          {/* Pagination controls */}
-          {pageCount > 1 && (
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="h-8 rounded-lg border border-border bg-card/40 px-2.5 py-0 text-[10px] font-bold transition hover:bg-card disabled:opacity-30"
-              >
-                ← Prev
-              </Button>
-              <span className="text-[10px] text-foreground/40 font-semibold">{page + 1} of {pageCount}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}
-                disabled={page >= pageCount - 1}
-                className="h-8 rounded-lg border border-border bg-card/40 px-2.5 py-0 text-[10px] font-bold transition hover:bg-card disabled:opacity-30"
-              >
-                Next →
-              </Button>
-            </div>
-          )}
         </Card>
 
         {/* RIGHT COLUMN: Biomechanics Inspector Map & Setup */}
         {selected ? (
-          <div className={cn("min-w-0 space-y-3 md:space-y-6", query.trim() ? "block" : "hidden sm:block")}>
+          <div className={cn("min-w-0 space-y-3 md:space-y-6", showDetail ? "block" : "hidden xl:block")}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowDetail(false)}
+              className="h-9 rounded-lg border border-border bg-card/70 px-3 text-[10px] font-bold text-foreground/70 xl:hidden"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to library
+            </Button>
             
             <div>
             <MuscleMap 
