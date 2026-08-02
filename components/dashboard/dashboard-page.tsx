@@ -8,8 +8,10 @@ import {
   BarChart3,
   CalendarClock,
   Dumbbell,
+  Edit3,
   Flame,
   History,
+  Play,
   Trophy,
 } from "lucide-react";
 
@@ -130,30 +132,37 @@ export function DashboardPage() {
                 </Button>
               </div>
 
-              {activePlan ? (
-                <div className="mt-3 space-y-3">
-                  <div className="rounded-xl border border-border bg-foreground/[0.025] p-3">
-                    <p className="truncate text-sm font-semibold text-foreground">{activePlan.name}</p>
-                    <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">
-                      {activePlan.notes || "No plan notes added."}
-                    </p>
-                  </div>
-
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {activePlan.days.slice(0, 4).map((day) => (
-                      <div key={day.id} className="min-w-0 rounded-xl border border-border bg-card p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-xs font-semibold text-foreground">
-                            {day.title || `Day ${day.day + 1}`}
-                          </p>
-                          <Badge className="shrink-0 border-none bg-foreground/5 px-1.5 py-0.5 text-[8px] font-bold text-muted-foreground">
-                            {day.items.length} lifts
-                          </Badge>
+              {data.plans.length ? (
+                <div className="mt-3 max-h-[310px] space-y-2 overflow-y-auto pr-1">
+                  {data.plans.map((plan) => {
+                    const totalExercises = plan.days.reduce((acc, day) => acc + day.items.length, 0);
+                    return (
+                      <div key={plan.id} className="rounded-xl border border-border bg-foreground/[0.025] p-3">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">{plan.name}</p>
+                            <p className="mt-1 truncate text-[10px] font-semibold text-muted-foreground">
+                              {plan.days.length} templates • {totalExercises} exercises
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            <Button asChild variant="outline" size="sm" className="h-8 rounded-lg px-2 text-[10px] font-bold">
+                              <Link href={`/train?action=edit&planId=${plan.id}`}>
+                                <Edit3 className="h-3 w-3" />
+                                <span className="hidden sm:inline">Edit</span>
+                              </Link>
+                            </Button>
+                            <Button asChild size="sm" className="h-8 rounded-lg !bg-black px-2 text-[10px] !text-white hover:!bg-neutral-900 [&_*]:!text-white [.theme-dark_&]:!bg-white [.theme-dark_&]:!text-black [.theme-dark_&]:hover:!bg-neutral-200 [.theme-dark_&_*]:!text-black">
+                              <Link href={`/train?action=start&planId=${plan.id}`}>
+                                <Play className="h-3 w-3 fill-current" />
+                                <span className="hidden sm:inline">Start</span>
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
-                        <p className="mt-1 truncate text-[10px] text-muted-foreground">{day.focus || "Routine"}</p>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="mt-3 rounded-xl border border-dashed border-border p-6 text-center">

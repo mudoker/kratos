@@ -8,7 +8,7 @@ import {
   Save, ArrowLeft, RotateCcw, Volume2, VolumeX, Timer, Check, Minus,
   Pause, Search, Copy, Star, ChevronDown, ChevronUp
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Exercise, ExerciseCategory, WeeklyPlan, WeeklyPlanDay, WeeklyPlanItem, WorkoutSession, WorkoutSessionItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -141,6 +141,7 @@ const playBeep = () => {
 export function PlannerPage() {
   const data = useData();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Navigation tab: "plans" (Manage templates), "session" (Resume/Start workout), "history" (Past logs)
   const [activeTab, setActiveTab] = useState<"plans" | "session" | "history">("session");
@@ -161,6 +162,8 @@ export function PlannerPage() {
   const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
   const [draftPlanPrompt, setDraftPlanPrompt] = useState<WeeklyPlan | null>(null);
+  const [isStartWorkoutDialogOpen, setIsStartWorkoutDialogOpen] = useState(false);
+  const [startDialogPlanId, setStartDialogPlanId] = useState<string | null>(null);
 
   // States for active operations
   const [isEditingSplit, setIsEditingSplit] = useState(false);
@@ -570,6 +573,14 @@ export function PlannerPage() {
     return null;
   };
 
+  const getPreviousSessionItem = (exerciseId: string) => {
+    const latest = [...sessions]
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+      .find((s) => s.items.some((item) => item.exerciseId === exerciseId));
+
+    return latest?.items.find((item) => item.exerciseId === exerciseId) ?? null;
+  };
+
   const checkIsNewPR = (exerciseId: string, weightStr: string, repsStr: string) => {
     const w = parseFloat(weightStr) || 0;
     const r = parseInt(repsStr) || 0;
@@ -623,6 +634,13 @@ export function PlannerPage() {
     setSelectedEffort("Moderate");
     setCompletedSets({});
     setIsWorkoutLoggerOpen(true);
+    setIsStartWorkoutDialogOpen(false);
+    setStartDialogPlanId(null);
+  };
+
+  const openStartWorkoutDialog = (planId?: string) => {
+    setStartDialogPlanId(planId ?? null);
+    setIsStartWorkoutDialogOpen(true);
   };
 
   const startWorkoutFromDay = (day: WeeklyPlanDay, plan: WeeklyPlan) => {
@@ -643,18 +661,19 @@ export function PlannerPage() {
       notes: day.notes || "",
       items: day.items.map((item, order) => {
         const setList = deserializeSetArray(item.sets, item.reps, item.targetLoad);
+        const previousItem = getPreviousSessionItem(item.exerciseId);
         return {
-          id: item.id,
+          id: createDraftId(),
           exerciseId: item.exerciseId,
           exerciseName: exercises.find((e) => e.id === item.exerciseId)?.name || item.exerciseId,
           plannedSets: item.sets,
           reps: item.reps,
-          restSeconds: item.restSeconds,
+          restSeconds: previousItem?.restSeconds || item.restSeconds,
           targetLoad: item.targetLoad,
           targetRpe: item.targetRpe,
-          sets: setList.map((s) => ({
-            weight: s.weight,
-            reps: s.reps,
+          sets: setList.map((s, setIndex) => ({
+            weight: previousItem?.sets?.[setIndex]?.weight || s.weight,
+            reps: previousItem?.sets?.[setIndex]?.reps || s.reps,
           })),
           notes: item.notes,
           order,
@@ -669,6 +688,8 @@ export function PlannerPage() {
     setSelectedEffort("Moderate");
     setCompletedSets({});
     setIsWorkoutLoggerOpen(true);
+    setIsStartWorkoutDialogOpen(false);
+    setStartDialogPlanId(null);
 
     if (session.items && session.items.length > 0) {
       setLoggerExpandedExercises({ [session.items[0].id]: true });
@@ -949,6 +970,27 @@ export function PlannerPage() {
       }
     }
   }, [data.plans, data.sessions, data.exercises]);
+
+  useEffect(() => {
+    const action = searchParams.get("action");
+    const planId = searchParams.get("planId");
+    if (!action || !planId || plans.length === 0) return;
+
+    const plan = plans.find((candidate) => candidate.id === planId);
+    if (!plan) return;
+
+    if (action === "edit") {
+      setActiveDraftPlan(plan);
+      setIsEditingSplit(true);
+    }
+
+    if (action === "start") {
+      setActiveTab("session");
+      openStartWorkoutDialog(plan.id);
+    }
+
+    router.replace("/train");
+  }, [plans, router, searchParams]);
 
   // Stopwatch ticking logic
   useEffect(() => {
@@ -2174,7 +2216,10 @@ export function PlannerPage() {
       exerciseCount: day.items.length,
     }))
   );
-  const mobileTemplateLimit = 1;
+  const startDialogTemplateEntries = startDialogPlanId
+    ? templateEntries.filter((entry) => entry.plan.id === startDialogPlanId)
+    : templateEntries;
+  const mobileTemplateLimit = 4;
   const desktopTemplateLimit = 8;
 
   return (
@@ -2457,7 +2502,7 @@ export function PlannerPage() {
             ) : null}
 
             <Card
-              onClick={startEmptyWorkout}
+              onClick={() => openStartWorkoutDialog()}
               className="cursor-pointer rounded-xl border border-border bg-card p-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all hover:border-border group sm:rounded-2xl sm:p-4"
             >
               <div className="flex items-center justify-between">
@@ -2510,7 +2555,7 @@ export function PlannerPage() {
               </span>
 
               {templateEntries.length > 0 ? (
-                <div className="grid gap-2.5 md:grid-cols-2">
+                <div className="max-h-[430px] overflow-y-auto pr-0.5 grid gap-2.5 md:grid-cols-2">
                   {templateEntries.map(({ plan, day, exerciseCount }, index) => {
                       const isDraft = isDraftPlan(plan);
                       return (
@@ -2714,6 +2759,68 @@ export function PlannerPage() {
             </div>
           </DialogContent>
         )}
+      </Dialog>
+
+      <Dialog open={isStartWorkoutDialogOpen} onOpenChange={setIsStartWorkoutDialogOpen}>
+        <DialogContent className="w-[min(92vw,520px)] max-h-[82vh] overflow-y-auto rounded-2xl border border-border bg-card p-4 text-foreground sm:p-5">
+          <DialogHeader className="pr-8">
+            <DialogTitle className="text-base font-bold text-foreground">Start workout</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Choose freestyle or start from a saved template with previous weights prefilled.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={startEmptyWorkout}
+              className="h-auto w-full justify-between rounded-xl border-border bg-foreground/[0.025] p-3 text-left hover:bg-foreground/[0.05]"
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-bold text-foreground">Freestyle workout</span>
+                  <span className="mt-0.5 block text-[10px] font-semibold text-muted-foreground">Start empty and add exercises as you go.</span>
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </Button>
+
+            <div className="space-y-2">
+              <p className="px-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                Templates ({startDialogTemplateEntries.length})
+              </p>
+              {startDialogTemplateEntries.length ? (
+                <div className="grid max-h-[46vh] gap-2 overflow-y-auto pr-1">
+                  {startDialogTemplateEntries.map(({ plan, day, exerciseCount }) => (
+                    <Button
+                      key={`${plan.id}-${day.id}-start-dialog`}
+                      type="button"
+                      variant="ghost"
+                      onClick={() => startWorkoutFromDay(day, plan)}
+                      className="h-auto justify-between rounded-xl border border-border bg-card p-3 text-left hover:bg-foreground/[0.035]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-xs font-bold text-foreground">{day.title}</span>
+                        <span className="mt-0.5 block truncate text-[10px] font-semibold text-muted-foreground">
+                          {plan.name} • {exerciseCount} exercises
+                        </span>
+                      </span>
+                      <Play className="h-3.5 w-3.5 shrink-0 fill-current text-muted-foreground" />
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                  No templates available yet.
+                </p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
       </Dialog>
 
       {/* DETAIL MODAL: VIEW COMPLETED WORKOUT */}
