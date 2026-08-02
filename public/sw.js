@@ -1,4 +1,4 @@
-const SW_VERSION = "5.1.51";
+const SW_VERSION = "5.1.53";
 const CACHE_NAME = `kratos-v${SW_VERSION}`;
 const STATIC_ASSETS = [
   "/logo.png",
@@ -22,6 +22,12 @@ self.addEventListener("message", (event) => {
   }
 
   if (event.data && event.data.type === "GET_VERSION") {
+    const replyPort = event.ports?.[0];
+    if (replyPort) {
+      replyPort.postMessage({ type: "SW_VERSION", version: SW_VERSION });
+      return;
+    }
+
     event.source?.postMessage({ type: "SW_VERSION", version: SW_VERSION });
   }
 });

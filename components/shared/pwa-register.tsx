@@ -104,8 +104,7 @@ export function PwaRegister() {
       localStorage.setItem(SEEN_VERSION_KEY, detectedVersion);
       return;
     }
-    if (!controllerVersion && seenVersion === detectedVersion) return;
-    if (!sw && seenVersion === detectedVersion) return;
+    if (seenVersion === detectedVersion) return;
     if (dismissedVersionRef.current === detectedVersion) return;
 
     setWaitingSW(sw);
