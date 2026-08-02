@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowRight, Dumbbell, KeyRound, Mail } from "lucide-react";
+import { Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
 function GoogleIcon() {
@@ -66,8 +64,6 @@ const readServerSession = async () => {
 };
 
 export function AuthScreen() {
-  const [form, setForm] = useState({ email: "", otp: "" });
-  const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -107,44 +103,37 @@ export function AuthScreen() {
     };
   }, []);
 
-  const requestCode = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const signInWithGoogle = async () => {
     setPending(true);
     setError("");
 
-    const result = await authClient.emailOtp.sendVerificationOtp({
-      email: form.email,
-      type: "sign-in",
-    });
+    try {
+      await resetPwaShell();
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: dashboardUrl(),
+        errorCallbackURL: "/login",
+        requestSignUp: true,
+        disableRedirect: true,
+      });
 
-    if (result.error) {
-      setError(result.error.message || "Could not send a sign-in code.");
+      if (result.error) {
+        setError(result.error.message || "Could not start Google sign-in.");
+        setPending(false);
+        return;
+      }
+
+      if (result.data?.url) {
+        window.location.href = result.data.url;
+        return;
+      }
+
+      setError("Google sign-in did not return a redirect URL.");
       setPending(false);
-      return;
-    }
-
-    setCodeSent(true);
-    setPending(false);
-  };
-
-  const verifyCode = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setPending(true);
-    setError("");
-
-    const result = await authClient.signIn.emailOtp({
-      email: form.email,
-      otp: form.otp.replace(/\s/g, ""),
-    });
-
-    if (result.error) {
-      setError(result.error.message || "That code did not work.");
+    } catch {
+      setError("Could not start Google sign-in.");
       setPending(false);
-      return;
     }
-
-    await resetPwaShell();
-    window.location.replace(dashboardUrl());
   };
 
   return (
@@ -169,7 +158,7 @@ export function AuthScreen() {
           <div className="space-y-1">
             <CardTitle className="text-base font-semibold tracking-tight text-white">Sign in</CardTitle>
             <CardDescription className="max-w-[250px] text-[11px] leading-relaxed text-white/45">
-              Get a one-time code from Neon Auth.
+              Continue with your Google account.
             </CardDescription>
           </div>
 
@@ -179,113 +168,22 @@ export function AuthScreen() {
             </div>
           ) : null}
 
-          <div className="mt-3.5 space-y-2.5">
+          <div className="mt-3.5">
             <Button
-              asChild
+              type="button"
               variant="secondary"
+              disabled={pending}
+              onClick={signInWithGoogle}
               className="h-8 w-full rounded-lg border border-white/10 !bg-white text-xs font-semibold !text-neutral-950 shadow-[0_14px_34px_rgba(0,0,0,0.2)] hover:!bg-neutral-100 [&>span]:!text-neutral-950"
             >
-              <a
-                href="/api/auth/google"
-                onClick={(event) => {
-                  event.preventDefault();
-                  void resetPwaShell().finally(() => {
-                    window.location.href = "/api/auth/google";
-                  });
-                }}
-              >
-                <GoogleIcon />
-                <span>Continue with Google</span>
-              </a>
+              <GoogleIcon />
+              <span>{pending ? "Opening Google..." : "Continue with Google"}</span>
             </Button>
-
-            <div className="flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/24">
-              <span className="h-px flex-1 bg-white/10" />
-              <span>Email code</span>
-              <span className="h-px flex-1 bg-white/10" />
-            </div>
           </div>
-
-          <form onSubmit={codeSent ? verifyCode : requestCode} className="mt-2.5 space-y-2.5">
-            <div className="space-y-1">
-              <Label htmlFor="email" className="text-[8.5px] font-bold uppercase tracking-[0.18em] text-white/38">
-                Email
-              </Label>
-              <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-white/32" />
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  readOnly={codeSent}
-                  placeholder="name@example.com"
-                  value={form.email}
-                  onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                  className="h-8 rounded-lg border-white/10 bg-white/[0.055] pl-8 text-xs text-white placeholder:text-white/24 hover:bg-white/[0.075] focus-visible:bg-white/[0.085] focus-visible:ring-1 focus-visible:ring-emerald-300/25"
-                />
-              </div>
-            </div>
-
-            {codeSent ? (
-              <div className="space-y-1">
-                <Label htmlFor="otp" className="text-[8.5px] font-bold uppercase tracking-[0.18em] text-white/38">
-                  One-time code
-                </Label>
-                <div className="relative">
-                  <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-white/32" />
-                  <Input
-                    id="otp"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    required
-                    maxLength={8}
-                    placeholder="Enter code"
-                    value={form.otp}
-                    onChange={(event) => setForm((current) => ({ ...current, otp: event.target.value }))}
-                    className="h-8 rounded-lg border-white/10 bg-white/[0.055] pl-8 text-xs text-white placeholder:text-white/24 hover:bg-white/[0.075] focus-visible:bg-white/[0.085] focus-visible:ring-1 focus-visible:ring-emerald-300/25"
-                  />
-                </div>
-                <p className="text-[9px] leading-relaxed text-white/32">
-                  Check your email for the Neon sign-in code.
-                </p>
-              </div>
-            ) : null}
-
-            <Button
-              type="submit"
-              disabled={pending}
-              className="h-8 w-full rounded-lg border border-white/10 bg-white/[0.07] text-xs font-semibold text-white shadow-none hover:bg-white/[0.1]"
-            >
-              {pending ? (
-                codeSent ? "Verifying..." : "Sending code..."
-              ) : (
-                <>
-                  <span>{codeSent ? "Verify code" : "Send code"}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </>
-              )}
-            </Button>
-
-            {codeSent ? (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setCodeSent(false);
-                  setForm((current) => ({ ...current, otp: "" }));
-                  setError("");
-                }}
-                className="h-7 w-full rounded-lg text-[10px] text-white/38 hover:bg-white/[0.06] hover:text-white"
-              >
-                Use another email
-              </Button>
-            ) : null}
-          </form>
         </Card>
 
         <p className="mt-2.5 text-center text-[9px] font-medium text-white/28">
-          Passwordless access only.
+          Google access only.
         </p>
       </div>
     </main>
