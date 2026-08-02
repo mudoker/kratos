@@ -122,8 +122,12 @@ export function ProgressPage() {
 
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button className="h-7 w-auto rounded-lg border-none bg-card px-2.5 text-[11px] font-semibold text-foreground shadow-md transition duration-200 hover:bg-card/90 md:h-10 md:rounded-xl md:px-4 md:text-xs" onClick={() => setForm(blankRecord())}>
-                <Plus className="h-3 w-3 text-current md:h-4 md:w-4" />
+              <Button
+                variant="secondary"
+                className="h-7 w-auto rounded-lg border-none bg-card px-2.5 text-[11px] font-semibold text-foreground shadow-md transition duration-200 hover:bg-card/90 md:h-10 md:rounded-xl md:px-4 md:text-xs"
+                onClick={() => setForm(blankRecord())}
+              >
+                <Plus className="h-3 w-3 md:h-4 md:w-4" style={{ color: "var(--foreground)", stroke: "var(--foreground)" }} />
                 <span>Log</span>
               </Button>
             </DialogTrigger>

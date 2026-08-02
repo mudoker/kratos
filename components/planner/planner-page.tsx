@@ -144,7 +144,7 @@ export function PlannerPage() {
   const searchParams = useSearchParams();
 
   // Navigation tab: "plans" (Manage templates), "session" (Resume/Start workout), "history" (Past logs)
-  const [activeTab, setActiveTab] = useState<"plans" | "session" | "history">("session");
+  const [activeTab, setActiveTab] = useState<"plans" | "session" | "history">("plans");
   const [plans, setPlans] = useState<WeeklyPlan[]>([]);
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   
@@ -164,6 +164,7 @@ export function PlannerPage() {
   const [draftPlanPrompt, setDraftPlanPrompt] = useState<WeeklyPlan | null>(null);
   const [isStartWorkoutDialogOpen, setIsStartWorkoutDialogOpen] = useState(false);
   const [startDialogPlanId, setStartDialogPlanId] = useState<string | null>(null);
+  const [expandedTemplatePlanIds, setExpandedTemplatePlanIds] = useState<Record<string, boolean>>({});
 
   // States for active operations
   const [isEditingSplit, setIsEditingSplit] = useState(false);
@@ -640,7 +641,14 @@ export function PlannerPage() {
 
   const openStartWorkoutDialog = (planId?: string) => {
     setStartDialogPlanId(planId ?? null);
+    if (planId) {
+      setExpandedTemplatePlanIds((prev) => ({ ...prev, [planId]: true }));
+    }
     setIsStartWorkoutDialogOpen(true);
+  };
+
+  const toggleTemplatePlan = (planId: string) => {
+    setExpandedTemplatePlanIds((prev) => ({ ...prev, [planId]: !prev[planId] }));
   };
 
   const startWorkoutFromDay = (day: WeeklyPlanDay, plan: WeeklyPlan) => {
@@ -2014,14 +2022,18 @@ export function PlannerPage() {
             variant="outline"
             className="flex-1 rounded-lg h-10.5 text-xs font-bold border-border bg-card"
           >
-            <Plus className="h-4 w-4 mr-1" /> Add split day
+            <Plus className="h-4 w-4 mr-1" style={{ color: "var(--foreground)", stroke: "var(--foreground)" }} /> Add split day
           </Button>
           <Button
             onClick={handleSavePlan}
             disabled={saving}
             className="flex-1 rounded-lg h-10.5 bg-card hover:bg-card/90 text-foreground text-xs font-bold"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--foreground)", stroke: "var(--foreground)" }} />
+            ) : (
+              <Save className="h-4 w-4 mr-1.5" style={{ color: "var(--foreground)", stroke: "var(--foreground)" }} />
+            )}
             Save plan template
           </Button>
         </div>
@@ -2209,16 +2221,14 @@ export function PlannerPage() {
     0
   );
   const latestSession = sessions[0];
-  const templateEntries = plans.flatMap((plan) =>
-    plan.days.map((day) => ({
-      plan,
-      day,
-      exerciseCount: day.items.length,
-    }))
-  );
-  const startDialogTemplateEntries = startDialogPlanId
-    ? templateEntries.filter((entry) => entry.plan.id === startDialogPlanId)
-    : templateEntries;
+  const templatePlans = plans.map((plan) => ({
+    plan,
+    dayCount: plan.days.length,
+    exerciseCount: plan.days.reduce((acc, day) => acc + day.items.length, 0),
+  }));
+  const startDialogTemplatePlans = startDialogPlanId
+    ? templatePlans.filter((entry) => entry.plan.id === startDialogPlanId)
+    : templatePlans;
   const mobileTemplateLimit = 4;
   const desktopTemplateLimit = 8;
 
@@ -2554,47 +2564,77 @@ export function PlannerPage() {
                 Templates
               </span>
 
-              {templateEntries.length > 0 ? (
+              {templatePlans.length > 0 ? (
                 <div className="max-h-[430px] overflow-y-auto pr-0.5 grid gap-2.5 md:grid-cols-2">
-                  {templateEntries.map(({ plan, day, exerciseCount }, index) => {
+                  {templatePlans.map(({ plan, dayCount, exerciseCount }, index) => {
                       const isDraft = isDraftPlan(plan);
+                      const isExpanded = Boolean(expandedTemplatePlanIds[plan.id]);
                       return (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          key={`${plan.id}-${day.id}`}
-                          onClick={() => startWorkoutFromDay(day, plan)}
+                        <div
+                          key={plan.id}
                           className={cn(
-                            "group h-auto min-h-12 w-full justify-between rounded-xl border border-border bg-card p-2 text-left transition-all hover:border-border hover:bg-card sm:min-h-0 sm:rounded-2xl sm:p-4",
-                            index >= mobileTemplateLimit && "hidden sm:flex",
+                            "rounded-xl border border-border bg-card transition-all sm:rounded-2xl",
+                            index >= mobileTemplateLimit && "hidden sm:block",
                             index >= desktopTemplateLimit && "sm:hidden"
                           )}
                         >
-                          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-                            <div className="h-7 w-7 rounded-lg bg-foreground/5 text-foreground flex items-center justify-center font-bold text-[10px] shrink-0 sm:h-8 sm:w-8 sm:text-xs">
-                              {day.title.slice(0, 3)}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex min-w-0 items-center gap-1.5">
-                                <h3 className="line-clamp-1 text-xs font-semibold text-foreground transition-colors group-hover:text-foreground/75">
-                                  {plan.name} • {day.title}
-                                </h3>
-                                {isDraft ? (
-                                  <Badge className="shrink-0 border-none bg-[#FFB547]/10 px-1.5 py-0.25 text-[7.5px] font-bold text-[#FFB547]">
-                                    Draft
-                                  </Badge>
-                                ) : null}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => toggleTemplatePlan(plan.id)}
+                            className="group h-auto min-h-12 w-full justify-between rounded-xl p-2 text-left hover:bg-foreground/[0.035] sm:min-h-0 sm:rounded-2xl sm:p-4"
+                          >
+                            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-[10px] font-bold text-foreground sm:h-8 sm:w-8 sm:text-xs">
+                                {plan.name.slice(0, 2)}
                               </div>
-                              <p className="truncate text-[9px] text-muted-foreground mt-0.5 font-semibold sm:text-[9.5px]">
-                                {day.focus || "Routine"} • {exerciseCount} exercises
-                              </p>
+                              <div className="min-w-0">
+                                <div className="flex min-w-0 items-center gap-1.5">
+                                  <h3 className="line-clamp-1 text-xs font-semibold text-foreground transition-colors group-hover:text-foreground/75">
+                                    {plan.name}
+                                  </h3>
+                                  {isDraft ? (
+                                    <Badge className="shrink-0 border-none bg-[#FFB547]/10 px-1.5 py-0.25 text-[7.5px] font-bold text-[#FFB547]">
+                                      Draft
+                                    </Badge>
+                                  ) : null}
+                                </div>
+                                <p className="truncate text-[9px] text-muted-foreground mt-0.5 font-semibold sm:text-[9.5px]">
+                                  {dayCount} templates • {exerciseCount} exercises
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <Play className="h-3.5 w-3.5 text-muted-foreground fill-current group-hover:text-foreground transition-colors" />
-                        </Button>
+                            {isExpanded ? (
+                              <ChevronUp className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+                            )}
+                          </Button>
+                          {isExpanded ? (
+                            <div className="space-y-1 border-t border-border px-2 pb-2 sm:px-3 sm:pb-3">
+                              {plan.days.map((day) => (
+                                <Button
+                                  key={`${plan.id}-${day.id}`}
+                                  type="button"
+                                  variant="ghost"
+                                  onClick={() => startWorkoutFromDay(day, plan)}
+                                  className="h-9 w-full justify-between rounded-lg px-2 text-left hover:bg-foreground/[0.035]"
+                                >
+                                  <span className="min-w-0">
+                                    <span className="block truncate text-[11px] font-semibold text-foreground">{day.title}</span>
+                                    <span className="block truncate text-[9px] font-semibold text-muted-foreground">
+                                      {day.focus || "Routine"} • {day.items.length} exercises
+                                    </span>
+                                  </span>
+                                  <Play className="h-3.5 w-3.5 shrink-0 fill-current text-muted-foreground" />
+                                </Button>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
                       );
                     })}
-                  {templateEntries.length > mobileTemplateLimit ? (
+                  {templatePlans.length > mobileTemplateLimit ? (
                     <Button
                       type="button"
                       variant="ghost"
@@ -2604,14 +2644,14 @@ export function PlannerPage() {
                       View all templates
                     </Button>
                   ) : null}
-                  {templateEntries.length > desktopTemplateLimit ? (
+                  {templatePlans.length > desktopTemplateLimit ? (
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setActiveTab("plans")}
                       className="hidden h-10 rounded-xl text-[11px] font-semibold sm:flex md:col-span-2"
                     >
-                      Manage all {templateEntries.length} templates
+                      Manage all {templatePlans.length} plans
                     </Button>
                   ) : null}
                 </div>
@@ -2779,7 +2819,10 @@ export function PlannerPage() {
             >
               <span className="flex min-w-0 items-center gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
-                  <Play className="h-3.5 w-3.5 fill-current" />
+                  <Play
+                    className="h-3.5 w-3.5 fill-current text-current"
+                    style={{ color: "var(--background)", fill: "var(--background)", stroke: "var(--background)" }}
+                  />
                 </span>
                 <span className="min-w-0">
                   <span className="block text-xs font-bold text-foreground">Freestyle workout</span>
@@ -2791,27 +2834,61 @@ export function PlannerPage() {
 
             <div className="space-y-2">
               <p className="px-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                Templates ({startDialogTemplateEntries.length})
+                Templates ({startDialogTemplatePlans.length})
               </p>
-              {startDialogTemplateEntries.length ? (
+              {startDialogTemplatePlans.length ? (
                 <div className="grid max-h-[46vh] gap-2 overflow-y-auto pr-1">
-                  {startDialogTemplateEntries.map(({ plan, day, exerciseCount }) => (
-                    <Button
-                      key={`${plan.id}-${day.id}-start-dialog`}
-                      type="button"
-                      variant="ghost"
-                      onClick={() => startWorkoutFromDay(day, plan)}
-                      className="h-auto justify-between rounded-xl border border-border bg-card p-3 text-left hover:bg-foreground/[0.035]"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-xs font-bold text-foreground">{day.title}</span>
-                        <span className="mt-0.5 block truncate text-[10px] font-semibold text-muted-foreground">
-                          {plan.name} • {exerciseCount} exercises
-                        </span>
-                      </span>
-                      <Play className="h-3.5 w-3.5 shrink-0 fill-current text-muted-foreground" />
-                    </Button>
-                  ))}
+                  {startDialogTemplatePlans.map(({ plan, dayCount, exerciseCount }) => {
+                    const isExpanded = Boolean(expandedTemplatePlanIds[plan.id]) || Boolean(startDialogPlanId);
+                    return (
+                      <div key={`${plan.id}-start-dialog`} className="rounded-xl border border-border bg-card">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => toggleTemplatePlan(plan.id)}
+                          className="h-auto w-full justify-between rounded-xl p-3 text-left hover:bg-foreground/[0.035]"
+                        >
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-foreground/5 text-[10px] font-bold text-foreground">
+                              {plan.name.slice(0, 2)}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block truncate text-xs font-bold text-foreground">{plan.name}</span>
+                              <span className="mt-0.5 block truncate text-[10px] font-semibold text-muted-foreground">
+                                {dayCount} templates • {exerciseCount} exercises
+                              </span>
+                            </span>
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                        </Button>
+                        {isExpanded ? (
+                          <div className="space-y-1 border-t border-border px-2 pb-2">
+                            {plan.days.map((day) => (
+                              <Button
+                                key={`${plan.id}-${day.id}-start-dialog-day`}
+                                type="button"
+                                variant="ghost"
+                                onClick={() => startWorkoutFromDay(day, plan)}
+                                className="h-9 w-full justify-between rounded-lg px-2 text-left hover:bg-foreground/[0.035]"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block truncate text-[11px] font-semibold text-foreground">{day.title}</span>
+                                  <span className="block truncate text-[9px] font-semibold text-muted-foreground">
+                                    {day.focus || "Routine"} • {day.items.length} exercises
+                                  </span>
+                                </span>
+                                <Play className="h-3.5 w-3.5 shrink-0 fill-current text-muted-foreground" />
+                              </Button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
