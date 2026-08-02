@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Bot,
@@ -44,12 +44,14 @@ function SidebarContent({
   pathname,
   user,
   onNavigate,
+  onPrefetch,
   onLogout,
 }: {
   isMobile?: boolean;
   pathname: string;
   user: AppUser;
   onNavigate: () => void;
+  onPrefetch: (href: Route) => void;
   onLogout: () => void;
 }) {
   return (
@@ -119,6 +121,8 @@ function SidebarContent({
                 key={item.href}
                 href={item.href}
                 onClick={onNavigate}
+                onPointerEnter={() => onPrefetch(item.href)}
+                onFocus={() => onPrefetch(item.href)}
                 className={cn(
                   "flex items-center transition-all duration-200 rounded-lg h-9 relative",
                   "w-9 justify-center p-0",
@@ -196,6 +200,22 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  useEffect(() => {
+    const prefetchRoutes = () => {
+      items.forEach((item) => {
+        if (item.href !== pathname) router.prefetch(item.href);
+      });
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(prefetchRoutes, { timeout: 1800 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeout = setTimeout(prefetchRoutes, 350);
+    return () => clearTimeout(timeout);
+  }, [pathname, router]);
+
   const logout = async () => {
     await authClient.signOut();
     router.push("/login");
@@ -211,7 +231,14 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
       {/* Desktop Left Sticky Sidebar */}
       <aside className="hidden lg:block relative w-20 shrink-0 h-[calc(100vh-2rem)] sticky top-4 z-40">
         <div className="absolute left-0 top-0 h-full w-20 hover:w-[280px] transition-all duration-300 ease-in-out border border-border bg-card p-4 shadow-[0_24px_80px_rgba(0,0,0,0.06)] rounded-[36px] overflow-y-auto overflow-x-hidden flex flex-col group">
-          <SidebarContent isMobile={false} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
+          <SidebarContent
+            isMobile={false}
+            pathname={pathname}
+            user={user}
+            onNavigate={() => setMobileMenuOpen(false)}
+            onPrefetch={(href) => router.prefetch(href)}
+            onLogout={logout}
+          />
         </div>
       </aside>
 
@@ -235,7 +262,14 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
             </button>
           </DialogTrigger>
           <DialogContent className="fixed top-0 left-0 bottom-0 h-dvh max-h-dvh w-[240px] translate-x-0 translate-y-0 rounded-r-2xl rounded-l-none bg-card p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] border-r border-border-strong overflow-y-auto max-w-full z-50">
-            <SidebarContent isMobile={true} pathname={pathname} user={user} onNavigate={() => setMobileMenuOpen(false)} onLogout={logout} />
+            <SidebarContent
+              isMobile={true}
+              pathname={pathname}
+              user={user}
+              onNavigate={() => setMobileMenuOpen(false)}
+              onPrefetch={(href) => router.prefetch(href)}
+              onLogout={logout}
+            />
           </DialogContent>
         </Dialog>
       </header>
@@ -254,6 +288,8 @@ export function AppShell({ user, children }: { user: AppUser; children: React.Re
             <Link
               key={item.href}
               href={item.href}
+              onPointerEnter={() => router.prefetch(item.href)}
+              onFocus={() => router.prefetch(item.href)}
               className={cn(
                 "flex h-10 min-w-0 flex-1 flex-col items-center justify-center rounded-xl px-1 transition-colors duration-150 active:scale-98 select-none",
                 isActive
