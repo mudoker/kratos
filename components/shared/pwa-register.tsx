@@ -61,6 +61,22 @@ const readServiceWorkerVersion = async () => {
   }
 };
 
+const readWorkerVersion = async (worker: ServiceWorker | null) =>
+  new Promise<string | null>((resolve) => {
+    if (!worker) {
+      resolve(null);
+      return;
+    }
+
+    const channel = new MessageChannel();
+    const timeout = window.setTimeout(() => resolve(null), 800);
+    channel.port1.onmessage = (event) => {
+      window.clearTimeout(timeout);
+      resolve(event.data?.type === "SW_VERSION" ? event.data.version : null);
+    };
+    worker.postMessage({ type: "GET_VERSION" }, [channel.port2]);
+  });
+
 export function PwaRegister() {
   const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(null);
   const [version, setVersion] = useState(VERSION_FALLBACK);
@@ -77,7 +93,19 @@ export function PwaRegister() {
 
   const showUpdate = useCallback(async (sw: ServiceWorker | null, nextVersion?: string) => {
     if (isApplyingRef.current) return;
-    const detectedVersion = nextVersion || await readServiceWorkerVersion();
+    const [detectedVersion, controllerVersion] = await Promise.all([
+      nextVersion || readServiceWorkerVersion(),
+      readWorkerVersion(navigator.serviceWorker?.controller ?? null),
+    ]);
+    const seenVersion = localStorage.getItem(SEEN_VERSION_KEY);
+
+    if (detectedVersion === VERSION_FALLBACK) return;
+    if (controllerVersion === detectedVersion) {
+      localStorage.setItem(SEEN_VERSION_KEY, detectedVersion);
+      return;
+    }
+    if (!controllerVersion && seenVersion === detectedVersion) return;
+    if (!sw && seenVersion === detectedVersion) return;
     if (dismissedVersionRef.current === detectedVersion) return;
 
     setWaitingSW(sw);
@@ -140,28 +168,11 @@ export function PwaRegister() {
     let registration: ServiceWorkerRegistration | null = null;
     let reloading = false;
 
-    const readControllerVersion = () =>
-      new Promise<string | null>((resolve) => {
-        const controller = navigator.serviceWorker.controller;
-        if (!controller) {
-          resolve(null);
-          return;
-        }
-
-        const channel = new MessageChannel();
-        const timeout = window.setTimeout(() => resolve(null), 800);
-        channel.port1.onmessage = (event) => {
-          window.clearTimeout(timeout);
-          resolve(event.data?.type === "SW_VERSION" ? event.data.version : null);
-        };
-        controller.postMessage({ type: "GET_VERSION" }, [channel.port2]);
-      });
-
     const checkVersionMismatch = async () => {
       const latestVersion = await readServiceWorkerVersion();
       if (latestVersion === VERSION_FALLBACK) return;
 
-      const controllerVersion = await readControllerVersion();
+      const controllerVersion = await readWorkerVersion(navigator.serviceWorker.controller);
       const seenVersion = localStorage.getItem(SEEN_VERSION_KEY);
       const activeVersion = controllerVersion || seenVersion;
 
